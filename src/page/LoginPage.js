@@ -62,7 +62,7 @@ const LoginPage = () => {
               }else {
                 setSessionData('session', data.data);
                 setSessionData('isLoggedIn', true);
-                setSessionData('check', true);
+                setlocalData('check', false);
                 window.location.href = '/'
                 // console.log('sesssion');
               }

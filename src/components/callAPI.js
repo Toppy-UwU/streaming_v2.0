@@ -1,7 +1,10 @@
-import { useState } from "react";
 
+// get API
 const getUserAPI = 'http://localhost:8900/getUsers';
 const getServerAPI = 'http://localhost:8900/server_resource';
+
+// post API
+
 
 export const getAPI = (call_api) => {
   let api = '';
@@ -21,3 +24,4 @@ export const getAPI = (call_api) => {
         console.error('Error:', error);
       });
 }
+

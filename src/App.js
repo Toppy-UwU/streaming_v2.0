@@ -11,6 +11,7 @@ import LoginPage from "./page/LoginPage"
 import RegisterPage from "./page/RegisterPage" 
 import ProfilePage from './page/profilePage';
 import AdminPage from './page/AdminPage';
+import UploadPage from './page/uploadPage';
 
 function App() {
 
@@ -18,12 +19,17 @@ function App() {
 		<Router>
 			<Routes>
 				<Route path="/contact" element={<Contact />} />
-				<Route path="/" element={<Home />} />
-				<Route path="" element={<Home />} />
+				
+				{/* login/register page */}
 				<Route path='/login' element={<LoginPage />} />
 				<Route path='/register' element={<RegisterPage />} />
+
+				{/* main page */}
+				<Route path="/" element={<Home />} />
 				<Route path='/profile' element={<ProfilePage />} />
+				<Route path='/upload' element={<UploadPage />} />
 				<Route path='/admin' element={<AdminPage />} />
+
 			</Routes>
 		</Router>
 	);

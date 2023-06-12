@@ -1,4 +1,5 @@
-from flask import Flask, request, jsonify, send_file
+
+from flask import Flask, json, request, jsonify, send_file
 from flask_cors import CORS
 from ffmpeg_streaming import Formats, Bitrate, Representation, Size
 import ffmpeg_streaming
@@ -112,14 +113,28 @@ def create_app(test_config = None):
         return ''
             
     
-    # @app.route('/upload', method=['POST'])
-    # def upload():
+    @app.route('/upload', methods=['POST'])
+    def upload():
 
-    #     data = request.get_json()
-    #     video_name = data.get('video_name')
+        file = request.files['video']
+        data = request.form['data']
+
+        vid_data = json.loads(data)
+        print(vid_data)
+
+
+
+
+        if file:
+            file.save('../user_upload_folder/'+file.filename)
+            # with open(data.filename, 'wb') as output_file:
+            #     for chunk in data:
+            #         output_file.write(chunk)
+            return 'success'
+        else:
+            return 'no file'
 
         
-    #     return ''
 
     @app.route('/download')
     def download():
