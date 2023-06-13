@@ -1,4 +1,6 @@
 
+import random
+import string
 from flask import Flask, json, request, jsonify, send_file
 from flask_cors import CORS
 from ffmpeg_streaming import Formats, Bitrate, Representation, Size
@@ -25,6 +27,24 @@ def create_app(test_config = None):
     app = Flask(__name__)
     CORS(app)
 
+# function section
+    # use to gen new video name for store in db
+    def genName(name):
+        file_type = name.split('.')[-1]
+        seed = name.split('.')[0]
+        ran_text = os.urandom(8).hex()
+        seed += ran_text
+        random.seed(seed)
+        characters = string.ascii_letters + string.digits
+        new_name = ''.join(random.choices(characters, k=12))
+        encode = new_name+ '.' + file_type
+        return encode
+    
+    def insertVidData(data):
+        print(data)
+
+
+# api section
     @app.route('/')
     def welcome():
         return "hello this is flask python"
@@ -119,22 +139,22 @@ def create_app(test_config = None):
         file = request.files['video']
         data = request.form['data']
 
+
         vid_data = json.loads(data)
+        new_name = genName(file.filename)
+
+        vid_data['encode'] = new_name
+
         print(vid_data)
 
-
-
-
         if file:
-            file.save('../user_upload_folder/'+file.filename)
+            file.save('../user_upload_folder/'+new_name)
             # with open(data.filename, 'wb') as output_file:
             #     for chunk in data:
             #         output_file.write(chunk)
             return 'success'
         else:
             return 'no file'
-
-        
 
     @app.route('/download')
     def download():

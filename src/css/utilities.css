@@ -24,3 +24,38 @@
       transform: rotate(360deg);
     }
   }
+
+  .card-margin {
+    background-color: rgba(21, 25, 29, 0.773);
+      margin: 10px;
+      width: auto;
+  }
+  
+  .btn-margin button {
+    margin-left: 5px;
+    margin-right: 5px;
+  }
+
+  .btn-up button {
+    width: 40%;
+  }
+
+  .full-height {
+    height: 80vh;
+  }
+
+  .test-bg-blue {
+    background-color: blue;
+  }
+
+  .test-bg-yellow {
+    background-color: yellow;
+  }
+
+  .test-bg-red {
+    background-color: red;
+  }
+
+  .test-bg-green {
+    background-color: green;
+  }

@@ -2,6 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 
 import './../css/utilities.css';
+import './../css/upload.css';
 
 import Sidebar from "../components/sidebar";
 import ProgressBar from "../components/progressBar";
@@ -9,17 +10,29 @@ import ProgressBar from "../components/progressBar";
 const UploadPage = () => {
     const uploadAPI = 'http://localhost:8900/upload';
 
-    const [file, setFile] = useState();
-    const [vidDesc, setVidDesc] = useState('');
-    const [upProgress, setUpProgress] = useState('0');
-    const [vidData, setVidData] = useState(null);
+    const [ file, setFile ] = useState();
+    const [ vidDesc, setVidDesc ] = useState('');
+    const [ upProgress, setUpProgress ] = useState('0');
+    const [ vidData, setVidData ] = useState(null);
+    const [ tmp, setTmp ] = useState('');
 
     const handleFileChange = (e) => {
         // console.log(e.target.files[0]);
         const tmpFile = e.target.files[0];
         setFile(tmpFile);
+        setTmp(tmpFile.name)
 
     };
+
+    const handleVidName = (e) => {
+        setTmp(e.target.value)
+        e.preventDefault();
+    }
+
+    const handleVidDesc = (e) => {
+        setVidDesc(e.target.value)
+        e.preventDefault();
+    }
 
 
     const handleClickUpload = async () => {
@@ -33,17 +46,18 @@ const UploadPage = () => {
             video.addEventListener('loadedmetadata', function () {
                 const duration = video.duration;
                 const tmpData = {
-                    'videoName': file.name,
+                    'videoName': tmp,
+                    'videoOriginName': file.name,
                     'videoSize': file.size,
                     'videoDuration': duration,
                     'videoDesc': vidDesc
                 }
-                setVidData(tmpData)
+                // setVidData(tmpData)
 
-                // console.log(vidData);
+                // console.log(tmpData);
                 const formData = new FormData();
                 formData.append('video', file, file.name);
-                // formData.append('data', JSON.stringify(tmpData));
+                formData.append('data', JSON.stringify(tmpData));
 
                 axios.post(uploadAPI, formData, {
                     headers: {
@@ -73,20 +87,60 @@ const UploadPage = () => {
 
     }
 
+    const cardClick = () => {
+        document.getElementById('uploadBtn').click()
+        // handleClickUpload
+    }
+
+    const logTest = () => {
+        console.log('work!!!');
+        console.log(tmp);
+    }
+
     return (
         <div>
             <Sidebar>
-                <div style={{ color: 'white' }}>
-                    <input type="file" accept="video/*" onChange={handleFileChange} />
-                    <button onClick={handleClickUpload}>upload</button>
-                    {/* <p>Upload Progress: {upProgress}%</p> */}
-
-
-
-                </div>
                 <div className="container-fluid">
-                    <div className="progress">
-                        <ProgressBar value={upProgress + '%'} />
+                    <div className="card card-margin" style={{ marginTop: '6%', backgroundColor: 'gray' }}>
+                        <div className="card-body">
+                            <div className="row">
+                                <div className="col-7">
+                                    <div>
+                                        <div class="card upload-card" onClick={cardClick} style={{ height: '70vh' }}>
+                                            <div class="card-body">
+                                                <h4 class="card-title center" style={{ marginTop: '20%' }}>Video Upload</h4>
+                                                <p class="card-text center">Choose a video to upload.</p>
+                                            </div>
+                                            <input className="form-control-file" id="uploadBtn" type="file" accept="video/*" style={{ display: 'none' }} onChange={handleFileChange} />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="col-5" >
+                                    <div className="row" >
+                                        <h4>Video Name</h4>
+                                        <div class="input-group row mb-3">
+                                            <input type="text" class="form-control" placeholder='' value={tmp} onChange={handleVidName} ></input>
+                                        </div>
+                                    </div>
+                                    <div class="input-group row">
+                                        <h4>Video Description</h4>
+                                        <textarea class="form-control" onChange={handleVidDesc} rows="4"></textarea>
+                                    </div>
+                                    <div className="row" style={{ marginTop: '48%' }}>
+                                        <div className="col btn-margin center">
+                                            <button className="btn btn-primary rounded-pill" style={{ flex: '1', height: '130%' }} onClick={handleClickUpload}>upload</button>
+                                            <button className="btn btn-danger rounded-pill" style={{ flex: '1', height: '130%' }} onClick={logTest}>cancle</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <br></br>
+                            <div className="row" style={{ marginLeft: '2px', marginRight: '2px' }}>
+                                <div className="progress">
+                                    <ProgressBar value={upProgress + '%'} />
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </Sidebar>

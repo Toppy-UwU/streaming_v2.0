@@ -5,7 +5,6 @@ import { getAPI } from '../components/callAPI';
 import NameTable from '../components/nameTable';
 
 import './../css/utilities.css';
-import './../css/admin.css';
 import ServerMonitor from '../components/serverMonitor';
 
 const Home = () => {
@@ -47,7 +46,7 @@ const Home = () => {
     return (
       <Sidebar>
         <div className="center">
-          <div className="loading"></div>
+          <div className="loading" style={{marginTop: '25%'}}></div>
         </div>
       </Sidebar>
     )
@@ -59,9 +58,9 @@ const Home = () => {
       <Sidebar>
 
         <div style={{}}>
-          <div className='card cardMargin'>
+          <div className='card card-margin'>
             <div className='card-header'>
-              <div className='marginBtn'>
+              <div className='btn-margin'>
                 <button className='btn btn-secondary' onClick={() => buttonHandler(1)} >clickk me</button>
                 <button className='btn btn-secondary' onClick={() => buttonHandler(2)} >User List</button>
                 <button className='btn btn-secondary' onClick={() => buttonHandler(3)} >Server Monitor</button>
