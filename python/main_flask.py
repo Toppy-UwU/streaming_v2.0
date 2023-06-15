@@ -5,6 +5,8 @@ from flask import Flask, json, request, jsonify, send_file
 from flask_cors import CORS
 from ffmpeg_streaming import Formats, Bitrate, Representation, Size
 import ffmpeg_streaming
+import jwt
+from datetime import datetime, timedelta
 
 import secrets
 import subprocess
@@ -25,19 +27,19 @@ _720p  = Representation(Size(1280, 720), Bitrate(2048 * 1024, 320 * 1024))
 
 def create_app(test_config = None):
     app = Flask(__name__)
+    app.config['SECRET_KEY'] = '123'
     CORS(app)
 
 # function section
     # use to gen new video name for store in db
     def genName(name):
-        file_type = name.split('.')[-1]
         seed = name.split('.')[0]
         ran_text = os.urandom(8).hex()
         seed += ran_text
         random.seed(seed)
         characters = string.ascii_letters + string.digits
         new_name = ''.join(random.choices(characters, k=12))
-        encode = new_name+ '.' + file_type
+        encode = new_name+ '.'
         return encode
     
     def insertVidData(data):
@@ -109,8 +111,19 @@ def create_app(test_config = None):
                 conn.commit()
                 cursor.close()
                 conn.close()
+
+                payload = {
+                    'U_id': data[0],
+                    'U_type': data[4],
+                    'U_permit': data[8],
+                    'exp': datetime.utcnow() + timedelta(minutes=1)
+                }
+                
+                token = jwt.encode(payload , app.config['SECRET_KEY'], algorithm='HS256')
+
                 return ({
                     'status': 'success',
+                    'token': token,
                     'data': {
                         'U_id': data[0],
                         'username': data[1],
@@ -131,7 +144,30 @@ def create_app(test_config = None):
                 }), 200
         
         return ''
-            
+
+    @app.route('/verify', methods=['POST'])
+    def verify_token():
+        raw_token = request.headers.get('Authorization')
+
+        if raw_token is None or not raw_token.startswith('Bearer '):
+            return 'Invalid token', 401
+
+        token = raw_token.split(' ')[-1]
+        try:
+            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+            data = {
+                'U_id': payload.get('U_id'),
+                'U_type': payload.get('U_type'),
+                'U_permit': payload.get('U_permit'),
+                'token_exp': payload.get('exp')
+            }
+            # Additional verification or processing can be done here
+            return data, 200
+        except jwt.ExpiredSignatureError:
+            return jsonify({'message': 'Token has expired'}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'message': 'Invalid token'}), 401
+
     
     @app.route('/upload', methods=['POST'])
     def upload():
@@ -148,10 +184,13 @@ def create_app(test_config = None):
         print(vid_data)
 
         if file:
-            file.save('../user_upload_folder/'+new_name)
-            # with open(data.filename, 'wb') as output_file:
-            #     for chunk in data:
-            #         output_file.write(chunk)
+            save_path = '../user_upload_folder/' + new_name + vid_data['videoType']
+            file.save(save_path)
+
+            # Wait until the file is successfully saved
+            while not os.path.exists(save_path):
+                time.sleep(1)
+            
             return 'success'
         else:
             return 'no file'

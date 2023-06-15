@@ -12,27 +12,53 @@ import RegisterPage from "./page/RegisterPage"
 import ProfilePage from './page/profilePage';
 import AdminPage from './page/AdminPage';
 import UploadPage from './page/uploadPage';
+import NotFoundPage from './page/notfoundPage';
+
+import { isSessionSet } from './components/session';
 
 function App() {
 
-	return (
-		<Router>
-			<Routes>
-				<Route path="/contact" element={<Contact />} />
+	if(isSessionSet('session') && isSessionSet('isLoggedIn')) {
+		return (
+			<Router>
+				<Routes>
+					<Route path="/contact" element={<Contact />} />
+					
+					{/* login/register page */}
+					<Route path='/login' element={<LoginPage />} />
+					<Route path='/register' element={<RegisterPage />} />
+	
+					{/* main page */}
+					<Route path="/" element={<Home />} />
+					<Route path='/profile' element={<ProfilePage />} />
+					<Route path='/upload' element={<UploadPage />} />
+					<Route path='/admin' element={<AdminPage />} />
+
+					{/* not found page */}
+					<Route path='*' element={<NotFoundPage />} />	
+				</Routes>
+			</Router>
+		);
+	} else {
+		return(
+			<Router>
+				<Routes>
+					{/* login/register page */}
+					<Route path='/login' element={<LoginPage />} />
+					<Route path='/register' element={<RegisterPage />} />
+	
+					{/* main page */}
+					<Route path="/" element={<Home />} />
+					<Route path='/profile' element={<ProfilePage />} />
 				
-				{/* login/register page */}
-				<Route path='/login' element={<LoginPage />} />
-				<Route path='/register' element={<RegisterPage />} />
+					{/* not found page */}
+					<Route path='*' element={<NotFoundPage />} />
+				</Routes>
+			</Router>
+		)
+	}
 
-				{/* main page */}
-				<Route path="/" element={<Home />} />
-				<Route path='/profile' element={<ProfilePage />} />
-				<Route path='/upload' element={<UploadPage />} />
-				<Route path='/admin' element={<AdminPage />} />
-
-			</Routes>
-		</Router>
-	);
+	
 }
 
 export default App;

@@ -1,5 +1,4 @@
 import React from 'react';
-// import { getlocalData, removelocalData } from './localstorage';
 import { getSessionData, removeSessionData, getlocalData, removelocalData, isSessionSet } from './session';
 
 
@@ -14,42 +13,10 @@ const Sidebar = ({ children }) => {
       var isLoggedIn = getlocalData('isLoggedIn');
     } else {
       // check if not checked remember me
-      // console.log('in session');
       var session = getSessionData('session');
       var isLoggedIn = getSessionData('isLoggedIn');
-
     }
   }
-
-  // const permitAPI = 'http://localhost:8900/getPermit?id=' + session.U_id;
-  // const [ permit, setPermit ] = useState(null);
-  // fetch(permitAPI)
-  //   .then(response => response.json())
-  //   .then(data => {
-  //     setPermit(data)
-  //     console.log(permit);
-  //   })
-  //   .catch(error => {
-  //     console.error('error:', error)
-  //   })
-
-  // const [ permit, setPermit ] = useState({'U_permit': null,'U_type': null});
-
-  // useEffect(() => {
-  //   getData();
-  // }, []);
-
-  // const getData = async () => {
-  //   try {
-  //     const response = await fetch(permitAPI);
-  //     const permitData = await response.json();
-  //     setPermit(permitData.data);
-  //     console.log(permit);
-  //   } catch (error) {
-  //     console.error('Error fetching data:', error);
-  //   }
-  // };
-
 
   const logoutHandler = (e) => {
     removelocalData('session');

@@ -7,7 +7,19 @@ import './../css/upload.css';
 import Sidebar from "../components/sidebar";
 import ProgressBar from "../components/progressBar";
 
+import { getSessionData, getlocalData } from "../components/session";
+
+
 const UploadPage = () => {
+
+    if (getlocalData('check')) {
+        // console.log('in local');
+        var session = getlocalData('session');
+      } else {
+        // check if not checked remember me
+        var session = getSessionData('session');
+      }
+
     const uploadAPI = 'http://localhost:8900/upload';
 
     const [ file, setFile ] = useState();
@@ -45,12 +57,15 @@ const UploadPage = () => {
 
             video.addEventListener('loadedmetadata', function () {
                 const duration = video.duration;
+                const type = file.type.split('/').pop(); // video/mp4 -> [video, mp4] -> mp4
                 const tmpData = {
                     'videoName': tmp,
                     'videoOriginName': file.name,
                     'videoSize': file.size,
                     'videoDuration': duration,
-                    'videoDesc': vidDesc
+                    'videoDesc': vidDesc,
+                    'videoType': type,
+                    'videoOwner': session.U_id
                 }
                 // setVidData(tmpData)
 
