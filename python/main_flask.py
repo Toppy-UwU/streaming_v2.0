@@ -22,6 +22,12 @@ _240p  = Representation(Size(426, 240), Bitrate(150 * 1024, 94 * 1024))
 _360p  = Representation(Size(640, 360), Bitrate(276 * 1024, 128 * 1024))
 _480p  = Representation(Size(854, 480), Bitrate(750 * 1024, 192 * 1024))
 _720p  = Representation(Size(1280, 720), Bitrate(2048 * 1024, 320 * 1024))
+_1080p = Representation(Size(1920, 1080), Bitrate(4096 * 1024, 512 * 1024))
+_1440p = Representation(Size(2560, 1440), Bitrate(8192 * 1024, 768 * 1024))
+# _4K = Representation(Size(3840, 2160), Bitrate(16384 * 1024, 1024 * 1024))
+
+vidResolutions = [_144p, _240p, _360p, _480p, _720p, _1080p, _1440p]
+tmpResolutions = ['144', '240', '360', '480', '720', '1080', '1440']
 
 
 
@@ -32,18 +38,65 @@ def create_app(test_config = None):
 
 # function section
     # use to gen new video name for store in db
-    def genName(name):
-        seed = name.split('.')[0]
+    def genFileName(name):
         ran_text = os.urandom(8).hex()
-        seed += ran_text
-        random.seed(seed)
+        name += ran_text
+        random.seed(name)
         characters = string.ascii_letters + string.digits
         new_name = ''.join(random.choices(characters, k=12))
-        encode = new_name+ '.'
+        encode = new_name
         return encode
     
+    def convert(path, vidData):
+        # print(vidData.get('height'))
+        try:
+            print('convert' + path)
+            video = ffmpeg_streaming.input(path)
+            # print(video)
+            hls = video.hls(Formats.h264())
+            # print('hls')
+            # maxRes = vidData.get('height')
+            # idx = tmpResolutions.index(str(maxRes))
+            # for i in range(idx+1):
+            #     hls.representations(vidResolutions[i])
+            hls.representations(_144p, _240p, _360p, _480p, _720p, _1080p, _1440p)
+            print('convert')
+            hls.output('..\\user_upload_folder\\'+vidData.get('path')+'\\' + vidData.get('encode') + '\\' + vidData.get('encode') + '.m3u8')
+            print('convert success')
+            os.remove(path)
+            insertVidData(vidData)
+        except Exception as e:
+            print('Error:', e)
+            pass
+
     def insertVidData(data):
-        print(data)
+        conn = create_conn()
+
+        cursor = conn.cursor()
+        cursor.execute(
+            'INSERT INTO videos (V_title, V_view, V_length, V_size, U_id, V_permit, V_encode, V_quality, V_desc) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)',
+            (data.get('videoName'), 0, data.get('videoDuration'), data.get('videoSize'), data.get('videoOwner'), data.get('videoPermit'), data.get('encode'), data.get('height'), data.get('videoDesc'))
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+    def verify(raw_token):
+        if raw_token is None or not raw_token.startswith('Bearer '):
+            return 'Invalid token', 401
+
+        token = raw_token.split(' ')[-1]
+        try:
+            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+            
+            # Additional verification or processing can be done here
+            return payload, 200
+        except jwt.ExpiredSignatureError:
+            # return jsonify({'message': 'Token has expired'}), 401
+            return 'token expired', 401
+        except jwt.InvalidTokenError:
+            # return jsonify({'message': 'Invalid token'}), 401
+            return 'invalid token', 401
 
 
 # api section
@@ -64,26 +117,24 @@ def create_app(test_config = None):
 
         encode_password = str(password).encode('utf-8')
         hashed_password = bcrypt.hashpw(encode_password, bcrypt.gensalt())
-        
+        file_name = genFileName(username)
 
         cursor = conn.cursor()
         cursor.execute(
-            'INSERT INTO userdb (U_name, U_mail, U_pass, U_type, U_vid, U_permit) VALUES (%s, %s, %s, %s, %s, %s)',
-            (username, email, hashed_password, 'user', 0, 1)
+            'INSERT INTO users (U_name, U_mail, U_pass, U_type, U_vid, U_permit, U_folder) VALUES (%s, %s, %s, %s, %s, %s, %s)',
+            (username, email, hashed_password, 'user', 0, 1, file_name)
         )
         conn.commit()
         cursor.close()
         conn.close()
         
-        # enable this on deploy
-        folder_path = '../user_upload_folder/'+username #create folder for uploaded videos
+        folder_path = '../user_upload_folder/'+file_name #create folder for uploaded videos
         os.makedirs(folder_path)
-
         return ({
-                    'status': 'success',
-                    'data': {}
-                })
-    
+                'status': 'success',
+                'data': {}
+            }), 200
+        
     @app.route('/login', methods=['POST'])
     def login():
         data = request.get_json()
@@ -96,7 +147,7 @@ def create_app(test_config = None):
         # get password
         cursor = conn.cursor()
         cursor.execute(
-            'SELECT * FROM userdb WHERE U_mail=%s',
+            'SELECT * FROM users WHERE U_mail=%s',
             (email,)
         )
         # print('select success')
@@ -116,7 +167,7 @@ def create_app(test_config = None):
                     'U_id': data[0],
                     'U_type': data[4],
                     'U_permit': data[8],
-                    'exp': datetime.utcnow() + timedelta(minutes=1)
+                    'exp': datetime.utcnow() + timedelta(days=30)
                 }
                 
                 token = jwt.encode(payload , app.config['SECRET_KEY'], algorithm='HS256')
@@ -130,7 +181,8 @@ def create_app(test_config = None):
                         'email': data[2],
                         'U_type': data[4],
                         'vid': data[5],
-                        'U_permit': data[8]
+                        'U_permit': data[8],
+                        'U_folder': data[9]
                     }
                 }), 200
             else:
@@ -155,45 +207,46 @@ def create_app(test_config = None):
         token = raw_token.split(' ')[-1]
         try:
             payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
-            data = {
-                'U_id': payload.get('U_id'),
-                'U_type': payload.get('U_type'),
-                'U_permit': payload.get('U_permit'),
-                'token_exp': payload.get('exp')
-            }
+            
             # Additional verification or processing can be done here
-            return data, 200
+            return jsonify(payload), 200
         except jwt.ExpiredSignatureError:
             return jsonify({'message': 'Token has expired'}), 401
         except jwt.InvalidTokenError:
             return jsonify({'message': 'Invalid token'}), 401
 
-    
     @app.route('/upload', methods=['POST'])
     def upload():
+        token = request.headers.get('Authorization')
+        
+        if(verify(token)[-1] == 200):
+            file = request.files['video']
+            data = request.form['data']
 
-        file = request.files['video']
-        data = request.form['data']
 
+            vid_data = json.loads(data)
+            vidName = file.filename
+            new_name = genFileName(vidName.split('.')[0])
 
-        vid_data = json.loads(data)
-        new_name = genName(file.filename)
+            vid_data['encode'] = new_name
 
-        vid_data['encode'] = new_name
+            # print(vid_data)
 
-        print(vid_data)
+            if file:
+                save_path = '../user_upload_folder/'+ vid_data['path'] +'/'+ new_name + '.' + vid_data['videoType']
+                file.save(save_path)
 
-        if file:
-            save_path = '../user_upload_folder/' + new_name + vid_data['videoType']
-            file.save(save_path)
+                # Wait until the file is successfully saved
+                while not os.path.exists(save_path):
+                    time.sleep(1)
 
-            # Wait until the file is successfully saved
-            while not os.path.exists(save_path):
-                time.sleep(1)
-            
-            return 'success'
+                convert(save_path, vid_data)
+                return ({'message': 'success'}), 200
+
+            else:
+                return ({'message': 'fail'}), 401
         else:
-            return 'no file'
+            return ({'message': 'token invalid'}), 401
 
     @app.route('/download')
     def download():
@@ -209,7 +262,7 @@ def create_app(test_config = None):
         conn = create_conn()
 
         cursor = conn.cursor()
-        cursor.execute('SELECT U_id, U_name, U_mail, U_vid, U_type, U_permit FROM userdb')
+        cursor.execute('SELECT U_id, U_name, U_mail, U_vid, U_type, U_permit FROM users')
         data = cursor.fetchall()
         conn.commit()
         cursor.close()
@@ -236,7 +289,7 @@ def create_app(test_config = None):
         conn = create_conn()
 
         cursor = conn.cursor()
-        cursor.execute('SELECT U_type, U_permit FROM userdb WHERE U_id=%s', (U_id,))
+        cursor.execute('SELECT U_type, U_permit FROM users WHERE U_id=%s', (U_id,))
         data = cursor.fetchone()
         conn.commit()
         cursor.close()
@@ -290,5 +343,5 @@ def create_app(test_config = None):
 APP = create_app()
 
 if __name__ == '__main__':
-    APP.run(host='0.0.0.0', port = 8900, debug=True) #ip:5000/predict
+    APP.run(host='0.0.0.0', port = 8900, debug=True) 
     #APP.run(debug=True)

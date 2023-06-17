@@ -20,7 +20,7 @@ function NameTable(props) {
                         <th scope="col">Email</th>
                         <th scope="col">User Type</th>
                         <th scope="col">Upload Permission</th>
-                        <th scope="col">Video Wwn</th>
+                        <th scope="col">Video Owned</th>
                         <th scope="col">Edit</th>
                     </tr>
                 </thead>

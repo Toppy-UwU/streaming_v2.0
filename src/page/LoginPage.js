@@ -56,6 +56,7 @@ const LoginPage = () => {
                 setlocalData('session', data.data);
                 setlocalData('isLoggedIn', true);
                 setlocalData('check', true);
+                setlocalData('token', data.token);
                 window.location.href = '/'
                 // console.log(data.data)
                 // console.log('local');
@@ -63,6 +64,7 @@ const LoginPage = () => {
                 setSessionData('session', data.data);
                 setSessionData('isLoggedIn', true);
                 setlocalData('check', false);
+                setSessionData('token', data.token);
                 window.location.href = '/'
                 // console.log('sesssion');
               }

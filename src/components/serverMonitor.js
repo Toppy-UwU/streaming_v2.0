@@ -36,11 +36,11 @@ function ServerMonitor(props) {
 
     return (
         <div>
-            <ul class="list-group">
-                <li class="list-group-item" style={{ backgroundColor: 'darkgray' }}>
+            <ul className="list-group">
+                <li className="list-group-item" style={{ backgroundColor: 'darkgray' }}>
                     <h5>Server Monitoring</h5>
                 </li>
-                <li class="list-group-item">
+                <li className="list-group-item">
                     <div>
                         CPU Usage: {serverRes.CPU_Used}
                         <div className="progress">
@@ -48,22 +48,22 @@ function ServerMonitor(props) {
                         </div>
                     </div>
                 </li>
-                {/* <li class="list-group-item">Disk_Free: {serverRes.Disk_Free}</li>
-                <li class="list-group-item">Disk_Total: {serverRes.Disk_Total}</li> */}
-                <li class="list-group-item">
+                {/* <li className="list-group-item">Disk_Free: {serverRes.Disk_Free}</li>
+                <li className="list-group-item">Disk_Total: {serverRes.Disk_Total}</li> */}
+                <li className="list-group-item">
                     Disk Usage: {serverRes.Disk_Used_Percent}
                     <div className="progress">
                         <ProgressBar value={serverRes.Disk_Used_Percent} />
                     </div>
                 </li>
-                <li class="list-group-item">
+                <li className="list-group-item">
                     Memory Usage: {serverRes.Memory_Used}
                     <div className="progress">
                         <ProgressBar value={serverRes.Memory_Used} />
                     </div>
                 </li>
-                <li class="list-group-item">Network Download: {serverRes.Network_Download}</li>
-                <li class="list-group-item">Network Upload: {serverRes.Network_Upload}</li>
+                <li className="list-group-item">Network Download: {serverRes.Network_Download}</li>
+                <li className="list-group-item">Network Upload: {serverRes.Network_Upload}</li>
             </ul>
         </div>
     );

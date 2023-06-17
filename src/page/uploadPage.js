@@ -15,17 +15,20 @@ const UploadPage = () => {
     if (getlocalData('check')) {
         // console.log('in local');
         var session = getlocalData('session');
+        var token = getlocalData('token')
       } else {
         // check if not checked remember me
         var session = getSessionData('session');
-      }
+        var token = getSessionData('token')    
+    }
+
 
     const uploadAPI = 'http://localhost:8900/upload';
 
     const [ file, setFile ] = useState();
     const [ vidDesc, setVidDesc ] = useState('');
     const [ upProgress, setUpProgress ] = useState('0');
-    const [ vidData, setVidData ] = useState(null);
+    const [ vidPermit, setVidPermit ] = useState('public');
     const [ tmp, setTmp ] = useState('');
 
     const handleFileChange = (e) => {
@@ -57,6 +60,8 @@ const UploadPage = () => {
 
             video.addEventListener('loadedmetadata', function () {
                 const duration = video.duration;
+                const w = video.videoWidth;
+                const h = video.videoHeight;
                 const type = file.type.split('/').pop(); // video/mp4 -> [video, mp4] -> mp4
                 const tmpData = {
                     'videoName': tmp,
@@ -65,7 +70,11 @@ const UploadPage = () => {
                     'videoDuration': duration,
                     'videoDesc': vidDesc,
                     'videoType': type,
-                    'videoOwner': session.U_id
+                    'videoOwner': session.U_id,
+                    'videoPermit': vidPermit,
+                    'path': session.U_folder,
+                    'width': w,
+                    'height': h
                 }
                 // setVidData(tmpData)
 
@@ -77,6 +86,7 @@ const UploadPage = () => {
                 axios.post(uploadAPI, formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
+                        'Authorization': 'Bearer ' + token
                     },
                     onUploadProgress: (progressEvent) => {
                         const progress = (progressEvent.loaded / progressEvent.total);
@@ -121,10 +131,10 @@ const UploadPage = () => {
                             <div className="row">
                                 <div className="col-7">
                                     <div>
-                                        <div class="card upload-card" onClick={cardClick} style={{ height: '70vh' }}>
-                                            <div class="card-body">
-                                                <h4 class="card-title center" style={{ marginTop: '20%' }}>Video Upload</h4>
-                                                <p class="card-text center">Choose a video to upload.</p>
+                                        <div className="card upload-card" onClick={cardClick} style={{ height: '70vh' }}>
+                                            <div className="card-body">
+                                                <h4 className="card-title center" style={{ marginTop: '20%' }}>Video Upload</h4>
+                                                <p className="card-text center">Choose a video to upload.</p>
                                             </div>
                                             <input className="form-control-file" id="uploadBtn" type="file" accept="video/*" style={{ display: 'none' }} onChange={handleFileChange} />
                                         </div>
@@ -133,13 +143,13 @@ const UploadPage = () => {
                                 <div className="col-5" >
                                     <div className="row" >
                                         <h4>Video Name</h4>
-                                        <div class="input-group row mb-3">
-                                            <input type="text" class="form-control" placeholder='' value={tmp} onChange={handleVidName} ></input>
+                                        <div className="input-group row mb-3">
+                                            <input type="text" className="form-control" placeholder='' value={tmp} onChange={handleVidName} ></input>
                                         </div>
                                     </div>
-                                    <div class="input-group row">
+                                    <div className="input-group row">
                                         <h4>Video Description</h4>
-                                        <textarea class="form-control" onChange={handleVidDesc} rows="4"></textarea>
+                                        <textarea className="form-control" onChange={handleVidDesc} rows="4"></textarea>
                                     </div>
                                     <div className="row" style={{ marginTop: '48%' }}>
                                         <div className="col btn-margin center">
