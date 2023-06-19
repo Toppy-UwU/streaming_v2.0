@@ -31,7 +31,7 @@ function NameTable(props) {
                             <td>{user.U_name}</td>
                             <td>{user.U_mail}</td>
                             <td>{user.U_type}</td>
-                            <td>{user.U_permit === 1 ? (<div>can</div>) : (<div>nope</div>)}</td>
+                            <td>{user.U_permit === 1 ? (<div>Have Permission</div>) : (<div>No Permission</div>)}</td>
                             <td>{user.U_vid}</td>
                             <td><button className="btn btn-secondary">edit</button></td>
                         </tr>

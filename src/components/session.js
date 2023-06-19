@@ -1,6 +1,6 @@
 import CryptoJS from "crypto-js";
 
-const encryptKey = '123'; // change later
+const encryptKey = '4yJHJpOA5AQgORVuF3VPA3xp8O2HU0Ok5k1NjPk5oWFUhGNBh4UQzoyr/lN6qvv9'; // change later
 
 //store data to session
 export const setlocalData = (key, data) => {

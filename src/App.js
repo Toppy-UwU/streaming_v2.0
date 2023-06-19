@@ -13,6 +13,7 @@ import ProfilePage from './page/profilePage';
 import AdminPage from './page/AdminPage';
 import UploadPage from './page/uploadPage';
 import NotFoundPage from './page/notfoundPage';
+import WatchPage from './page/WatchPage';
 
 import { isSessionSet } from './components/session';
 
@@ -33,6 +34,7 @@ function App() {
 					<Route path='/profile' element={<ProfilePage />} />
 					<Route path='/upload' element={<UploadPage />} />
 					<Route path='/admin' element={<AdminPage />} />
+					<Route path='/watch' element={<WatchPage />} />
 
 					{/* not found page */}
 					<Route path='*' element={<NotFoundPage />} />	

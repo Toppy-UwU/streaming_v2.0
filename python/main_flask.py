@@ -7,8 +7,9 @@ from ffmpeg_streaming import Formats, Bitrate, Representation, Size
 import ffmpeg_streaming
 import jwt
 from datetime import datetime, timedelta
-
-import secrets
+import base64
+import cv2
+import threading
 import subprocess
 import bcrypt
 import psutil
@@ -51,6 +52,11 @@ def create_app(test_config = None):
         # print(vidData.get('height'))
         try:
             print('convert' + path)
+            
+            if(vidData.get('videoThumbnail') == ''):
+                b64 = getThumbnail(path)
+                vidData['videoThumbnail'] = b64
+
             video = ffmpeg_streaming.input(path)
             # print(video)
             hls = video.hls(Formats.h264())
@@ -59,7 +65,8 @@ def create_app(test_config = None):
             # idx = tmpResolutions.index(str(maxRes))
             # for i in range(idx+1):
             #     hls.representations(vidResolutions[i])
-            hls.representations(_144p, _240p, _360p, _480p, _720p, _1080p, _1440p)
+            # hls.representations(_144p, _240p, _360p, _480p, _720p, _1080p, _1440p)
+            hls.auto_generate_representations()
             print('convert')
             hls.output('..\\user_upload_folder\\'+vidData.get('path')+'\\' + vidData.get('encode') + '\\' + vidData.get('encode') + '.m3u8')
             print('convert success')
@@ -74,29 +81,41 @@ def create_app(test_config = None):
 
         cursor = conn.cursor()
         cursor.execute(
-            'INSERT INTO videos (V_title, V_view, V_length, V_size, U_id, V_permit, V_encode, V_quality, V_desc) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)',
-            (data.get('videoName'), 0, data.get('videoDuration'), data.get('videoSize'), data.get('videoOwner'), data.get('videoPermit'), data.get('encode'), data.get('height'), data.get('videoDesc'))
+            'INSERT INTO videos (V_title, V_view, V_length, V_size, V_pic, U_id, V_permit, V_encode, V_quality, V_desc) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
+            (data.get('videoName'), 0, data.get('videoDuration'), data.get('videoSize'), data.get('videoThumbnail'), data.get('videoOwner'), data.get('videoPermit'), data.get('encode'), data.get('height'), data.get('videoDesc'))
         )
         conn.commit()
         cursor.close()
         conn.close()
 
+    def getThumbnail(path):
+        video = cv2.VideoCapture(path)
+        frame_count = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
+
+        video.set(cv2.CAP_PROP_POS_FRAMES, int(frame_count*0.3))
+        flag, frame = video.read()
+        video.release()
+
+        flag, img = cv2.imencode('.jpg', frame)
+        b64_img = base64.b64encode(img.tobytes())
+        return b64_img
+    
     def verify(raw_token):
         if raw_token is None or not raw_token.startswith('Bearer '):
-            return 'Invalid token', 401
+            # invalid token
+            return False
 
         token = raw_token.split(' ')[-1]
         try:
             payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
             
-            # Additional verification or processing can be done here
-            return payload, 200
+            return True
         except jwt.ExpiredSignatureError:
             # return jsonify({'message': 'Token has expired'}), 401
-            return 'token expired', 401
+            return False
         except jwt.InvalidTokenError:
             # return jsonify({'message': 'Invalid token'}), 401
-            return 'invalid token', 401
+            return False
 
 
 # api section
@@ -219,32 +238,39 @@ def create_app(test_config = None):
     def upload():
         token = request.headers.get('Authorization')
         
-        if(verify(token)[-1] == 200):
-            file = request.files['video']
-            data = request.form['data']
+        if(verify(token)):
+            tmp = token.split(' ')[-1]
+            payload = jwt.decode(tmp, app.config['SECRET_KEY'], algorithms=['HS256'])
+            
+            if(payload.get('U_permit') == 1):
+                file = request.files['video']
+                data = request.form['data']
 
+                vid_data = json.loads(data)
+                vidName = file.filename
+                new_name = genFileName(vidName.split('.')[0])
 
-            vid_data = json.loads(data)
-            vidName = file.filename
-            new_name = genFileName(vidName.split('.')[0])
+                vid_data['encode'] = new_name
 
-            vid_data['encode'] = new_name
+                # print(vid_data)
 
-            # print(vid_data)
+                if file:
+                    save_path = '../user_upload_folder/'+ vid_data['path'] +'/'+ new_name + '.' + vid_data['videoType']
+                    file.save(save_path)
 
-            if file:
-                save_path = '../user_upload_folder/'+ vid_data['path'] +'/'+ new_name + '.' + vid_data['videoType']
-                file.save(save_path)
+                    # Wait until the file is successfully saved
+                    while not os.path.exists(save_path):
+                        time.sleep(1)
 
-                # Wait until the file is successfully saved
-                while not os.path.exists(save_path):
-                    time.sleep(1)
-
-                convert(save_path, vid_data)
-                return ({'message': 'success'}), 200
-
+                    thread = threading.Thread(target=convert, args=(save_path, vid_data))
+                    thread.start()
+                    # convert(save_path, vid_data)
+                    time.sleep(0.8)
+                    return ({'message': 'upload success, converting'}), 200
+                else:
+                    return ({'message': 'upload/convert error'}), 500
             else:
-                return ({'message': 'fail'}), 401
+                return ({'message': 'No Permission'}), 406
         else:
             return ({'message': 'token invalid'}), 401
 
@@ -281,6 +307,44 @@ def create_app(test_config = None):
             users.append(user)
 
         return jsonify(users), 200
+    
+    @app.route('/getVideos/public')
+    def getVideos():
+        try:
+            conn = create_conn()
+
+            cursor = conn.cursor()
+            cursor.execute(
+                'SELECT videos.*, users.U_name, users.U_folder FROM videos, users WHERE users.U_ID = videos.U_ID AND V_permit=%s ORDER BY RAND ( ) LIMIT 20 ', 
+                ('public',))
+            data = cursor.fetchall()
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            videos = []
+            for row in data:
+                tmp = str(row[6])
+                video = {
+                    'V_ID': row[0],
+                    'V_title': row[1],
+                    'V_view': row[2],
+                    'V_legth': row[3],
+                    'V_size': row[4],
+                    'V_upload': row[5],
+                    'V_pic': tmp[2:-1],
+                    'V_encode': row[9],
+                    'V_quality': row[10],
+                    'V_desc': row[11],
+                    'U_name': row[12],
+                    'U_folder': row[13]
+                }
+                videos.append(video)
+
+            return jsonify(videos), 200
+        except Exception as e:
+            print(e)
+            return ({'message': 'Get Videos Fail'}), 500
     
     @app.route('/getPermit', methods=['GET'])
     def getPermit():

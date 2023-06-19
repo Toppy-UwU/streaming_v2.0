@@ -8,6 +8,7 @@ import Sidebar from "../components/sidebar";
 import ProgressBar from "../components/progressBar";
 
 import { getSessionData, getlocalData } from "../components/session";
+import e from "cors";
 
 
 const UploadPage = () => {
@@ -16,26 +17,32 @@ const UploadPage = () => {
         // console.log('in local');
         var session = getlocalData('session');
         var token = getlocalData('token')
-      } else {
+    } else {
         // check if not checked remember me
         var session = getSessionData('session');
-        var token = getSessionData('token')    
+        var token = getSessionData('token')
     }
 
 
     const uploadAPI = 'http://localhost:8900/upload';
 
-    const [ file, setFile ] = useState();
-    const [ vidDesc, setVidDesc ] = useState('');
-    const [ upProgress, setUpProgress ] = useState('0');
-    const [ vidPermit, setVidPermit ] = useState('public');
-    const [ tmp, setTmp ] = useState('');
+    const [file, setFile] = useState();
+    const [vidDesc, setVidDesc] = useState('');
+    const [upProgress, setUpProgress] = useState('0');
+    const [vidPermit, setVidPermit] = useState('public');
+    const [tmp, setTmp] = useState('');
+    const [videoUrl, setVideoUrl] = useState(null);
+    const [videoKey, setVideoKey] = useState(0);
 
     const handleFileChange = (e) => {
         // console.log(e.target.files[0]);
         const tmpFile = e.target.files[0];
-        setFile(tmpFile);
-        setTmp(tmpFile.name)
+        if (tmpFile) {
+            setFile(tmpFile);
+            setTmp(tmpFile.name);
+            setVideoUrl(URL.createObjectURL(tmpFile));
+            setVideoKey(videoKey + 1);
+        }
 
     };
 
@@ -49,11 +56,19 @@ const UploadPage = () => {
         e.preventDefault();
     }
 
+    const handleSelect = (e) => {
+        setVidPermit(e.target.value);
+    }
+
 
     const handleClickUpload = async () => {
 
         setUpProgress('0');
         if (file) {
+
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('cancleBtn').disabled = true;
+
             const video = document.createElement('video');
             video.preload = 'metadata';
             video.src = URL.createObjectURL(file);
@@ -72,13 +87,15 @@ const UploadPage = () => {
                     'videoType': type,
                     'videoOwner': session.U_id,
                     'videoPermit': vidPermit,
+                    'videoThumbnail': '',
                     'path': session.U_folder,
                     'width': w,
                     'height': h
+                    // encode included
                 }
                 // setVidData(tmpData)
 
-                // console.log(tmpData);
+                console.log(tmpData);
                 const formData = new FormData();
                 formData.append('video', file, file.name);
                 formData.append('data', JSON.stringify(tmpData));
@@ -92,10 +109,14 @@ const UploadPage = () => {
                         const progress = (progressEvent.loaded / progressEvent.total);
                         let tmp = Math.round(progress * 100)
                         setUpProgress(tmp.toString());
+                        if (tmp == 100.0 || tmp == 100) {
+                            console.log('done upload');
+                        }
                     },
                 })
                     .then((response) => {
-                        sendConvert()
+                        alert('Upload Success\nConverting Video');
+                        window.location.href='/';
                     })
                     .catch((error) => {
                         console.error('Upload failed:', error);
@@ -108,10 +129,6 @@ const UploadPage = () => {
         }
     }
 
-    const sendConvert = () => {
-
-    }
-
     const cardClick = () => {
         document.getElementById('uploadBtn').click()
         // handleClickUpload
@@ -119,7 +136,7 @@ const UploadPage = () => {
 
     const logTest = () => {
         console.log('work!!!');
-        console.log(tmp);
+        console.log(vidPermit);
     }
 
     return (
@@ -131,13 +148,32 @@ const UploadPage = () => {
                             <div className="row">
                                 <div className="col-7">
                                     <div>
-                                        <div className="card upload-card" onClick={cardClick} style={{ height: '70vh' }}>
-                                            <div className="card-body">
-                                                <h4 className="card-title center" style={{ marginTop: '20%' }}>Video Upload</h4>
-                                                <p className="card-text center">Choose a video to upload.</p>
+                                        {videoUrl ? (
+                                            <div className="card" style={{ height: '61.7vh' }}>
+                                                <div className="card-body">
+                                                    <video key={videoKey} controls style={{ width: '100%' }} >
+                                                        <source src={videoUrl} type="video/mp4" />
+                                                    </video>
+
+                                                    <div className="center">
+                                                        <button className="btn btn-primary" onClick={cardClick}>
+                                                            Change Video
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <input className="form-control-file" id="uploadBtn" type="file" accept="video/*" style={{ display: 'none' }} onChange={handleFileChange} />
-                                        </div>
+
+                                        ) : (
+                                            <div className="card upload-card" onClick={cardClick} style={{ height: '61.7vh' }}>
+                                                <div className="card-body">
+                                                    <h4 className="card-title center" style={{ marginTop: '20%' }}>Video Upload</h4>
+                                                    <p className="card-text center">Choose a video to upload.</p>
+                                                </div>
+                                                {/* <input className="form-control-file" id="uploadBtn" type="file" accept="video/*" style={{ display: 'none' }} onChange={handleFileChange} /> */}
+                                            </div>
+                                        )}
+
+                                        <input className="form-control-file" id="uploadBtn" type="file" accept="video/*" style={{ display: 'none' }} onChange={handleFileChange} />
                                     </div>
                                 </div>
                                 <div className="col-5" >
@@ -151,19 +187,30 @@ const UploadPage = () => {
                                         <h4>Video Description</h4>
                                         <textarea className="form-control" onChange={handleVidDesc} rows="4"></textarea>
                                     </div>
-                                    <div className="row" style={{ marginTop: '48%' }}>
+                                    <div className="input-group row" style={{ marginTop: '15px' }}>
+                                        <h4>Video Permission</h4>
+                                        <select className="form-control custom-select mb-3" value={vidPermit} onChange={handleSelect}>
+                                            <option value='public'>Public</option>
+                                            <option value="private">Private</option>
+                                            <option value="unlisted">Unlisted</option>
+                                        </select>
+                                    </div>
+                                    <div className="row" style={{ marginTop: '10%' }}>
                                         <div className="col btn-margin center">
-                                            <button className="btn btn-primary rounded-pill" style={{ flex: '1', height: '130%' }} onClick={handleClickUpload}>upload</button>
-                                            <button className="btn btn-danger rounded-pill" style={{ flex: '1', height: '130%' }} onClick={logTest}>cancle</button>
+                                            <button className="btn btn-primary rounded-pill" style={{ flex: '1', height: '130%' }} id="submitBtn" onClick={handleClickUpload}>upload</button>
+                                            <button className="btn btn-danger rounded-pill" style={{ flex: '1', height: '130%' }} id="cancleBtn" onClick={logTest}>cancle</button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <br></br>
                             <div className="row" style={{ marginLeft: '2px', marginRight: '2px' }}>
-                                <div className="progress">
-                                    <ProgressBar value={upProgress + '%'} />
+                                <div className="col-12">
+                                    <div className="progress">
+                                        <ProgressBar value={upProgress + '%'} />
+                                    </div>
                                 </div>
+
                             </div>
                         </div>
                     </div>

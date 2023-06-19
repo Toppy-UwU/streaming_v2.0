@@ -1,9 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { getSessionData, removeSessionData, getlocalData, removelocalData, isSessionSet } from './session';
-
+import './../css/utilities.css';
 
 const Sidebar = ({ children }) => {
-
 
   if(isSessionSet('session') && isSessionSet('isLoggedIn')) {
     
