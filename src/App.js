@@ -1,4 +1,5 @@
 import './css/App.css';
+import 'video.js/dist/video-js.css';
 
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import 'react-bootstrap'

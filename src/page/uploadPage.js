@@ -149,7 +149,7 @@ const UploadPage = () => {
                                 <div className="col-7">
                                     <div>
                                         {videoUrl ? (
-                                            <div className="card" style={{ height: '61.7vh' }}>
+                                            <div className="card" style={{ height: '65.7vh' }}>
                                                 <div className="card-body">
                                                     <video key={videoKey} controls style={{ width: '100%' }} >
                                                         <source src={videoUrl} type="video/mp4" />
@@ -164,7 +164,7 @@ const UploadPage = () => {
                                             </div>
 
                                         ) : (
-                                            <div className="card upload-card" onClick={cardClick} style={{ height: '61.7vh' }}>
+                                            <div className="card upload-card" onClick={cardClick} style={{ height: '65.7vh' }}>
                                                 <div className="card-body">
                                                     <h4 className="card-title center" style={{ marginTop: '20%' }}>Video Upload</h4>
                                                     <p className="card-text center">Choose a video to upload.</p>

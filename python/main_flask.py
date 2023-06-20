@@ -68,7 +68,7 @@ def create_app(test_config = None):
             # hls.representations(_144p, _240p, _360p, _480p, _720p, _1080p, _1440p)
             hls.auto_generate_representations()
             print('convert')
-            hls.output('..\\user_upload_folder\\'+vidData.get('path')+'\\' + vidData.get('encode') + '\\' + vidData.get('encode') + '.m3u8')
+            hls.output('..\\upload\\'+vidData.get('path')+'\\' + vidData.get('encode') + '\\' + vidData.get('encode') + '.m3u8')
             print('convert success')
             os.remove(path)
             insertVidData(vidData)
@@ -255,7 +255,7 @@ def create_app(test_config = None):
                 # print(vid_data)
 
                 if file:
-                    save_path = '../user_upload_folder/'+ vid_data['path'] +'/'+ new_name + '.' + vid_data['videoType']
+                    save_path = '../upload/'+ vid_data['path'] +'/'+ new_name + '.' + vid_data['videoType']
                     file.save(save_path)
 
                     # Wait until the file is successfully saved
@@ -329,10 +329,11 @@ def create_app(test_config = None):
                     'V_ID': row[0],
                     'V_title': row[1],
                     'V_view': row[2],
-                    'V_legth': row[3],
+                    'V_length': row[3],
                     'V_size': row[4],
                     'V_upload': row[5],
                     'V_pic': tmp[2:-1],
+                    'U_ID': row[7],
                     'V_encode': row[9],
                     'V_quality': row[10],
                     'V_desc': row[11],

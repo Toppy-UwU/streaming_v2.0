@@ -31,8 +31,10 @@ const Home = () => {
 
     <div>
       <Sidebar>
-        <h1>Hello</h1>
+        <div style={{marginTop: '15px'}}>
         <ShowVideos videos={videos}/>
+
+        </div>
       </Sidebar>
     </div>
 
