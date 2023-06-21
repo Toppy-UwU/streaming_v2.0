@@ -7,7 +7,7 @@ const getVideosPublic = 'http://localhost:8900/getVideos/public';
 // post API
 
 
-export const getAPI = (call_api) => {
+export const getAPI = async (call_api) => {
   let api = '';
   if (call_api === 'users') {
     api = getUserAPI;
@@ -17,14 +17,12 @@ export const getAPI = (call_api) => {
     api = getVideosPublic
   }
 
-  return fetch(api)
-      .then(response => response.json())
-      .then(data => {
-        //   console.log(data);
-        return data
-      })
-      .catch(error => {
-        console.error('Error:', error);
-      });
+  try {
+    const response = await fetch(api);
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error:', error);
+  }
 }
 

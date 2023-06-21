@@ -57,9 +57,9 @@ const VideoPlayer = ({ source }) => {
   }
 
   return (
-    <div className='container-fluid test-bg-red' >
+    <div className='container-fluid' >
         <div className='row'>
-        <video ref={videoRef}  controls>
+        <video ref={videoRef} controls>
             Your browser does not support the video tag.
         </video>
         </div>

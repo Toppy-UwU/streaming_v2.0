@@ -73,3 +73,12 @@
   .test-bg-green {
     background-color: green;
   }
+
+  .download-icon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: 5px;
+    background-image: url('./../img/download.png');
+    background-size: cover;
+  }

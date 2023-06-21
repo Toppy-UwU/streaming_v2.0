@@ -274,9 +274,12 @@ def create_app(test_config = None):
         else:
             return ({'message': 'token invalid'}), 401
 
-    @app.route('/download')
+    @app.route('/download', methods=['GET'])
     def download():
-        video_url = request.args.get('video_url')
+        video = request.args.get('v')
+        user = request.args.get('u')
+
+        video_url = 'http://localhost:80/hls/upload/'+user+'/'+video+'/'+video+'.m3u8'
 
         subprocess.run(['ffmpeg', '-i', video_url, 'output.mp4', '-y'])
         response = send_file('output.mp4', as_attachment=True)
@@ -347,6 +350,47 @@ def create_app(test_config = None):
             print(e)
             return ({'message': 'Get Videos Fail'}), 500
     
+    @app.route('/getVideo/info', methods=['GET'])
+    def getVideo():
+        try:
+            V_encode = request.args.get('v')
+            
+            conn = create_conn()
+
+            cursor = conn.cursor()
+            cursor.execute(
+                'SELECT videos.*, users.U_name, users.U_folder, users.U_pro_pic FROM videos, users WHERE users.U_ID = videos.U_ID AND videos.V_encode =  %s', 
+                (V_encode,))
+            data = cursor.fetchone()
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            tmp = str(data[6])
+            tmp2 = str(data[14])
+            video = {
+                'V_ID': data[0],
+                'V_title': data[1],
+                'V_view': data[2],
+                'V_length': data[3],
+                'V_size': data[4],
+                'V_upload': data[5],
+                'V_pic': tmp[2:-1],
+                'U_ID': data[7],
+                'V_encode': data[9],
+                'V_quality': data[10],
+                'V_desc': data[11],
+                'U_name': data[12],
+                'U_folder': data[13],
+                'U_pro_pic': tmp2[2:-1]
+                }
+
+            return jsonify(video), 200
+        except Exception as e:
+            print(e)
+            return ({'message': 'Get Videos Fail'}), 500
+
+
     @app.route('/getPermit', methods=['GET'])
     def getPermit():
         U_id = request.args.get('id')

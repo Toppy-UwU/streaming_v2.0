@@ -86,8 +86,8 @@ const Sidebar = ({ children }) => {
         </div>
       </div>
       {/* end of side bar */}
-      <div className="container-fluid" style={{ marginLeft: '250px', backgroundColor: 'rgb(56, 56, 56)' }}>
-        <div className="row">
+      <div className="container-fluid" style={{ marginLeft: '250px', backgroundColor: 'rgb(56, 56, 56)', height: '100vh', overflow: 'auto', position: 'relative' }}>
+        <div className="row" >
           {children}
         </div>
       </div>

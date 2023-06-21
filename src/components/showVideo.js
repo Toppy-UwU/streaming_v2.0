@@ -2,6 +2,11 @@ import '../css/video.css'
 
 
 function ShowVideos(props) {
+    if(!props) {
+        return (
+            <div className='loading'/>
+        )
+    }
 
     return (
         <div className="container-fluid" style={{ flexWrap: 'wrap' }}>
