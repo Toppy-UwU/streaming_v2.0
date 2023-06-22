@@ -30,7 +30,7 @@ const Sidebar = ({ children }) => {
 
   return (
     <div className="d-flex" style={{ minHeight: '100vh' }} id={'sideBar'}>
-      <div className="position-fixed h-100" style={{ width: '250px', backgroundColor: 'gray' }}>
+      <div className="position-fixed h-100" style={{ width: '250px', backgroundColor: 'rgb(44,48,52)' }}>
         <div className="col-12">
           <div className="input-group" style={{ padding: '15px' }}>
             <input type="text" className="form-control rounded-end-0 rounded-start-pill" placeholder="search" aria-label="searchBar" aria-describedby="searchBtn" />

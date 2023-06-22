@@ -143,7 +143,7 @@ const UploadPage = () => {
         <div>
             <Sidebar>
                 <div className="container-fluid">
-                    <div className="card card-margin" style={{ marginTop: '6%', backgroundColor: 'gray' }}>
+                    <div className="card card-margin" style={{ marginTop: '6%', backgroundColor: 'rgb(44,48,52)' }}>
                         <div className="card-body">
                             <div className="row">
                                 <div className="col-7">
@@ -176,7 +176,7 @@ const UploadPage = () => {
                                         <input className="form-control-file" id="uploadBtn" type="file" accept="video/*" style={{ display: 'none' }} onChange={handleFileChange} />
                                     </div>
                                 </div>
-                                <div className="col-5" >
+                                <div className="col-5" style={{color: 'white'}}>
                                     <div className="row" >
                                         <h4>Video Name</h4>
                                         <div className="input-group row mb-3">

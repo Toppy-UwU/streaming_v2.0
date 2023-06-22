@@ -17,21 +17,6 @@ import os
 import time
 from conn import create_conn
 
-# video resolutions
-_144p  = Representation(Size(256, 144), Bitrate(95 * 1024, 64 * 1024))
-_240p  = Representation(Size(426, 240), Bitrate(150 * 1024, 94 * 1024))
-_360p  = Representation(Size(640, 360), Bitrate(276 * 1024, 128 * 1024))
-_480p  = Representation(Size(854, 480), Bitrate(750 * 1024, 192 * 1024))
-_720p  = Representation(Size(1280, 720), Bitrate(2048 * 1024, 320 * 1024))
-_1080p = Representation(Size(1920, 1080), Bitrate(4096 * 1024, 512 * 1024))
-_1440p = Representation(Size(2560, 1440), Bitrate(8192 * 1024, 768 * 1024))
-# _4K = Representation(Size(3840, 2160), Bitrate(16384 * 1024, 1024 * 1024))
-
-vidResolutions = [_144p, _240p, _360p, _480p, _720p, _1080p, _1440p]
-tmpResolutions = ['144', '240', '360', '480', '720', '1080', '1440']
-
-
-
 def create_app(test_config = None):
     app = Flask(__name__)
     app.config['SECRET_KEY'] = '123'
@@ -311,6 +296,39 @@ def create_app(test_config = None):
 
         return jsonify(users), 200
     
+    @app.route('/getUser/id', methods=['GET'])
+    def getUser():
+        try:
+            u_id = request.args.get('u')
+            
+            conn = create_conn()
+
+            cursor = conn.cursor()
+            cursor.execute(
+                'SELECT * FROM users WHERE U_ID = %s', 
+                (u_id,))
+            data = cursor.fetchone()
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            tmp = str(data[6])
+            tmp2 = str(data[10])
+            user = {
+                'U_ID': data[0],
+                'U_name': data[1],
+                'U_mail': data[2],
+                'U_type': data[4],
+                'U_vid': data[5],
+                'U_pro_pic': tmp[2:-1],
+                'U_banner': tmp2[2:-1]
+                }
+
+            return jsonify(user), 200
+        except Exception as e:
+            print(e)
+            return ({'message': 'Get Videos Fail'}), 500
+    
     @app.route('/getVideos/public')
     def getVideos():
         try:
@@ -318,7 +336,7 @@ def create_app(test_config = None):
 
             cursor = conn.cursor()
             cursor.execute(
-                'SELECT videos.*, users.U_name, users.U_folder FROM videos, users WHERE users.U_ID = videos.U_ID AND V_permit=%s ORDER BY RAND ( ) LIMIT 20 ', 
+                'SELECT videos.*, users.U_name, users.U_folder FROM videos, users WHERE users.U_ID = videos.U_ID AND V_permit=%s ORDER BY RAND ( ) LIMIT 10 ', 
                 ('public',))
             data = cursor.fetchall()
             conn.commit()
@@ -350,6 +368,48 @@ def create_app(test_config = None):
             print(e)
             return ({'message': 'Get Videos Fail'}), 500
     
+    @app.route('/getVideos/profile')
+    def getVideosProfile():
+        permit= request.args.get('p')
+        user = request.args.get('u')
+
+        try:
+            conn = create_conn()
+
+            cursor = conn.cursor()
+            cursor.execute(
+                'SELECT videos.*, users.U_name, users.U_folder FROM videos, users WHERE users.U_ID = videos.U_ID AND videos.U_ID = %s AND V_permit = %s ORDER BY RAND ( ) LIMIT 10 ', 
+                (user, permit))
+            data = cursor.fetchall()
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            videos = []
+            for row in data:
+                tmp = str(row[6])
+                video = {
+                    'V_ID': row[0],
+                    'V_title': row[1],
+                    'V_view': row[2],
+                    'V_length': row[3],
+                    'V_size': row[4],
+                    'V_upload': row[5],
+                    'V_pic': tmp[2:-1],
+                    'U_ID': row[7],
+                    'V_encode': row[9],
+                    'V_quality': row[10],
+                    'V_desc': row[11],
+                    'U_name': row[12],
+                    'U_folder': row[13]
+                }
+                videos.append(video)
+
+            return jsonify(videos), 200
+        except Exception as e:
+            print(e)
+            return ({'message': 'Get Videos Fail'}), 500
+
     @app.route('/getVideo/info', methods=['GET'])
     def getVideo():
         try:
@@ -389,7 +449,6 @@ def create_app(test_config = None):
         except Exception as e:
             print(e)
             return ({'message': 'Get Videos Fail'}), 500
-
 
     @app.route('/getPermit', methods=['GET'])
     def getPermit():
