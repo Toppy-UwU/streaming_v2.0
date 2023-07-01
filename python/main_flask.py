@@ -1,9 +1,11 @@
 
+import io
 import random
 import string
 from flask import Flask, json, request, jsonify, send_file
 from flask_cors import CORS
-from ffmpeg_streaming import Formats, Bitrate, Representation, Size
+from ffmpeg_streaming import Formats
+from PIL import Image
 import ffmpeg_streaming
 import jwt
 from datetime import datetime, timedelta
@@ -102,6 +104,21 @@ def create_app(test_config = None):
             # return jsonify({'message': 'Invalid token'}), 401
             return False
 
+    def imgResize(file, w, h):
+        # pro 400x400
+        # banner 820x312
+        img = Image.open(file)
+        img_resize = img.resize((w, h))
+        img_resize = img_resize.convert("RGB")
+
+        buffer = io.BytesIO()
+        img_resize.save(buffer, format="JPEG")
+        b64 = base64.b64encode(buffer.getvalue())
+        # clear buffer
+        buffer.seek(0)
+        buffer.truncate()
+        return b64
+
 
 # api section
     @app.route('/')
@@ -110,35 +127,38 @@ def create_app(test_config = None):
         
     @app.route('/register', methods=['POST'])
     def register():
-        # Get the data from the request
-        data = request.get_json()
-        # create connection
-        conn = create_conn()
+        try:
+            # Get the data from the request
+            data = request.get_json()
+            # create connection
+            conn = create_conn()
 
-        username = data.get('username')
-        email = data.get('email')
-        password = data.get('password')
+            username = data.get('username')
+            email = data.get('email')
+            password = data.get('password')
 
-        encode_password = str(password).encode('utf-8')
-        hashed_password = bcrypt.hashpw(encode_password, bcrypt.gensalt())
-        file_name = genFileName(username)
+            encode_password = str(password).encode('utf-8')
+            hashed_password = bcrypt.hashpw(encode_password, bcrypt.gensalt())
+            file_name = genFileName(username)
 
-        cursor = conn.cursor()
-        cursor.execute(
-            'INSERT INTO users (U_name, U_mail, U_pass, U_type, U_vid, U_permit, U_folder) VALUES (%s, %s, %s, %s, %s, %s, %s)',
-            (username, email, hashed_password, 'user', 0, 1, file_name)
-        )
-        conn.commit()
-        cursor.close()
-        conn.close()
-        
-        folder_path = '../user_upload_folder/'+file_name #create folder for uploaded videos
-        os.makedirs(folder_path)
-        return ({
-                'status': 'success',
-                'data': {}
-            }), 200
-        
+            cursor = conn.cursor()
+            cursor.execute(
+                'INSERT INTO users (U_name, U_mail, U_pass, U_type, U_vid, U_permit, U_folder) VALUES (%s, %s, %s, %s, %s, %s, %s)',
+                (username, email, hashed_password, 'user', 0, 1, file_name)
+            )
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            folder_path = '../upload/'+file_name #create folder for uploaded videos
+            os.makedirs(folder_path)
+            return ({
+                    'status': 'success',
+                    'data': {}
+                }), 200
+        except Exception as e:
+            return ({'message': 'error'}), 400
+     
     @app.route('/login', methods=['POST'])
     def login():
         data = request.get_json()
@@ -171,7 +191,7 @@ def create_app(test_config = None):
                     'U_id': data[0],
                     'U_type': data[4],
                     'U_permit': data[8],
-                    'exp': datetime.utcnow() + timedelta(days=30)
+                    'exp': datetime.utcnow() + timedelta(days=1)
                 }
                 
                 token = jwt.encode(payload , app.config['SECRET_KEY'], algorithm='HS256')
@@ -312,6 +332,17 @@ def create_app(test_config = None):
             cursor.close()
             conn.close()
 
+            folder_name = data[9]
+            folder_path = '../upload/'+folder_name
+            size = 0
+
+            for path, dirs, files in os.walk(folder_path):
+                for f in files:
+                    fp = os.path.join(path, f)
+                    size += os.path.getsize(fp)
+
+            size = round(size/(1048576)) # bytes to mb
+
             tmp = str(data[6])
             tmp2 = str(data[10])
             user = {
@@ -320,6 +351,7 @@ def create_app(test_config = None):
                 'U_mail': data[2],
                 'U_type': data[4],
                 'U_vid': data[5],
+                'U_storage': size,
                 'U_pro_pic': tmp[2:-1],
                 'U_banner': tmp2[2:-1]
                 }
@@ -437,6 +469,7 @@ def create_app(test_config = None):
                 'V_upload': data[5],
                 'V_pic': tmp[2:-1],
                 'U_ID': data[7],
+                'V_permit': data[8],
                 'V_encode': data[9],
                 'V_quality': data[10],
                 'V_desc': data[11],
@@ -471,6 +504,105 @@ def create_app(test_config = None):
             }
         }), 200
     
+    @app.route('/update/user/user', methods=['POST'])
+    def updateUser_User():
+        token = request.headers.get('Authorization')
+
+        if(verify(token)):
+            tmp = token.split(' ')[-1]
+            payload = jwt.decode(tmp, app.config['SECRET_KEY'], algorithms=['HS256'])
+            tmp = request.form.get('data')
+            data = json.loads(tmp)
+
+            if(payload.get('U_id') == data['U_id']):
+
+                
+                pro = request.files.get('pro')
+                banner = request.files.get('banner')
+                f1, f2 = False, False
+
+                if pro is not None : 
+                    pro64 = imgResize(pro, 400, 400)
+                    f1 = True
+
+                if banner is not None :
+                    banner64 = imgResize(banner, 820, 312)
+                    f2 = True
+
+                
+
+
+                conn = create_conn()
+
+                cursor = conn.cursor()
+                
+                if(f1 and f2):
+                    cursor.execute(
+                        'UPDATE users SET U_name = %s, U_mail=%s, U_pro_pic=%s, U_banner=%s WHERE U_ID = %s' 
+                        ,(data['username'], data['email'], pro64, banner64, data['U_id'])
+                    )
+
+                elif (f1 and not f2):
+                    cursor.execute(
+                        'UPDATE users SET U_name = %s, U_mail=%s, U_pro_pic=%s WHERE U_ID = %s' 
+                        ,(data['username'], data['email'], pro64, data['U_id'])
+                    )
+
+                elif (not f1 and f2):
+                    cursor.execute(
+                        'UPDATE users SET U_name = %s, U_mail=%s, U_banner=%s WHERE U_ID = %s' 
+                        ,(data['username'], data['email'], banner64, data['U_id'])
+                    )
+
+                elif (not f1 and not f2):
+                    cursor.execute(
+                        'UPDATE users SET U_name = %s, U_mail=%s WHERE U_ID = %s' 
+                        ,(data['username'], data['email'], data['U_id'])
+                    )
+
+                conn.commit()
+                cursor.close()
+                conn.close()
+
+
+                return ({'message': 'success'}), 200
+            else:
+                return ({'message': 'no permission'})
+        else:
+            return ({'message': 'token invalid'}), 401
+
+    @app.route('/update/user/admin', methods=['POST'])
+    def updateUser_admin():
+        token = request.headers.get('Authorization')
+        
+        if(verify(token)):
+            tmp = token.split(' ')[-1]
+            payload = jwt.decode(tmp, app.config['SECRET_KEY'], algorithms=['HS256'])
+            
+            if(payload.get('U_type') == 'admin'):
+                data = request.get_json()
+
+                conn = create_conn()
+                cursor = conn.cursor()
+
+                cursor.execute(
+                    'UPDATE users SET U_name=%s, U_mail=%s, U_permit=%s, U_type=%s WHERE U_ID=%s' 
+                    ,(data.get('U_name'), data.get('U_mail'), data.get('U_permit'), data.get('U_type'), data.get('U_id'))
+                )
+
+                conn.commit()
+                cursor.close()
+                conn.close()
+
+                return ({'message': 'success'}), 200
+            else:
+                print('2')
+                return ({'message': 'have no permission'}), 400
+        else:
+            print('3')
+            return ({'message': 'token invalid'}), 400
+
+
     @app.route('/server_resource')
     def server():
         #CPU INFO
@@ -507,6 +639,7 @@ def create_app(test_config = None):
                   'Disk_Used_Percent' : str(disk_used_percent)+'%',
                   'Network_Download' : str(net_in)+' MB/s',
                   'Network_Upload' : str(net_out)+' MB/s'}), 200
+    
     return app
 APP = create_app()
 

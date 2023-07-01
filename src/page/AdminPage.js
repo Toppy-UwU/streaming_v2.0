@@ -10,7 +10,7 @@ import ServerMonitor from '../components/serverMonitor';
 const Home = () => {
   const [users, setUsers] = useState(null);
   let [currentComp, setCurrentComp] = useState(null)
-
+  
   useEffect(() => {
     getAPI('users')
       .then(response => {
@@ -21,7 +21,7 @@ const Home = () => {
 
   useEffect(() => {
     if (users !== null) {
-      setCurrentComp('admin');
+      setCurrentComp(<NameTable users={users} />);
     }
   }, [users]);
 
@@ -30,9 +30,10 @@ const Home = () => {
 
   const buttonHandler = (btnId) => {
     let tmp = null;
-    if (btnId === 1) {
-      tmp = 'admin'
-    } else if (btnId === 2) {
+    // if (btnId === 1) {
+    //   tmp = 'admin'
+    // } else 
+    if (btnId === 2) {
       tmp = <NameTable users={users} />
     } else if (btnId === 3) {
       tmp = <ServerMonitor />
@@ -61,7 +62,7 @@ const Home = () => {
           <div className='card card-margin'>
             <div className='card-header'>
               <div className='btn-margin'>
-                <button className='btn btn-secondary' onClick={() => buttonHandler(1)} >clickk me</button>
+                {/* <button className='btn btn-secondary' onClick={() => buttonHandler(1)} >clickk me</button> */}
                 <button className='btn btn-secondary' onClick={() => buttonHandler(2)} >User List</button>
                 <button className='btn btn-secondary' onClick={() => buttonHandler(3)} >Server Monitor</button>
               </div>

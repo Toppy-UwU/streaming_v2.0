@@ -61,3 +61,35 @@ export const decryptData = (data, key) => {
   var jsonData = decryptedData.toString(CryptoJS.enc.Utf8);
   return JSON.parse(jsonData);
 }
+
+// authentication section
+
+export const checkVidPermit = (U_idFromVid) => {
+  const f = isSessionSet('session')
+  var tmp
+  if(f) {
+    tmp = getSessionData('session')
+    if(tmp === null) {
+      tmp = getlocalData('session')
+    }
+  }else {
+    return false
+  }
+  if(tmp.U_id === U_idFromVid) {
+    return true
+  }else {
+    return false
+  }
+}
+
+export const getToken = () => {
+  const f = isSessionSet('session')
+  var tmp
+  if(f) {
+    tmp = getSessionData('token')
+    if(tmp === null) {
+      tmp = getlocalData('token')
+    }
+  }
+  return tmp
+}

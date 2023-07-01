@@ -15,6 +15,11 @@
     align-items: center;
 }
 
+.right {
+  display: flex;
+  justify-content: right;
+}
+
 .href-noline {
   text-decoration: none;
 }

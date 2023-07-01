@@ -6,7 +6,6 @@ import 'react-bootstrap'
 
 
 import Home from "./page/Home"
-import About from "./page/About"
 import Contact from "./page/Contact"
 import LoginPage from "./page/LoginPage"
 import RegisterPage from "./page/RegisterPage" 
@@ -53,6 +52,8 @@ function App() {
 					{/* main page */}
 					<Route path="/" element={<Home />} />
 					<Route path='/profile' element={<ProfilePage />} />
+					<Route path='/watch' element={<WatchPage />} />
+
 				
 					{/* not found page */}
 					<Route path='*' element={<NotFoundPage />} />

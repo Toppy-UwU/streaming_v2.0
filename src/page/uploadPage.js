@@ -8,19 +8,20 @@ import Sidebar from "../components/sidebar";
 import ProgressBar from "../components/progressBar";
 
 import { getSessionData, getlocalData } from "../components/session";
-import e from "cors";
-
 
 const UploadPage = () => {
 
+    var session
+    var token
+
     if (getlocalData('check')) {
         // console.log('in local');
-        var session = getlocalData('session');
-        var token = getlocalData('token')
+        session = getlocalData('session');
+        token = getlocalData('token')
     } else {
         // check if not checked remember me
-        var session = getSessionData('session');
-        var token = getSessionData('token')
+        session = getSessionData('session');
+         token = getSessionData('token')
     }
 
 
@@ -109,7 +110,7 @@ const UploadPage = () => {
                         const progress = (progressEvent.loaded / progressEvent.total);
                         let tmp = Math.round(progress * 100)
                         setUpProgress(tmp.toString());
-                        if (tmp == 100.0 || tmp == 100) {
+                        if (tmp === 100.0 || tmp === 100) {
                             console.log('done upload');
                         }
                     },

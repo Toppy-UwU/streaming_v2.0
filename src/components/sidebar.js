@@ -75,9 +75,14 @@ const Sidebar = ({ children }) => {
                     </a>
                   </>
                 ) : (
+                  <>
+                  <a href="/" style={{ marginTop: '20px' }}>
+                      <button className="btn btn-light rounded-pill" style={{ width: '230px', color: 'black' }}>Home</button>
+                    </a>
                   <a href="/login" style={{ marginTop: '20px' }}>
                     <button className="btn btn-light rounded-pill" style={{ width: '230px', color: 'black' }}>Login</button>
                   </a>
+                  </>
                 )}
               </nav>
             </div>
