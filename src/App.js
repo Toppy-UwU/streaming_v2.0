@@ -14,12 +14,14 @@ import AdminPage from './page/AdminPage';
 import UploadPage from './page/uploadPage';
 import NotFoundPage from './page/notfoundPage';
 import WatchPage from './page/WatchPage';
+import TokenExpirePage from './page/tokenExpirePage';
 
 import { isSessionSet } from './components/session';
 
 function App() {
-
+	
 	if(isSessionSet('session') && isSessionSet('isLoggedIn')) {
+		
 		return (
 			<Router>
 				<Routes>
@@ -35,6 +37,7 @@ function App() {
 					<Route path='/upload' element={<UploadPage />} />
 					<Route path='/admin' element={<AdminPage />} />
 					<Route path='/watch' element={<WatchPage />} />
+					<Route path='/token-expired' element={<TokenExpirePage />} />
 
 					{/* not found page */}
 					<Route path='*' element={<NotFoundPage />} />	
@@ -53,6 +56,7 @@ function App() {
 					<Route path="/" element={<Home />} />
 					<Route path='/profile' element={<ProfilePage />} />
 					<Route path='/watch' element={<WatchPage />} />
+					<Route path='/token-expired' element={<TokenExpirePage />} />
 
 				
 					{/* not found page */}

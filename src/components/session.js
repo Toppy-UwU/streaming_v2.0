@@ -68,10 +68,12 @@ export const checkVidPermit = (U_idFromVid) => {
   const f = isSessionSet('session')
   var tmp
   if(f) {
-    tmp = getSessionData('session')
-    if(tmp === null) {
+    try {
+      tmp = getSessionData('session')
+    } catch (error) {
       tmp = getlocalData('session')
     }
+    
   }else {
     return false
   }
@@ -92,4 +94,24 @@ export const getToken = () => {
     }
   }
   return tmp
+}
+
+export const isAdmin = () => {
+  const f = isSessionSet('session')
+  var tmp
+  if(f) {
+    try {
+      tmp = getSessionData('session')
+    } catch (error) {
+      tmp = getlocalData('session')
+    }
+    
+  }else {
+    return false
+  }
+  if(tmp.U_type === 'admin') {
+    return true
+  }else {
+    return false
+  }
 }

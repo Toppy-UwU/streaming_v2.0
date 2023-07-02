@@ -76,7 +76,7 @@ const RegisterPage = () => {
       <div style={{ backgroundColor: 'rgba(38, 38, 38, 0.85)', backgroundSize: 'cover', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         <div className="container">
           <div className="row vh-100">
-            <div className="col-12 my-center">
+            <div className="col-12">
               <div className="card mx-auto rounded" style={{ width: '300px', backgroundColor: 'rgb(55, 55, 55)' }}>
                 <div className="card-body">
                   <h2 style={{ color: 'white', textAlign: 'center' }}>CS Streaming 888</h2>

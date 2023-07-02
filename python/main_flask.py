@@ -1,6 +1,7 @@
 
 import io
 import random
+import shutil
 import string
 from flask import Flask, json, request, jsonify, send_file
 from flask_cors import CORS
@@ -191,7 +192,7 @@ def create_app(test_config = None):
                     'U_id': data[0],
                     'U_type': data[4],
                     'U_permit': data[8],
-                    'exp': datetime.utcnow() + timedelta(days=1)
+                    'exp': datetime.utcnow() + timedelta(days=30)
                 }
                 
                 token = jwt.encode(payload , app.config['SECRET_KEY'], algorithm='HS256')
@@ -410,7 +411,7 @@ def create_app(test_config = None):
 
             cursor = conn.cursor()
             cursor.execute(
-                'SELECT videos.*, users.U_name, users.U_folder FROM videos, users WHERE users.U_ID = videos.U_ID AND videos.U_ID = %s AND V_permit = %s ORDER BY RAND ( ) LIMIT 10 ', 
+                'SELECT videos.*, users.U_name, users.U_folder FROM videos, users WHERE users.U_ID = videos.U_ID AND videos.U_ID = %s AND V_permit = %s ORDER BY videos.V_upload DESC LIMIT 10 ', 
                 (user, permit))
             data = cursor.fetchall()
             conn.commit()
@@ -602,6 +603,70 @@ def create_app(test_config = None):
             print('3')
             return ({'message': 'token invalid'}), 400
 
+    @app.route('/update/video/user', methods=['POST'])
+    def updateVideo_user():
+        token = request.headers.get('Authorization')
+
+        if(verify(token)):
+            tmp = token.split(' ')[-1]
+            payload = jwt.decode(tmp, app.config['SECRET_KEY'], algorithms=['HS256'])
+            data = request.get_json()
+
+            if(payload.get('U_id') == data['U_id'] or payload.get('U_type') == 'admin'):
+                conn = create_conn()
+                cursor = conn.cursor()
+                
+                cursor.execute(
+                        'UPDATE videos SET V_title=%s, V_desc=%s, V_permit=%s WHERE V_encode=%s' 
+                        ,(data['title'], data['desc'], data['permit'], data['encode'])
+                    )
+
+                conn.commit()
+                cursor.close()
+                conn.close()
+
+
+                return ({'message': 'success'}), 200
+            else:
+                return ({'message': 'no permission'}), 400
+        else:
+            return ({'message': 'token invalid'}), 401
+
+    @app.route('/delete/video/user', methods=['POST'])
+    def deleteVideo_user():
+        token = request.headers.get('Authorization')
+
+        if(verify(token)):
+            tmp = token.split(' ')[-1]
+            payload = jwt.decode(tmp, app.config['SECRET_KEY'], algorithms=['HS256'])
+            data = request.get_json()
+
+            if(payload.get('U_id') == data['U_id'] or payload.get('U_type') == 'admin'):
+                print(data)
+                conn = create_conn()
+                cursor = conn.cursor()
+                path = '../upload/'+ data['U_folder'] + '/' + data['V_encode']
+                
+                cursor.execute(
+                        'DELETE FROM videos WHERE U_ID=%s AND V_encode=%s' 
+                        ,(data['U_id'], data['V_encode'])
+                    )
+
+                conn.commit()
+                cursor.close()
+                conn.close()
+
+                try:
+                    shutil.rmtree(path)
+                except OSError as e:
+                    pass
+
+
+                return ({'message': 'success'}), 200
+            else:
+                return ({'message': 'no permission'}), 400
+        else:
+            return ({'message': 'token invalid'}), 401
 
     @app.route('/server_resource')
     def server():

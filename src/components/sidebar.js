@@ -1,32 +1,51 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { getSessionData, removeSessionData, getlocalData, removelocalData, isSessionSet } from './session';
 import './../css/utilities.css';
+import TokenExpirePage from '../page/tokenExpirePage';
 
 const Sidebar = ({ children }) => {
-
-  if(isSessionSet('session') && isSessionSet('isLoggedIn')) {
-    
-    if (getlocalData('check')) {
-      // console.log('in local');
-      var session = getlocalData('session');
-      var isLoggedIn = getlocalData('isLoggedIn');
-    } else {
-      // check if not checked remember me
-      var session = getSessionData('session');
-      var isLoggedIn = getSessionData('isLoggedIn');
-    }
-  }
-
   const logoutHandler = (e) => {
     removelocalData('session');
     removelocalData('isLoggedIn');
+    removelocalData('token');
+    removelocalData('expDate');
 
     removeSessionData('session');
     removeSessionData('isLoggedIn');
+    removeSessionData('token');
+    removeSessionData('expDate');
 
     removelocalData('check');
   }
 
+  if(isSessionSet('session') && isSessionSet('isLoggedIn')) {
+    
+    
+      if (getlocalData('check')) {
+        const expDate = getlocalData('expDate');
+        if (Date.now() >= expDate){
+          logoutHandler();
+          window.location.href = '/token-expired';
+        } else {
+        // console.log('in local');
+        var session = getlocalData('session');
+        var isLoggedIn = getlocalData('isLoggedIn');
+        }
+      } else {
+        const expDate = getSessionData('expDate');
+        if (Date.now() >= expDate){
+          logoutHandler();
+          window.location.href = '/token-expired';
+        } else {
+        // check if not checked remember me
+        session = getSessionData('session');
+        isLoggedIn = getSessionData('isLoggedIn');
+        }
+      }
+    
+
+    
+  }
 
   return (
     <div className="d-flex" style={{ minHeight: '100vh' }} id={'sideBar'}>

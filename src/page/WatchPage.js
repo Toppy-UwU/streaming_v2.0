@@ -7,18 +7,24 @@ import { getAPI } from '../components/callAPI';
 import 'video.js/dist/video-js.css';
 import { useState, useEffect } from 'react';
 import ShowVideos from '../components/showVideo';
-import { checkVidPermit } from '../components/session';
+import { checkVidPermit, isAdmin } from '../components/session';
+import ReactModal from 'react-modal';
+import VideoUpdateModal from '../components/videoUpdateModal';
 
 const WatchPage = () => {
     const param = new URLSearchParams(window.location.search);
-    const [videos, setVideos] = useState(null)
-    const [vidDetail, setVidDetail] = useState(null)
+    const [videos, setVideos] = useState(null);
+    const [vidDetail, setVidDetail] = useState(null);
+    const [ isOpen, setIsOpen ] = useState(false);
 
     const user = param.get('u');
     const video = param.get('v');
 
     const url = 'http://localhost:80/hls/upload/' + user + '/' + video + '/' + video + '.m3u8';
     const api = 'http://localhost:8900/getVideo/info?v=' + video
+
+    ReactModal.setAppElement('#root');
+
 
     useEffect(() => {
         fetch(api)
@@ -64,17 +70,45 @@ const WatchPage = () => {
 
     }
 
+    const openModal = () => {
+        setIsOpen(true);
+    }
+
+    const closeModal = () => {
+        setIsOpen(false);
+    }
+
+    const update = () => {
+        window.location.reload();
+    }
+
+    const modalStyle = {
+        content: {
+          top: '50%',
+          left: '50%',
+          right: 'auto',
+          bottom: 'auto',
+          transform: 'translate(-50%, -50%)',
+          width: '50%',
+          height: 'max-content',
+          backgroundColor: 'rgb(44, 48, 56)',
+        },
+        overlay: {
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        },
+      };
+
 
     if (videos) {
-        let f
-        f = checkVidPermit(vidDetail.U_ID)
-
+        const f1 = checkVidPermit(vidDetail.U_ID)
+        const f2 = isAdmin()
+        
         return (
             <div style={{ backgroundColor: 'rgb(56, 56, 56)' }}>
                 <Sidebar >
                     <div className='container-fluid' >
                         <div className='row'>
-                            {f || vidDetail.V_permit === 'public' || vidDetail.V_permit === 'unlisted' ? 
+                            {f1 || vidDetail.V_permit === 'public' || vidDetail.V_permit === 'unlisted' ? 
                             <div className='col-9'>
                                 <div className='row' style={{paddingBottom: '10px'}}>
                                     <VideoPlayer source={url} />
@@ -96,10 +130,14 @@ const WatchPage = () => {
                                                     <div className='dropdown-menu dropdown-menu-dark ' aria-labelledby='dropdownMenuButton'>
                                                         <button className='dropdown-item' onClick={handleDownloadBtn}>download</button>
                                                         <button className='dropdown-item'>get api</button>
-                                                        {f &&
-                                                        <button className='dropdown-item'>setting</button>
-
+                                                        {(f1 || f2) &&
+                                                        <button className='dropdown-item' onClick={openModal}>setting</button>
                                                         }
+
+                                                        <ReactModal isOpen={isOpen} onRequestClose={closeModal} style={modalStyle}>
+                                                            <VideoUpdateModal id={vidDetail.U_ID} desc={vidDetail.V_desc} title={vidDetail.V_title} permit={vidDetail.V_permit} path={vidDetail.U_folder} encode={vidDetail.V_encode} update={update} closeModal={closeModal} />
+                                                        </ReactModal>
+
                                                     </div>
                                                 </div>
                                             </div>
