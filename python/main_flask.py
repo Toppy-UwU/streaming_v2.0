@@ -4,7 +4,7 @@ import random
 import shutil
 import string
 from flask import Flask, json, request, jsonify, send_file
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 from ffmpeg_streaming import Formats
 from PIL import Image
 import ffmpeg_streaming
@@ -84,7 +84,8 @@ def create_app(test_config = None):
         flag, frame = video.read()
         video.release()
 
-        flag, img = cv2.imencode('.jpg', frame)
+        re_frame = cv2.resize(frame, (1280, 720))
+        flag, img = cv2.imencode('.jpg', re_frame)
         b64_img = base64.b64encode(img.tobytes())
         return b64_img
     
@@ -125,7 +126,20 @@ def create_app(test_config = None):
     @app.route('/')
     def welcome():
         return "hello this is flask python"
+
+    @app.route('/test/json', methods=['POST'])
+    def testJson():
+        data = request.get_json()
+        print(data)
+        return '', 200
         
+    @app.route('/test/json/get', methods=['GET'])
+    def testGetJson():
+        t = request.args.get('t')
+        v = request.args.get('v')
+        print(t, v)
+        return '', 200
+
     @app.route('/register', methods=['POST'])
     def register():
         try:
@@ -668,6 +682,89 @@ def create_app(test_config = None):
         else:
             return ({'message': 'token invalid'}), 401
 
+    @app.route('/insert/history', methods=['POST'])
+    def insertHistory():
+        data = request.get_json()
+        conn = create_conn()
+        cursor = conn.cursor()
+                
+        cursor.execute(
+                'INSERT INTO histories (U_ID, V_ID, H_watchtime) \
+                SELECT %s, %s, COALESCE((SELECT H_watchTime FROM histories WHERE U_ID = %s AND V_ID = %s ORDER BY H_watchData DESC LIMIT 1), 0) \
+                WHERE %s != ( \
+                    SELECT V_ID FROM histories \
+                    WHERE U_ID = %s \
+                    ORDER BY H_watchData DESC LIMIT 1) \
+                    OR NOT EXISTS ( \
+                        SELECT V_ID FROM histories WHERE U_ID = %s)' 
+                ,(data['U_id'], data['V_id'], data['U_id'], data['V_id'], data['V_id'], data['U_id'], data['U_id'])
+            )
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return ({'message': 'success'}), 200
+
+    @app.route('/update/history/user', methods=['POST'])
+    def updateHistory():
+        data = request.get_json()
+        conn = create_conn()
+        cursor = conn.cursor()
+                
+        cursor.execute(
+                'UPDATE histories SET H_watchtime = %s \
+                WHERE U_ID = %s AND V_ID = %s AND H_watchData = ( \
+                    SELECT MAX(H_watchData) \
+                    FROM histories \
+                    WHERE U_ID = %s AND V_ID = %s \
+                )' 
+                ,(data['watchTime'], data['U_id'], data['V_id'], data['U_id'], data['V_id'])
+            )
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return ({'message': 'success'}), 200
+
+    @app.route('/getHistories', methods=['GET'])
+    def getHistories():
+        u = request.args.get('u')
+        conn = create_conn()
+
+        cursor = conn.cursor()
+        cursor.execute(
+            'SELECT h.H_ID, h.H_watchData, v.V_ID, v.V_title, v.V_encode, v.V_pic, u.U_ID, u.U_name, u.U_folder \
+            FROM histories AS h \
+            JOIN videos AS v ON v.V_ID = h.V_ID \
+            JOIN users AS u ON u.U_ID = h.U_ID \
+            WHERE h.U_ID = %s \
+            ORDER BY h.H_watchData DESC \
+            LIMIT 10'
+            ,(u,)
+            )
+        data = cursor.fetchall()
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        histories = []
+        for row in data:
+            tmp = str(row[5])
+            history = {
+                'H_ID': row[0],
+                'H_watchDate': row[1],
+                'V_ID': row[2],
+                'V_title': row[3],
+                'V_encode': row[4], 
+                'V_pic': tmp[2:-1],
+                'U_ID': row[6],
+                'U_name': row[7],
+                'U_folder': row[8]
+            }
+            histories.append(history)
+
+        return jsonify(histories), 200
+
     @app.route('/server_resource')
     def server():
         #CPU INFO
@@ -704,6 +801,7 @@ def create_app(test_config = None):
                   'Disk_Used_Percent' : str(disk_used_percent)+'%',
                   'Network_Download' : str(net_in)+' MB/s',
                   'Network_Upload' : str(net_out)+' MB/s'}), 200
+    
     
     return app
 APP = create_app()

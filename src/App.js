@@ -15,6 +15,7 @@ import UploadPage from './page/uploadPage';
 import NotFoundPage from './page/notfoundPage';
 import WatchPage from './page/WatchPage';
 import TokenExpirePage from './page/tokenExpirePage';
+import HistoryPage from './page/HistoryPage';
 
 import { isSessionSet } from './components/session';
 
@@ -38,6 +39,7 @@ function App() {
 					<Route path='/admin' element={<AdminPage />} />
 					<Route path='/watch' element={<WatchPage />} />
 					<Route path='/token-expired' element={<TokenExpirePage />} />
+					<Route path='/history' element={<HistoryPage />} />
 
 					{/* not found page */}
 					<Route path='*' element={<NotFoundPage />} />	

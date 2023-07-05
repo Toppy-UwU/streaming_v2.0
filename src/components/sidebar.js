@@ -73,7 +73,7 @@ const Sidebar = ({ children }) => {
                     <a href={`/profile?profile=${session.U_id}`} style={{ marginTop: '20px' }}>
                       <button className="btn btn-light rounded-pill" style={{ width: '230px', color: 'black' }}>Profile</button>
                     </a>
-                    <a href="historyPage.php" style={{ marginTop: '20px' }}>
+                    <a href="/history" style={{ marginTop: '20px' }}>
                       <button className="btn btn-light rounded-pill" style={{ width: '230px', color: 'black' }}>History</button>
                     </a>
 

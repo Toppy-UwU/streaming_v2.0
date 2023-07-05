@@ -20,15 +20,20 @@ const ProfilePage = () => {
   ReactModal.setAppElement('#root');
 
   let [currentComp, setCurrentComp] = useState('public');
+  var session
 
   if (isSessionSet('session') && isSessionSet('isLoggedIn')) {
 
     if (getlocalData('check')) {
       // console.log('in local');
-      var session = getlocalData('session');
+      session = getlocalData('session');
     } else {
       // check if not checked remember me
       session = getSessionData('session');
+    }
+  }else {
+    session = {
+      'U_id': null
     }
   }
 

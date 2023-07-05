@@ -7,9 +7,10 @@ import { getAPI } from '../components/callAPI';
 import 'video.js/dist/video-js.css';
 import { useState, useEffect } from 'react';
 import ShowVideos from '../components/showVideo';
-import { checkVidPermit, isAdmin } from '../components/session';
+import { checkVidPermit, getUser, isAdmin, isSessionSet } from '../components/session';
 import ReactModal from 'react-modal';
 import VideoUpdateModal from '../components/videoUpdateModal';
+import { createHistory } from '../components/saveHistories';
 
 const WatchPage = () => {
     const param = new URLSearchParams(window.location.search);
@@ -19,12 +20,12 @@ const WatchPage = () => {
 
     const user = param.get('u');
     const video = param.get('v');
+    var flag = true
 
     const url = 'http://localhost:80/hls/upload/' + user + '/' + video + '/' + video + '.m3u8';
     const api = 'http://localhost:8900/getVideo/info?v=' + video
 
     ReactModal.setAppElement('#root');
-
 
     useEffect(() => {
         fetch(api)
@@ -32,10 +33,21 @@ const WatchPage = () => {
             .then(data => {
                 // console.log(data);
                 setVidDetail(data)
+                if(isSessionSet('session') && flag) {
+                    const history = {
+                        'U_id': getUser(),
+                        'V_id': data.V_ID
+                    }
+                    createHistory(history)
+                    flag = false
+                }
             })
             .catch(e => {
                 console.error('Error:', e);
             })
+
+        
+
     }, [api])
 
     useEffect(() => {
@@ -98,7 +110,6 @@ const WatchPage = () => {
         },
       };
 
-
     if (videos) {
         const f1 = checkVidPermit(vidDetail.U_ID)
         const f2 = isAdmin()
@@ -111,7 +122,7 @@ const WatchPage = () => {
                             {f1 || vidDetail.V_permit === 'public' || vidDetail.V_permit === 'unlisted' ? 
                             <div className='col-9'>
                                 <div className='row' style={{paddingBottom: '10px'}}>
-                                    <VideoPlayer source={url} />
+                                    <VideoPlayer source={url} V_id={vidDetail.V_ID} U_id={getUser()}/>
                                 </div>
                                 <div className='row' style={{ color: 'white' }}>
                                     <div className='col'>

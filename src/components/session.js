@@ -96,6 +96,18 @@ export const getToken = () => {
   return tmp
 }
 
+export const getUser = () => {
+  const f = isSessionSet('session')
+  var tmp
+  if(f) {
+    tmp = getSessionData('session')
+    if(tmp === null) {
+      tmp = getlocalData('session')
+    }
+  }
+  return tmp.U_id
+}
+
 export const isAdmin = () => {
   const f = isSessionSet('session')
   var tmp
