@@ -23,7 +23,11 @@ from conn import create_conn
 def create_app(test_config = None):
     app = Flask(__name__)
     app.config['SECRET_KEY'] = '123'
+    
     CORS(app)
+    app.config['CORS_ORIGINS'] = ['http://localhost:3000']
+    app.config['CORS_METHODS'] = ['GET', 'POST', 'OPTIONS']
+    app.config['CORS_HEADERS'] = ['Content-Type']
 
 # function section
     # use to gen new video name for store in db
@@ -461,13 +465,20 @@ def create_app(test_config = None):
     def getVideo():
         try:
             V_encode = request.args.get('v')
+            u = request.args.get('u')
             
             conn = create_conn()
 
             cursor = conn.cursor()
             cursor.execute(
-                'SELECT videos.*, users.U_name, users.U_folder, users.U_pro_pic FROM videos, users WHERE users.U_ID = videos.U_ID AND videos.V_encode =  %s', 
-                (V_encode,))
+                'SELECT v.*, u.U_name, u.U_folder, u.U_pro_pic, COALESCE(h.H_watchTime, 0) AS H_watchTime \
+                FROM videos AS v  \
+                JOIN users AS u ON u.U_ID = v.U_ID \
+                LEFT JOIN histories AS h ON h.U_ID = %s AND h.V_ID = v.V_ID \
+                WHERE u.U_ID = v.U_ID \
+                AND v.V_encode = %s \
+                ORDER BY h.H_watchdata DESC LIMIT 1', 
+                (u, V_encode,))
             data = cursor.fetchone()
             conn.commit()
             cursor.close()
@@ -490,7 +501,8 @@ def create_app(test_config = None):
                 'V_desc': data[11],
                 'U_name': data[12],
                 'U_folder': data[13],
-                'U_pro_pic': tmp2[2:-1]
+                'U_pro_pic': tmp2[2:-1],
+                'watchTime': data[15]
                 }
 
             return jsonify(video), 200
@@ -706,6 +718,7 @@ def create_app(test_config = None):
         return ({'message': 'success'}), 200
 
     @app.route('/update/history/user', methods=['POST'])
+    @cross_origin()
     def updateHistory():
         data = request.get_json()
         conn = create_conn()
@@ -726,7 +739,7 @@ def create_app(test_config = None):
         conn.close()
         return ({'message': 'success'}), 200
 
-    @app.route('/getHistories', methods=['GET'])
+    @app.route('/get/histories', methods=['GET'])
     def getHistories():
         u = request.args.get('u')
         conn = create_conn()
@@ -764,6 +777,42 @@ def create_app(test_config = None):
             histories.append(history)
 
         return jsonify(histories), 200
+
+    @app.route('/get/histories/lastWatch', methods=['GET'])
+    def getLastWatch():
+        u = request.args.get('u')
+        v = request.args.get('v')
+        conn = create_conn()
+
+        cursor = conn.cursor()
+        cursor.execute(
+            'SELECT H_watchTime \
+            FROM histories \
+            WHERE V_ID = %s AND U_ID = %s \
+            ORDER BY H_watchdata DESC LIMIT 1'
+            ,(v, u)
+            )
+        data = cursor.fetchone()
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        watch = {
+            'watchTime': data[0]
+        }
+
+        return jsonify(watch), 200
+
+    @app.route('/update/video/view')
+    def updateView():
+        # UPDATE videos
+        # SET V_view = (
+        #     SELECT COUNT(V_ID)
+        #     FROM histories
+        #     WHERE histories.V_ID = videos.V_ID
+        #     GROUP BY V_ID
+        # );
+        pass
 
     @app.route('/server_resource')
     def server():

@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Hls from 'hls.js';
 import { insertHistories } from './saveHistories';
-import { isSessionSet } from './session';
+import { getUser, isSessionSet } from './session';
 
-const VideoPlayer = ({ source, V_id, U_id }) => {
+const VideoPlayer = ({ source, V_id, watchTime }) => {
   const videoRef = useRef(null);
   const [hls, setHls] = useState(null);
   const [resolutions, setResolutions] = useState(null);
@@ -20,7 +20,7 @@ const VideoPlayer = ({ source, V_id, U_id }) => {
       tmpHls.attachMedia(video);
 
       setHls(tmpHls);
-
+      video.currentTime = watchTime;
       video.autoplay = true;
 
       tmpHls.on(Hls.Events.MANIFEST_PARSED, () => {
@@ -30,12 +30,7 @@ const VideoPlayer = ({ source, V_id, U_id }) => {
       });
     };
 
-    
-
     loadVideo();
-    
-    
-
 
     return () => {
       
@@ -45,30 +40,62 @@ const VideoPlayer = ({ source, V_id, U_id }) => {
 
   useEffect(() => {
     const video = videoRef.current;
+    let c_time = 0;
 
     const handleTime = async (e) => {
-      e.preventDefault();
+      const dif_time = video.currentTime - c_time;
+      
+      if(dif_time >= 15) {
+        c_time = video.currentTime;
+        const tmp = {
+          'watchTime': video.currentTime,
+          'V_id': V_id,
+          'U_id': getUser()
+        }
+        await insertHistories(tmp);
+      }
+    }
+
+    const handleEnd= async (e) => {
+        const tmp = {
+          'watchTime': 0,
+          'V_id': V_id,
+          'U_id': getUser()
+        }
+        await insertHistories(tmp);
+    }
+
+    const handlePause= async (e) => {
       const tmp = {
         'watchTime': video.currentTime,
         'V_id': V_id,
-        'U_id': U_id
+        'U_id': getUser()
       }
       await insertHistories(tmp);
-      e.returnValue = '';
-    }
+  }
 
     if(isSessionSet('session')) {
-      window.addEventListener('beforeunload', handleTime)
+      video.addEventListener('timeupdate', handleTime)
+      video.addEventListener('ended', handleEnd);
+      video.addEventListener('pause', handlePause);
     }
+
+    return () => {
+      if(isSessionSet('session')) {
+        video.removeEventListener('timeupdate', handleTime);
+        video.removeEventListener('ended', handleEnd);
+        video.removeEventListener('pause', handlePause);
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    const video = videoRef.current;
 
     return () => {
       if (hls) {
         hls.destroy();
       }
-      if(isSessionSet('session')) {
-        window.removeEventListener('beforeunload', handleTime)
-      }
-
       video.removeAttribute('src');
     };
   }, [hls]);

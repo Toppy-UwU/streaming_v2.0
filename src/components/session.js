@@ -47,7 +47,7 @@ export const isSessionSet = (key) => {
   }else {
     return false
   }
-}
+};
 
 // encryption section
 
@@ -105,7 +105,11 @@ export const getUser = () => {
       tmp = getlocalData('session')
     }
   }
-  return tmp.U_id
+  if(tmp) {
+    return tmp.U_id;
+  }else {
+    return '';
+  }
 }
 
 export const isAdmin = () => {

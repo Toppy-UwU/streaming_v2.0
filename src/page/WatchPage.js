@@ -13,17 +13,18 @@ import VideoUpdateModal from '../components/videoUpdateModal';
 import { createHistory } from '../components/saveHistories';
 
 const WatchPage = () => {
-    const param = new URLSearchParams(window.location.search);
-    const [videos, setVideos] = useState(null);
-    const [vidDetail, setVidDetail] = useState(null);
+    const param = new URLSearchParams(window.location.search); 
+    const [videos, setVideos] = useState(null); //show video
+    const [vidDetail, setVidDetail] = useState(null); // played video data
     const [ isOpen, setIsOpen ] = useState(false);
 
     const user = param.get('u');
     const video = param.get('v');
     var flag = true
+    const c_user = getUser();
 
     const url = 'http://localhost:80/hls/upload/' + user + '/' + video + '/' + video + '.m3u8';
-    const api = 'http://localhost:8900/getVideo/info?v=' + video
+    const api = 'http://localhost:8900/getVideo/info?v=' + video + '&u=' + c_user;
 
     ReactModal.setAppElement('#root');
 
@@ -32,10 +33,10 @@ const WatchPage = () => {
             .then(response => response.json())
             .then(data => {
                 // console.log(data);
-                setVidDetail(data)
+                setVidDetail(data);
                 if(isSessionSet('session') && flag) {
                     const history = {
-                        'U_id': getUser(),
+                        'U_id': c_user,
                         'V_id': data.V_ID
                     }
                     createHistory(history)
@@ -122,7 +123,7 @@ const WatchPage = () => {
                             {f1 || vidDetail.V_permit === 'public' || vidDetail.V_permit === 'unlisted' ? 
                             <div className='col-9'>
                                 <div className='row' style={{paddingBottom: '10px'}}>
-                                    <VideoPlayer source={url} V_id={vidDetail.V_ID} U_id={getUser()}/>
+                                    <VideoPlayer source={url} V_id={vidDetail.V_ID} watchTime={vidDetail.watchTime}/>
                                 </div>
                                 <div className='row' style={{ color: 'white' }}>
                                     <div className='col'>

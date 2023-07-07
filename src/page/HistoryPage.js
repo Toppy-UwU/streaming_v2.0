@@ -5,7 +5,7 @@ import { getUser } from "../components/session"
 const HistoryPage = () => {
     const [ histories, setHistories ] = useState(null);
     const u = getUser();
-    const api = 'http://localhost:8900/getHistories?u=' + u;
+    const api = 'http://localhost:8900/get/histories?u=' + u;
 
     useEffect(() => {
         fetch(api)
