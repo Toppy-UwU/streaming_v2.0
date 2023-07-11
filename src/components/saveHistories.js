@@ -11,7 +11,7 @@ export const insertHistories = async (data) => {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(data)
-        }).then(response => { console.log(response); }).catch((error) => { })
+        }).then(response => { }).catch((error) => { })
     // }
     
 }

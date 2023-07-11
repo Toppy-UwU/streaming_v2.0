@@ -16,11 +16,27 @@ import NotFoundPage from './page/notfoundPage';
 import WatchPage from './page/WatchPage';
 import TokenExpirePage from './page/tokenExpirePage';
 import HistoryPage from './page/HistoryPage';
+import TagPage from './page/tagPage';
 
-import { isSessionSet } from './components/session';
+import { getlocalData, isSessionSet, setlocalData } from './components/session';
+import { useEffect, useRef } from 'react';
 
 function App() {
+
+	// useEffect(() => {
+	// 	const handleUnload = () => {
+	// 	  if(!getlocalData('check')) {
+	// 		localStorage.clear();
+	// 	  }
+	// 	}
 	
+	// 	window.addEventListener('beforeunload', handleUnload)
+	
+	// 	return () => {
+	// 	  window.removeEventListener('beforeunload', handleUnload)
+	// 	}
+	//   }, [])
+
 	if(isSessionSet('session') && isSessionSet('isLoggedIn')) {
 		
 		return (
@@ -40,6 +56,7 @@ function App() {
 					<Route path='/watch' element={<WatchPage />} />
 					<Route path='/token-expired' element={<TokenExpirePage />} />
 					<Route path='/history' element={<HistoryPage />} />
+					<Route path='/tag' element={<TagPage />} />
 
 					{/* not found page */}
 					<Route path='*' element={<NotFoundPage />} />	
@@ -59,6 +76,7 @@ function App() {
 					<Route path='/profile' element={<ProfilePage />} />
 					<Route path='/watch' element={<WatchPage />} />
 					<Route path='/token-expired' element={<TokenExpirePage />} />
+					<Route path='/tag' element={<TagPage />} />
 
 				
 					{/* not found page */}

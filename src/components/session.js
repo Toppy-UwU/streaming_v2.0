@@ -22,27 +22,26 @@ export const removelocalData = (key) => {
   localStorage.removeItem(key);
 };
 
-export const setSessionData = (key, data) => {
-  const jsonData = JSON.stringify(data);
-  var encryptJson = encryptData(jsonData, encryptKey);
-  sessionStorage.setItem(key, encryptJson );
-};
+// export const setSessionData = (key, data) => {
+//   const jsonData = JSON.stringify(data);
+//   var encryptJson = encryptData(jsonData, encryptKey);
+//   sessionStorage.setItem(key, encryptJson );
+// };
 
-export const getSessionData = (key) => {
-  const jsonData = sessionStorage.getItem(key);
-  var decryptJson = decryptData(jsonData, encryptKey);
-  // return JSON.parse(jsonData);
-  return decryptJson
-};
+// export const getSessionData = (key) => {
+//   const jsonData = sessionStorage.getItem(key);
+//   var decryptJson = decryptData(jsonData, encryptKey);
+//   // return JSON.parse(jsonData);
+//   return decryptJson
+// };
 
-export const removeSessionData = (key) => {
-  sessionStorage.removeItem(key);
-};
+// export const removeSessionData = (key) => {
+//   sessionStorage.removeItem(key);
+// };
 
 export const isSessionSet = (key) => {
-  const data1 = sessionStorage.getItem(key)
   const data2 = localStorage.getItem(key)
-  if (data1 !== null || data2 !== null) {
+  if (data2 !== null) {
     return true
   }else {
     return false
@@ -68,12 +67,7 @@ export const checkVidPermit = (U_idFromVid) => {
   const f = isSessionSet('session')
   var tmp
   if(f) {
-    try {
-      tmp = getSessionData('session')
-    } catch (error) {
-      tmp = getlocalData('session')
-    }
-    
+    tmp = getlocalData('session')
   }else {
     return false
   }
@@ -88,10 +82,7 @@ export const getToken = () => {
   const f = isSessionSet('session')
   var tmp
   if(f) {
-    tmp = getSessionData('token')
-    if(tmp === null) {
-      tmp = getlocalData('token')
-    }
+    tmp = getlocalData('token')
   }
   return tmp
 }
@@ -100,10 +91,7 @@ export const getUser = () => {
   const f = isSessionSet('session')
   var tmp
   if(f) {
-    tmp = getSessionData('session')
-    if(tmp === null) {
-      tmp = getlocalData('session')
-    }
+    tmp = getlocalData('session')
   }
   if(tmp) {
     return tmp.U_id;
@@ -116,11 +104,7 @@ export const isAdmin = () => {
   const f = isSessionSet('session')
   var tmp
   if(f) {
-    try {
-      tmp = getSessionData('session')
-    } catch (error) {
-      tmp = getlocalData('session')
-    }
+    tmp = getlocalData('session')
     
   }else {
     return false

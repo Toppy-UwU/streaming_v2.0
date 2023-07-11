@@ -24,7 +24,7 @@ const WatchPage = () => {
     const c_user = getUser();
 
     const url = 'http://localhost:80/hls/upload/' + user + '/' + video + '/' + video + '.m3u8';
-    const api = 'http://localhost:8900/getVideo/info?v=' + video + '&u=' + c_user;
+    const api = 'http://localhost:8900/get/video/info?v=' + video + '&u=' + c_user;
 
     ReactModal.setAppElement('#root');
 
@@ -111,7 +111,7 @@ const WatchPage = () => {
         },
       };
 
-    if (videos) {
+    if (videos && vidDetail) {
         const f1 = checkVidPermit(vidDetail.U_ID)
         const f2 = isAdmin()
         
@@ -128,8 +128,26 @@ const WatchPage = () => {
                                 <div className='row' style={{ color: 'white' }}>
                                     <div className='col'>
                                         <div className='row' style={{paddingBottom: '20px'}}>
-                                            <div className='col-10'>
+                                            <div className='col-7'>
                                                 <h3>{vidDetail.V_title}</h3>
+                                            </div>
+                                            <div className='col-3'>
+                                                <h6>
+                                                <div className='row'>
+                                                    Tag:
+                                                    {vidDetail.tags.map((tag, index) => (
+                                                        <div className="col-auto">
+                                                            <a href={'/tag?tag=' + tag.T_name}>
+                                                                <div className="" style={{ width: 'fit-content', backgroundColor: 'white', borderRadius: '10px' }}>
+                                                                    <div style={{ marginRight: '8px',marginLeft: '8px', color: 'black' }}>
+                                                                        {tag.T_name}
+                                                                    </div>
+                                                                </div>
+                                                            </a>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                    </h6>
                                             </div>
                                             <div className='col-2 right' >
                                                 {/* <button className='btn btn-secondary rounded-pill' style={{width: '42.5px'}} onClick={handleDownloadBtn}>
@@ -147,7 +165,7 @@ const WatchPage = () => {
                                                         }
 
                                                         <ReactModal isOpen={isOpen} onRequestClose={closeModal} style={modalStyle}>
-                                                            <VideoUpdateModal id={vidDetail.U_ID} desc={vidDetail.V_desc} title={vidDetail.V_title} permit={vidDetail.V_permit} path={vidDetail.U_folder} encode={vidDetail.V_encode} update={update} closeModal={closeModal} />
+                                                            <VideoUpdateModal id={vidDetail.U_ID} V_id={vidDetail.V_ID} desc={vidDetail.V_desc} title={vidDetail.V_title} permit={vidDetail.V_permit} path={vidDetail.U_folder} encode={vidDetail.V_encode} update={update} closeModal={closeModal} tags={vidDetail.tags} />
                                                         </ReactModal>
 
                                                     </div>

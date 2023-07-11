@@ -6,6 +6,7 @@ import NameTable from '../components/nameTable';
 
 import './../css/utilities.css';
 import ServerMonitor from '../components/serverMonitor';
+import UploadLog from '../components/uploadLog';
 
 const Home = () => {
   const [users, setUsers] = useState(null);
@@ -30,9 +31,9 @@ const Home = () => {
 
   const buttonHandler = (btnId) => {
     let tmp = null;
-    // if (btnId === 1) {
-    //   tmp = 'admin'
-    // } else 
+    if (btnId === 1) {
+      tmp = <UploadLog />
+    } else 
     if (btnId === 2) {
       tmp = <NameTable users={users} />
     } else if (btnId === 3) {
@@ -64,6 +65,7 @@ const Home = () => {
               <div className='btn-margin'>
                 {/* <button className='btn btn-secondary' onClick={() => buttonHandler(1)} >clickk me</button> */}
                 <button className='btn btn-secondary' onClick={() => buttonHandler(2)} >User List</button>
+                <button className='btn btn-secondary' onClick={() => buttonHandler(1)} >Video Upload Log</button>
                 <button className='btn btn-secondary' onClick={() => buttonHandler(3)} >Server Monitor</button>
               </div>
             </div>

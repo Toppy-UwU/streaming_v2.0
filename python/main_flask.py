@@ -52,12 +52,6 @@ def create_app(test_config = None):
             video = ffmpeg_streaming.input(path)
             # print(video)
             hls = video.hls(Formats.h264())
-            # print('hls')
-            # maxRes = vidData.get('height')
-            # idx = tmpResolutions.index(str(maxRes))
-            # for i in range(idx+1):
-            #     hls.representations(vidResolutions[i])
-            # hls.representations(_144p, _240p, _360p, _480p, _720p, _1080p, _1440p)
             hls.auto_generate_representations()
             print('convert')
             hls.output('..\\upload\\'+vidData.get('path')+'\\' + vidData.get('encode') + '\\' + vidData.get('encode') + '.m3u8')
@@ -186,6 +180,7 @@ def create_app(test_config = None):
 
         email = data.get('email')
         plain_password = data.get('password')
+        check = data.get('check')
 
         # get password
         cursor = conn.cursor()
@@ -206,12 +201,25 @@ def create_app(test_config = None):
                 cursor.close()
                 conn.close()
 
-                payload = {
-                    'U_id': data[0],
-                    'U_type': data[4],
-                    'U_permit': data[8],
-                    'exp': datetime.utcnow() + timedelta(days=30)
-                }
+                
+
+                if(check == 1 or check == '1'):
+                    print('1 month')
+                    payload = {
+                        'U_id': data[0],
+                        'U_type': data[4],
+                        'U_permit': data[8],
+                        'exp': datetime.utcnow() + timedelta(days=30)
+                    }
+                else:
+                    print('1 hours')
+                    payload = {
+                        'U_id': data[0],
+                        'U_type': data[4],
+                        'U_permit': data[8],
+                        'exp': datetime.utcnow() + timedelta(hours=1)
+                    }
+                
                 
                 token = jwt.encode(payload , app.config['SECRET_KEY'], algorithm='HS256')
 
@@ -419,6 +427,52 @@ def create_app(test_config = None):
             print(e)
             return ({'message': 'Get Videos Fail'}), 500
     
+    @app.route('/get/videos/tag', methods=['GET'])
+    def getVideos_tag():
+        try:
+            data = request.args.get('tag')
+            conn = create_conn()
+
+            cursor = conn.cursor()
+            cursor.execute(
+                'SELECT videos.*, users.U_name, users.U_folder \
+                FROM videos, users \
+                WHERE users.U_ID = videos.U_ID \
+                AND V_permit=%s AND videos.V_ID IN ( \
+                SELECT V_ID FROM tag_video WHERE T_ID = (\
+                    SELECT T_ID FROM tags WHERE T_name = %s)) \
+                ORDER BY V_upload DESC LIMIT 10', 
+                ('public', data))
+            data = cursor.fetchall()
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            videos = []
+            for row in data:
+                tmp = str(row[6])
+                video = {
+                    'V_ID': row[0],
+                    'V_title': row[1],
+                    'V_view': row[2],
+                    'V_length': row[3],
+                    'V_size': row[4],
+                    'V_upload': row[5],
+                    'V_pic': tmp[2:-1],
+                    'U_ID': row[7],
+                    'V_encode': row[9],
+                    'V_quality': row[10],
+                    'V_desc': row[11],
+                    'U_name': row[12],
+                    'U_folder': row[13]
+                }
+                videos.append(video)
+
+            return jsonify(videos), 200
+        except Exception as e:
+            print(e)
+            return ({'message': 'Get Videos Fail'}), 500
+
     @app.route('/getVideos/profile')
     def getVideosProfile():
         permit= request.args.get('p')
@@ -461,7 +515,7 @@ def create_app(test_config = None):
             print(e)
             return ({'message': 'Get Videos Fail'}), 500
 
-    @app.route('/getVideo/info', methods=['GET'])
+    @app.route('/get/video/info', methods=['GET'])
     def getVideo():
         try:
             V_encode = request.args.get('v')
@@ -480,9 +534,26 @@ def create_app(test_config = None):
                 ORDER BY h.H_watchdata DESC LIMIT 1', 
                 (u, V_encode,))
             data = cursor.fetchone()
+
+            cursor.execute(
+                'SELECT * FROM tags WHERE T_ID IN \
+                    (SELECT T_ID FROM tag_video WHERE V_ID = \
+                        (SELECT V_ID FROM videos WHERE V_encode = %s))',
+                        (V_encode,)
+            )
+            data2 = cursor.fetchall()
+
             conn.commit()
             cursor.close()
             conn.close()
+
+            tags = []
+            for row in data2:
+                tag = {
+                    'T_ID': row[0],
+                    'T_name': row[1]
+                }
+                tags.append(tag)
 
             tmp = str(data[6])
             tmp2 = str(data[14])
@@ -502,7 +573,8 @@ def create_app(test_config = None):
                 'U_name': data[12],
                 'U_folder': data[13],
                 'U_pro_pic': tmp2[2:-1],
-                'watchTime': data[15]
+                'watchTime': data[15],
+                'tags': tags
                 }
 
             return jsonify(video), 200
@@ -646,6 +718,26 @@ def create_app(test_config = None):
                         'UPDATE videos SET V_title=%s, V_desc=%s, V_permit=%s WHERE V_encode=%s' 
                         ,(data['title'], data['desc'], data['permit'], data['encode'])
                     )
+                
+                cursor.execute(
+                    'SELECT * FROM tag_video WHERE V_ID = %s',(data['V_id'],)
+                )
+                exist_data = cursor.fetchall()
+
+                exist_row = {(row[0], row[1]) for row in exist_data}
+                new_row = {(data['V_id'], row['T_ID']) for row in data['tag']}
+
+                insert_row = new_row - exist_row
+                delete_row = exist_row - new_row
+
+                insert_q = 'INSERT INTO tag_video (V_ID, T_ID) VALUES (%s, %s)'
+                delete_q = 'DELETE FROM tag_video WHERE V_ID = %s AND T_ID = %s'
+
+                for row in insert_row:
+                    cursor.execute(insert_q, row)
+
+                for row in delete_row:
+                    cursor.execute(delete_q, row)
 
                 conn.commit()
                 cursor.close()
@@ -803,16 +895,57 @@ def create_app(test_config = None):
 
         return jsonify(watch), 200
 
-    @app.route('/update/video/view')
-    def updateView():
-        # UPDATE videos
-        # SET V_view = (
-        #     SELECT COUNT(V_ID)
-        #     FROM histories
-        #     WHERE histories.V_ID = videos.V_ID
-        #     GROUP BY V_ID
-        # );
-        pass
+    @app.route('/get/uploadLog')
+    def getUploadLog():
+        conn = create_conn()
+
+        cursor = conn.cursor()
+        cursor.execute('SELECT v.V_pic, v.V_title, v.V_encode, v.U_ID, u.U_name, v.V_upload, u.U_folder\
+                       FROM videos AS v \
+                       JOIN users AS u \
+                       WHERE u.U_ID = v.U_ID \
+                       ORDER BY v.V_upload DESC')
+        data = cursor.fetchall()
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        logs = []
+        for row in data:
+            tmp = str(row[0])
+            log = {
+                'V_pic': tmp[2:-1],
+                'V_title': row[1],
+                'V_encode': row[2],
+                'U_ID': row[3],
+                'U_name': row[4],
+                'V_upload': row[5],
+                'U_folder': row[6]
+            }
+            logs.append(log)
+
+        return jsonify(logs), 200
+
+    @app.route('/get/tags')
+    def getTag():
+        conn = create_conn()
+
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM tags')
+        data = cursor.fetchall()
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        tags = []
+        for row in data:
+            tag = {
+                'T_ID': row[0],
+                'T_name': row[1]
+            }
+            tags.append(tag)
+
+        return jsonify(tags), 200
 
     @app.route('/server_resource')
     def server():

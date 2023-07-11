@@ -8,6 +8,7 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import 'video.js/dist/video-js.css';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+
 root.render(
   // turn strictMode off when deploy
   <React.StrictMode>

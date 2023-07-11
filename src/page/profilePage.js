@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ReactModal from 'react-modal';
-import { isSessionSet, getSessionData, getlocalData } from '../components/session';
+import { isSessionSet, getlocalData } from '../components/session';
 
 import Sidebar from '../components/sidebar';
 
@@ -22,15 +22,8 @@ const ProfilePage = () => {
   let [currentComp, setCurrentComp] = useState('public');
   var session
 
-  if (isSessionSet('session') && isSessionSet('isLoggedIn')) {
-
-    if (getlocalData('check')) {
-      // console.log('in local');
-      session = getlocalData('session');
-    } else {
-      // check if not checked remember me
-      session = getSessionData('session');
-    }
+  if (isSessionSet('token')) {
+    session = getlocalData('session');
   }else {
     session = {
       'U_id': null

@@ -7,22 +7,18 @@ import './../css/upload.css';
 import Sidebar from "../components/sidebar";
 import ProgressBar from "../components/progressBar";
 
-import { getSessionData, getlocalData } from "../components/session";
+import { getlocalData, isSessionSet } from "../components/session";
 
 const UploadPage = () => {
 
     var session
     var token
 
-    if (getlocalData('check')) {
+    if (isSessionSet('token')) {
         // console.log('in local');
         session = getlocalData('session');
         token = getlocalData('token')
-    } else {
-        // check if not checked remember me
-        session = getSessionData('session');
-         token = getSessionData('token')
-    }
+    } 
 
 
     const uploadAPI = 'http://localhost:8900/upload';

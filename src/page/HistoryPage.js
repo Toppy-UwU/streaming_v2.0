@@ -32,7 +32,7 @@ const HistoryPage = () => {
                                             <a className="href-noline-in" href={'/watch?u='+ history.U_folder + '&v=' + history.V_encode}>
                                                 <div className="row">
                                                     <div className="col-2">
-                                                        <img className="card-img-top " src={'data:image/jpeg;base64,' + history.V_pic} style={{marginBottom: 'px', borderRadius: '20px'}} alt={history.V_title+' thumbnail'} />
+                                                        <img className="card-img-top " src={'data:image/jpeg;base64,' + history.V_pic} style={{marginBottom: '5px', borderRadius: '20px'}} alt={history.V_title+' thumbnail'} />
 
                                                     </div>
                                                     <div className="col">

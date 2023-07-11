@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 // import { getlocalData, setlocalData } from '../components/localstorage';
-import { setSessionData, setlocalData, isSessionSet } from '../components/session';
+import { setlocalData, isSessionSet } from '../components/session';
 import './../css/login.css';
 
 const LoginPage = () => {
-  if(isSessionSet('isLoggedIn')) {
+  if (isSessionSet('isLoggedIn')) {
     window.location.href = '/'
   }
 
@@ -23,17 +23,18 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    var checkbox = document.getElementById('checkBox');
     const loginData = {
       email: email,
-      password: password
+      password: password,
+      check: (checkbox.checked ? 1 : 0)
     };
 
-    var checkbox = document.getElementById('checkBox');
+    
 
     const jsonData = JSON.stringify(loginData);
 
-    if(email !== '' || password !== '') {
+    if (email !== '' || password !== '') {
       const expDate = new Date();
       try {
         fetch(api, {
@@ -51,30 +52,45 @@ const LoginPage = () => {
             }
           })
           .then((data) => {
-            if(data.status === 'success') {
-              if(checkbox.checked) {
-                expDate.setDate(expDate.getDate() + 31);
-
-                setlocalData('session', data.data);
-                setlocalData('isLoggedIn', true);
-                setlocalData('check', true);
-                setlocalData('token', data.token);
-                setlocalData('expDate', expDate.getTime());
-                window.location.href = '/'
-                // console.log(data.data)
-                // console.log('local');
-              }else {
-                expDate.setDate(expDate.getDate() + 31);
-
-                setSessionData('session', data.data);
-                setSessionData('isLoggedIn', true);
-                setlocalData('check', false);
-                setSessionData('token', data.token);
-                setSessionData('expDate', expDate.getTime());
-                window.location.href = '/'
-                // console.log('sesssion');
+            console.log(data);
+            if (data.status === 'success') {
+              if (checkbox.checked) {
+                expDate.setDate(expDate.getDate() + 30);
+              } else {
+                expDate.setSeconds(expDate.getSeconds() + 3600);
               }
-            }else if(data.status === 'fail') {
+              
+              setlocalData('session', data.data);
+              setlocalData('isLoggedIn', true);
+              setlocalData('token', data.token);
+              setlocalData('expDate', expDate.getTime());
+
+             
+              window.location.href = '/'
+
+              // if(checkbox.checked) {
+              //   expDate.setDate(expDate.getDate() + 31);
+
+              //   setlocalData('session', data.data);
+              //   setlocalData('isLoggedIn', true);
+              //   setlocalData('check', true);
+              //   setlocalData('token', data.token);
+              //   setlocalData('expDate', expDate.getTime());
+              //   window.location.href = '/'
+              //   // console.log(data.data)
+              //   // console.log('local');
+              // }else {
+              //   expDate.setDate(expDate.getDate() + 31);
+
+              //   setSessionData('session', data.data);
+              //   setSessionData('isLoggedIn', true);
+              //   setlocalData('check', false);
+              //   setSessionData('token', data.token);
+              //   setSessionData('expDate', expDate.getTime());
+              //   window.location.href = '/'
+              //   // console.log('sesssion');
+              // }
+            } else if (data.status === 'fail') {
               alert('wrong email or password')
             }
           })
@@ -85,11 +101,11 @@ const LoginPage = () => {
         console.log('Error:', error);
       }
 
-    }else {
+    } else {
       alert('Please fill in all the fields')
     }
 
-    
+
   };
 
 
@@ -103,10 +119,10 @@ const LoginPage = () => {
             <br />
             <form onSubmit={handleSubmit}>
               <div className="form-group" style={{ marginTop: '10px', marginBottom: '20px' }}>
-                <input type="email" className="form-control rounded-pill" name="email" id="email" placeholder="Email" onChange={handleEmailChange}/>
+                <input type="email" className="form-control rounded-pill" name="email" id="email" placeholder="Email" onChange={handleEmailChange} />
               </div>
               <div className="form-group" style={{ marginTop: '20px', marginBottom: '10px' }}>
-                <input type="password" className="form-control rounded-pill" name="password" id="password" placeholder="Password" onChange={handlePasswordChange}/>
+                <input type="password" className="form-control rounded-pill" name="password" id="password" placeholder="Password" onChange={handlePasswordChange} />
               </div>
               <div className="form-group form-check">
                 <input type="checkbox" className="form-check-input" id="checkBox" />

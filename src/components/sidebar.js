@@ -1,50 +1,26 @@
-import React from 'react';
-import { getSessionData, removeSessionData, getlocalData, removelocalData, isSessionSet } from './session';
+import React, { useEffect } from 'react';
+import { getlocalData, removelocalData, isSessionSet } from './session';
 import './../css/utilities.css';
-import TokenExpirePage from '../page/tokenExpirePage';
 
 const Sidebar = ({ children }) => {
   const logoutHandler = (e) => {
-    removelocalData('session');
-    removelocalData('isLoggedIn');
-    removelocalData('token');
-    removelocalData('expDate');
-
-    removeSessionData('session');
-    removeSessionData('isLoggedIn');
-    removeSessionData('token');
-    removeSessionData('expDate');
-
-    removelocalData('check');
+    // removelocalData('session');
+    // removelocalData('isLoggedIn');
+    // removelocalData('token');
+    // removelocalData('expDate');
+    // removelocalData('check');
+    localStorage.clear()
   }
 
   if(isSessionSet('session') && isSessionSet('isLoggedIn')) {
-    
-    
-      if (getlocalData('check')) {
-        const expDate = getlocalData('expDate');
-        if (Date.now() >= expDate){
-          logoutHandler();
-          window.location.href = '/token-expired';
-        } else {
-        // console.log('in local');
-        var session = getlocalData('session');
-        var isLoggedIn = getlocalData('isLoggedIn');
-        }
+      const expDate = getlocalData('expDate');
+      if (Date.now() >= expDate){
+        logoutHandler();
+        window.location.href = '/token-expired';
       } else {
-        const expDate = getSessionData('expDate');
-        if (Date.now() >= expDate){
-          logoutHandler();
-          window.location.href = '/token-expired';
-        } else {
-        // check if not checked remember me
-        session = getSessionData('session');
-        isLoggedIn = getSessionData('isLoggedIn');
-        }
+      var session = getlocalData('session');
+      var isLoggedIn = getlocalData('isLoggedIn');
       }
-    
-
-    
   }
 
   return (

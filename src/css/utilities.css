@@ -44,6 +44,10 @@
   color: inherit;
 }
 
+.set-fisrt-upper::first-letter {
+  text-transform: capitalize;
+}
+
 @keyframes spin {
     0% {
       transform: rotate(0deg);
