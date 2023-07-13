@@ -17,6 +17,7 @@ import WatchPage from './page/WatchPage';
 import TokenExpirePage from './page/tokenExpirePage';
 import HistoryPage from './page/HistoryPage';
 import TagPage from './page/tagPage';
+import SearchPage from './page/searchPage';
 
 import { getlocalData, isSessionSet, setlocalData } from './components/session';
 import { useEffect, useRef } from 'react';
@@ -57,6 +58,7 @@ function App() {
 					<Route path='/token-expired' element={<TokenExpirePage />} />
 					<Route path='/history' element={<HistoryPage />} />
 					<Route path='/tag' element={<TagPage />} />
+					<Route path='/search' element={<SearchPage />} />
 
 					{/* not found page */}
 					<Route path='*' element={<NotFoundPage />} />	
@@ -77,7 +79,7 @@ function App() {
 					<Route path='/watch' element={<WatchPage />} />
 					<Route path='/token-expired' element={<TokenExpirePage />} />
 					<Route path='/tag' element={<TagPage />} />
-
+					<Route path='/search' element={<SearchPage />} />
 				
 					{/* not found page */}
 					<Route path='*' element={<NotFoundPage />} />

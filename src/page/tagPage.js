@@ -33,7 +33,7 @@ const TagPage = () => {
         .then(response => {
         setTags(response);
         })
-    }, [])
+    }, [api])
 
     if(videos) {
         return (
@@ -46,10 +46,10 @@ const TagPage = () => {
                                    All
                                 </button>
                             </div>
-                            {tags && tags.map((tag, index) => (
-                                <div className='col-auto'>
+                            {tags && tags.slice(0, 5).map((tag, index) => (
+                                <div className='col-auto' key={index} style={{marginTop: '5px'}}>
                                     <button className='btn rounded-pill' style={{ backgroundColor: 'white' }} onClick={() => changeTag(tag.T_name)}>
-                                        {tag.T_name}
+                                        {tag.T_name} : {tag.count}
                                     </button>
                                 </div>
                             ))}

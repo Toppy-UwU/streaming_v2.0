@@ -10,7 +10,7 @@ function ShowVideos(props) {
                     {props.videos.map((video) => ( 
                         <div className="video-card " style={{ width: '300px'}} key={video.V_ID}>
                             <a href={'/watch?u=' + video.U_folder + '&v=' + video.V_encode} style={{textDecoration: 'none', color: 'white'}}>
-                                <img className="card-img-top " src={'data:image/jpeg;base64,' + video.V_pic} style={{marginBottom: '10px', borderRadius: '20px'}} alt={video.V_title+' thumbnail'} />
+                                <img className="card-img-top " src={'data:image/jpeg;base64,' + video.V_pic} style={{marginBottom: '10px', borderRadius: '20px', aspectRatio: '16/9'}} alt={video.V_title+' thumbnail'} />
                                 <div style={{marginLeft: '8px', marginRight: '8px'}}>
                                     <div>
                                     <div className='row'>

@@ -63,16 +63,28 @@ def create_app(test_config = None):
             pass
 
     def insertVidData(data):
-        conn = create_conn()
+        try:
+            path = '../upload/'+ data.get('path') + '/' + data.get('encode')
+            conn = create_conn()
 
-        cursor = conn.cursor()
-        cursor.execute(
-            'INSERT INTO videos (V_title, V_view, V_length, V_size, V_pic, U_id, V_permit, V_encode, V_quality, V_desc) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
-            (data.get('videoName'), 0, data.get('videoDuration'), data.get('videoSize'), data.get('videoThumbnail'), data.get('videoOwner'), data.get('videoPermit'), data.get('encode'), data.get('height'), data.get('videoDesc'))
-        )
-        conn.commit()
-        cursor.close()
-        conn.close()
+            cursor = conn.cursor()
+            cursor.execute(
+                'INSERT INTO videos (V_title, V_view, V_length, V_size, V_pic, U_id, V_permit, V_encode, V_quality, V_desc) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
+                (data.get('videoName'), 0, data.get('videoDuration'), data.get('videoSize'), data.get('videoThumbnail'), data.get('videoOwner'), data.get('videoPermit'), data.get('encode'), data.get('height'), data.get('videoDesc'))
+            )
+            
+            for tag in data.get('tags'):
+                cursor.execute(
+                    'INSERT INTO tag_video (V_ID, T_ID) VALUES ((SELECT V_ID FROM videos WHERE V_encode = %s ), %s) '
+                    ,(data.get('encode'), tag['T_ID'])
+                )
+
+            conn.commit()
+            cursor.close()
+            conn.close()
+        except Exception as e:
+            print('error:', e)
+            shutil.rmtree(path)
 
     def getThumbnail(path):
         video = cv2.VideoCapture(path)
@@ -473,6 +485,52 @@ def create_app(test_config = None):
             print(e)
             return ({'message': 'Get Videos Fail'}), 500
 
+    @app.route('/get/videos/search', methods=['GET'])
+    def getVideos_search():
+        try:
+            data = request.args.get('s')
+            data = '%' + data + '%'
+
+            conn = create_conn()
+            cursor = conn.cursor()
+            cursor.execute(
+                'SELECT videos.*, users.U_name, users.U_folder \
+                FROM videos, users \
+                WHERE users.U_ID = videos.U_ID \
+                AND V_permit=%s \
+                AND V_title LIKE %s \
+                ORDER BY V_upload DESC LIMIT 10', 
+                ('public', data))
+            data = cursor.fetchall()
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            videos = []
+            for row in data:
+                tmp = str(row[6])
+                video = {
+                    'V_ID': row[0],
+                    'V_title': row[1],
+                    'V_view': row[2],
+                    'V_length': row[3],
+                    'V_size': row[4],
+                    'V_upload': row[5],
+                    'V_pic': tmp[2:-1],
+                    'U_ID': row[7],
+                    'V_encode': row[9],
+                    'V_quality': row[10],
+                    'V_desc': row[11],
+                    'U_name': row[12],
+                    'U_folder': row[13]
+                }
+                videos.append(video)
+
+            return jsonify(videos), 200
+        except Exception as e:
+            print(e)
+            return ({'message': 'Get Videos Fail'}), 500
+
     @app.route('/getVideos/profile')
     def getVideosProfile():
         permit= request.args.get('p')
@@ -766,6 +824,15 @@ def create_app(test_config = None):
                 path = '../upload/'+ data['U_folder'] + '/' + data['V_encode']
                 
                 cursor.execute(
+                    'DELETE FROM tag_video WHERE V_ID = \
+                        (SELECT V_encode \
+                        FROM videos \
+                        WHERE V_encode = %s)',
+                    (data['V_encode'],)
+                )
+                conn.commit()
+
+                cursor.execute(
                         'DELETE FROM videos WHERE U_ID=%s AND V_encode=%s' 
                         ,(data['U_id'], data['V_encode'])
                     )
@@ -931,7 +998,10 @@ def create_app(test_config = None):
         conn = create_conn()
 
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM tags')
+        cursor.execute('SELECT tg.T_ID, tg.T_name, COUNT(tv.V_ID) AS count \
+                       FROM tags AS tg \
+                       LEFT JOIN tag_video AS tv ON tv.T_ID = tg.T_ID \
+                       GROUP BY tg.T_ID, tg.T_name')
         data = cursor.fetchall()
         conn.commit()
         cursor.close()
@@ -941,11 +1011,53 @@ def create_app(test_config = None):
         for row in data:
             tag = {
                 'T_ID': row[0],
-                'T_name': row[1]
+                'T_name': row[1],
+                'count': row[2]
             }
             tags.append(tag)
 
         return jsonify(tags), 200
+
+    @app.route('/insert/tag', methods=['POST'])
+    def insertNewTag():
+        token = request.headers.get('Authorization')
+        
+        if(verify(token)):
+            data = request.get_json()
+
+            conn = create_conn()
+            cursor = conn.cursor()
+            
+            for tag in data:
+                cursor.execute('INSERT INTO tags (T_name) VALUES (%s)',(tag,))
+                
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            return ({'message': 'success'}), 200
+        
+        else:
+            return({'message': 'token invalid'}), 400
+
+    @app.route('/delete/tag', methods=['GET'])
+    def deleteTag():
+        token = request.headers.get('Authorization')
+        
+        if(verify(token)):
+            t = request.args.get('t')
+            conn = create_conn()
+            cursor = conn.cursor()
+            cursor.execute('DELETE FROM tags WHERE T_ID = %s', (t,))
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            return ({'message': 'success'}), 200
+        else:
+            return ({'message': 'token invalid'}), 400
+
+
 
     @app.route('/server_resource')
     def server():

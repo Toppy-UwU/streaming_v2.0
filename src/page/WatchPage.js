@@ -136,7 +136,7 @@ const WatchPage = () => {
                                                 <div className='row'>
                                                     Tag:
                                                     {vidDetail.tags.map((tag, index) => (
-                                                        <div className="col-auto">
+                                                        <div className="col-auto" key={index} style={{marginTop: '5px'}}>
                                                             <a href={'/tag?tag=' + tag.T_name}>
                                                                 <div className="" style={{ width: 'fit-content', backgroundColor: 'white', borderRadius: '10px' }}>
                                                                     <div style={{ marginRight: '8px',marginLeft: '8px', color: 'black' }}>

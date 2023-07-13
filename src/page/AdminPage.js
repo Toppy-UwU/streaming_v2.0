@@ -7,6 +7,7 @@ import NameTable from '../components/nameTable';
 import './../css/utilities.css';
 import ServerMonitor from '../components/serverMonitor';
 import UploadLog from '../components/uploadLog';
+import TagList from '../components/tagList';
 
 const Home = () => {
   const [users, setUsers] = useState(null);
@@ -38,6 +39,8 @@ const Home = () => {
       tmp = <NameTable users={users} />
     } else if (btnId === 3) {
       tmp = <ServerMonitor />
+    } else if (btnId === 4) {
+      tmp = <TagList />
     }
 
     setCurrentComp(tmp)
@@ -67,6 +70,7 @@ const Home = () => {
                 <button className='btn btn-secondary' onClick={() => buttonHandler(2)} >User List</button>
                 <button className='btn btn-secondary' onClick={() => buttonHandler(1)} >Video Upload Log</button>
                 <button className='btn btn-secondary' onClick={() => buttonHandler(3)} >Server Monitor</button>
+                <button className='btn btn-secondary' onClick={() => buttonHandler(4)} >Tag Management</button>
               </div>
             </div>
             <div>

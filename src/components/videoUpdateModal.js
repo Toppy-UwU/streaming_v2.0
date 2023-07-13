@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react"
 import { getToken } from "./session";
 import { getAPI } from "./callAPI";
-import Chip from "./chip";
 
 
 const VideoUpdateModal = (props) => {
@@ -21,9 +20,9 @@ const VideoUpdateModal = (props) => {
         getAPI('tags')
             .then(response => {
                 const removeID = vidTags.map(tmp => tmp.T_ID);
-                const tmp_tag = response.filter(tag => !removeID.includes(tag.T_ID))
+                const tmp_tag = response.filter(tag => !removeID.includes(tag.T_ID));
                 setTags(tmp_tag)
-            })
+            });
     }, [])
 
     const handleSubmit = () => {

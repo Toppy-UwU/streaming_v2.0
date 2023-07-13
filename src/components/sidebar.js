@@ -1,8 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { getlocalData, removelocalData, isSessionSet } from './session';
 import './../css/utilities.css';
 
 const Sidebar = ({ children }) => {
+  const [search, setSearch] = useState('');
+
   const logoutHandler = (e) => {
     // removelocalData('session');
     // removelocalData('isLoggedIn');
@@ -10,6 +12,16 @@ const Sidebar = ({ children }) => {
     // removelocalData('expDate');
     // removelocalData('check');
     localStorage.clear()
+  }
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setSearch(e.target.value);
+  }
+
+  const goSearch =  (e) => {
+    e.preventDefault();
+    window.location.href = '/search?search=' + search;
   }
 
   if(isSessionSet('session') && isSessionSet('isLoggedIn')) {
@@ -27,12 +39,14 @@ const Sidebar = ({ children }) => {
     <div className="d-flex" style={{ minHeight: '100vh' }} id={'sideBar'}>
       <div className="position-fixed h-100" style={{ width: '250px', backgroundColor: 'rgb(44,48,52)' }}>
         <div className="col-12">
+          <form onSubmit={goSearch}>
           <div className="input-group" style={{ padding: '15px' }}>
-            <input type="text" className="form-control rounded-end-0 rounded-start-pill" placeholder="search" aria-label="searchBar" aria-describedby="searchBtn" />
+            <input type="text" className="form-control rounded-end-0 rounded-start-pill" placeholder="search" aria-label="searchBar" aria-describedby="searchBtn" defaultValue={''} onChange={handleSearch}/>
             <div className="input-group-append">
-              <button className="btn btn-light rounded-start-0 rounded-end-pill" type="button" id="searchBtn">search</button>
+              <button className="btn btn-light rounded-start-0 rounded-end-pill" type="submit" id="searchBtn" onClick={goSearch}>search</button>
             </div>
           </div>
+          </form>
 
           <hr />
 

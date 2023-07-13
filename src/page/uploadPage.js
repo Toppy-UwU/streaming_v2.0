@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 
 import './../css/utilities.css';
@@ -6,6 +6,7 @@ import './../css/upload.css';
 
 import Sidebar from "../components/sidebar";
 import ProgressBar from "../components/progressBar";
+import { getAPI } from "../components/callAPI";
 
 import { getlocalData, isSessionSet } from "../components/session";
 
@@ -30,6 +31,58 @@ const UploadPage = () => {
     const [tmp, setTmp] = useState('');
     const [videoUrl, setVideoUrl] = useState(null);
     const [videoKey, setVideoKey] = useState(0);
+    const [vidTags, setVidTags] = useState([]);
+    const [tags, setTags] = useState(null);
+    const [showTags, setShowTags] = useState(null);
+    const [thumbnail, setThumbnail] = useState(null);
+
+    useEffect(() => {
+        getAPI('tags')
+            .then(response => {
+                // const removeID = vidTags.map(tmp => tmp.T_ID);
+                // const tmp_tag = response.filter(tag => !removeID.includes(tag.T_ID))
+                setTags(response);
+                setShowTags(response);
+            })
+    }, []);
+
+    const handleTag = (tag) => {
+        const tmp_vidTags = [...vidTags];
+        const tmp_tags = showTags.filter(tmp_tag => tmp_tag !== tag);
+        tmp_vidTags.push(tag);
+        setVidTags(tmp_vidTags);
+        // setTags(tmp_tags);
+        setShowTags(tmp_tags);
+    }
+
+    const removeTag = (tag) => {
+        const tmp_vidTags = vidTags.filter(tmp_tag => tmp_tag !== tag);
+        const tmp_tags = [...showTags];
+        tmp_tags.push(tag);
+        const tmp = tmp_tags.map(tmp => tmp.T_ID);
+        const show = tags.filter(tag => tmp.includes(tag.T_ID));
+        setVidTags(tmp_vidTags);
+        // setTags(tmp_tags);
+        console.log(show);
+        setShowTags(show);
+    }
+
+    const searchTag = (e) => {
+        e.preventDefault();
+        if(e.target.value === ''){
+            const removeID = vidTags.map(tmp => tmp.T_ID);
+            const tmp_tag = tags.filter(tag => !removeID.includes(tag.T_ID))
+            setShowTags(tmp_tag);
+        }else {
+            const input = e.target.value;
+            const tmp_tags = vidTags.map(tmp => tmp.T_ID);
+            const show = tags.filter(tag => !tmp_tags.includes(tag.T_ID));
+            const tmp = show.filter(tag =>
+                tag.T_name.toLowerCase().includes(input.toLowerCase())
+            );
+            setShowTags(tmp);
+        }
+      };
 
     const handleFileChange = (e) => {
         // console.log(e.target.files[0]);
@@ -57,6 +110,53 @@ const UploadPage = () => {
         setVidPermit(e.target.value);
     }
 
+    const handleThumbnail = (e) => {
+        var thumbnail = e.target.files[0];
+        if (thumbnail) {
+            const reader = new FileReader();
+
+            reader.onload = () => {
+
+                const image = new Image();
+                image.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const maxW = 800; 
+                    const aspectRatio = 16 / 9;
+
+
+                    let w = image.width;
+                    let h = image.height;
+
+                    const maxH = Math.round(w / aspectRatio);
+
+                    if (w > maxW || h > maxH) {
+                        const wRatio = maxW / w;
+                        const hRatio = maxH / h;
+
+                        const ratio = Math.min(wRatio, hRatio);
+                        w *= ratio;
+                        h *= ratio;
+                    }
+
+                    canvas.width = w;
+                    canvas.height = h;
+
+                    const context = canvas.getContext('2d');
+                    context.drawImage(image, 0, 0, w, h);
+
+                    const b64 = canvas.toDataURL('image/jpeg');
+                    const tmp = b64.replace("data:image/jpeg;base64,", "");
+                    setThumbnail(tmp);
+                };
+
+                image.src = reader.result;
+            };
+
+            reader.readAsDataURL(thumbnail);
+        }
+
+
+    }
 
     const handleClickUpload = async () => {
 
@@ -84,19 +184,19 @@ const UploadPage = () => {
                     'videoType': type,
                     'videoOwner': session.U_id,
                     'videoPermit': vidPermit,
-                    'videoThumbnail': '',
+                    'videoThumbnail': thumbnail,
                     'path': session.U_folder,
                     'width': w,
-                    'height': h
+                    'height': h,
+                    'tags': vidTags
                     // encode included
                 }
                 // setVidData(tmpData)
 
-                console.log(tmpData);
                 const formData = new FormData();
                 formData.append('video', file, file.name);
                 formData.append('data', JSON.stringify(tmpData));
-
+                // console.log(tmpData);
                 axios.post(uploadAPI, formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
@@ -127,8 +227,12 @@ const UploadPage = () => {
     }
 
     const cardClick = () => {
-        document.getElementById('uploadBtn').click()
+        document.getElementById('uploadBtn').click();
         // handleClickUpload
+    }
+
+    const thumbnailClick = () => {
+        document.getElementById('imgBtn').click();
     }
 
     const logTest = () => {
@@ -153,8 +257,11 @@ const UploadPage = () => {
                                                     </video>
 
                                                     <div className="center">
-                                                        <button className="btn btn-primary" onClick={cardClick}>
+                                                        <button className="btn btn-primary" onClick={cardClick} style={{marginRight: '5px'}}>
                                                             Change Video
+                                                        </button>
+                                                        <button className="btn btn-primary" onClick={thumbnailClick} style={{marginLeft: '5px'}}>
+                                                            Select Thumbnail
                                                         </button>
                                                     </div>
                                                 </div>
@@ -171,6 +278,8 @@ const UploadPage = () => {
                                         )}
 
                                         <input className="form-control-file" id="uploadBtn" type="file" accept="video/*" style={{ display: 'none' }} onChange={handleFileChange} />
+                                        <input className="form-control-file" id="imgBtn" type="file" accept="image/png, image/jpeg" style={{ display: 'none' }} onChange={handleThumbnail} />
+
                                     </div>
                                 </div>
                                 <div className="col-5" style={{color: 'white'}}>
@@ -181,16 +290,52 @@ const UploadPage = () => {
                                         </div>
                                     </div>
                                     <div className="input-group row">
+                                        <div className="col">
                                         <h4>Video Description</h4>
                                         <textarea className="form-control" onChange={handleVidDesc} rows="4"></textarea>
-                                    </div>
-                                    <div className="input-group row" style={{ marginTop: '15px' }}>
+                                        </div>
+                                        <div className="col">
                                         <h4>Video Permission</h4>
                                         <select className="form-control custom-select mb-3" value={vidPermit} onChange={handleSelect}>
                                             <option value='public'>Public</option>
                                             <option value="private">Private</option>
                                             <option value="unlisted">Unlisted</option>
                                         </select>
+                                        </div>
+                                    </div>
+                                    <div className="input-group row" style={{ marginTop: '15px' }}>
+                                    <label>Tag</label>
+                                    {tags && 
+                                        <h6>
+                                        <div className="row">
+                                            {vidTags && vidTags.map((tag, index) => (
+                                                <div className="col-auto" key={index}>
+                                                    <div className="" style={{ width: 'fit-content', backgroundColor: 'white', borderRadius: '10px' }}>
+                                                        <div style={{ marginRight: '8px', marginTop: '5px', color: 'black' }}>
+                                                            <button onClick={() => removeTag(tag)} className="btn">x</button>
+                                                            {tag.T_name}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            <div className="col-auto">
+                                                <div style={{ width: 'fit-content', backgroundColor: 'white', borderRadius: '10px' }}>
+                                                    <div className="dropdown" style={{ marginTop: '5px', color: 'black' }}>
+                                                        <button className="btn" type="button" id="dropdownTag" aria-haspopup="true" data-bs-toggle="dropdown" aria-expanded="false">+</button>
+                                                        <div className='dropdown-menu dropdown-menu-dark ' aria-labelledby='dropdownTag'>
+                                                        <div className="col input-group">
+                                                            <input type="text" className="form-control" placeholder="search tag" onChange={searchTag} defaultValue={''}/>
+                                                        </div>
+                                                            {showTags && showTags.slice(0, 5).map((d_tag, index) => (
+                                                                <button key={index} className='dropdown-item' onClick={() => handleTag(d_tag)}>+ {d_tag.T_name}</button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </h6>
+                                    }
                                     </div>
                                     <div className="row" style={{ marginTop: '10%' }}>
                                         <div className="col btn-margin center">

@@ -42,10 +42,10 @@ const Home = () => {
       <Sidebar>
         <div style={{ marginTop: '15px' }}>
           <div className='row'>
-          {tags && tags.map((tag, index) => (
-            <div className='col-auto'>
+          {tags && tags.slice(0, 8).map((tag, index) => (
+            <div className='col-auto' key={index} style={{marginTop: '5px'}}>
               <button className='btn rounded-pill' style={{backgroundColor: 'white'}} onClick={() => changeTag(tag.T_name)}>
-                {tag.T_name}
+                {tag.T_name} : {tag.count}
               </button>
             </div>
           ))}
