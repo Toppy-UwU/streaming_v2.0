@@ -46,6 +46,14 @@ const UploadPage = () => {
             })
     }, []);
 
+    const checkDate = () => {
+        const expDate = getlocalData('expDate');
+        if (Date.now() >= expDate){
+            localStorage.clear();
+            window.location.href = '/token-expired';
+        } 
+    }
+
     const handleTag = (tag) => {
         const tmp_vidTags = [...vidTags];
         const tmp_tags = showTags.filter(tmp_tag => tmp_tag !== tag);
@@ -159,6 +167,8 @@ const UploadPage = () => {
     }
 
     const handleClickUpload = async () => {
+
+        checkDate();
 
         setUpProgress('0');
         if (file) {

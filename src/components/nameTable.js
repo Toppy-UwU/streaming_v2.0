@@ -1,11 +1,16 @@
 import { useState } from "react";
 import ReactModal from "react-modal";
 import UserEditModal from "./userEditModal";
+import e from "cors";
+import { getToken } from "./session";
 
 
 const NameTable = (props) => {
     const [isOpen, setIsOpen ] = useState(false);
     const [ selectedUser, setSelectedUser ] = useState(null);
+    const [ addedUser, setAddUser ] = useState([]);
+
+    const api = 'http://localhost:8900/insert/user/admin';
 
     ReactModal.setAppElement('#root');
 
@@ -46,6 +51,70 @@ const NameTable = (props) => {
         },
       };
 
+      const handleAddUser = () => {
+        const users = [...addedUser];
+        const tmp = {
+            'U_name': '',
+            'U_mail': '',
+            'U_pass': '',
+            'U_type': '',
+            'U_permit': 1
+        };
+        users.push(tmp);
+        setAddUser(users);
+      }
+
+      const handleSave = () => {
+        const token = getToken();
+        fetch(api, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify(addedUser)
+        }).then(response => {
+            if(response.ok) {
+                // window.location.reload();
+            }
+        }).catch(() => {});
+      }
+
+
+      const handleName = (e, index) => {
+        e.preventDefault();
+        const users = [...addedUser]
+        users[index].U_name = e.target.value;
+        setAddUser(users);
+      }
+
+      const handlePass = (e, index) => {
+        e.preventDefault();
+        const users = [...addedUser]
+        users[index].U_pass = e.target.value;
+        setAddUser(users);
+      }
+
+      const handleMail = (e, index) => {
+        e.preventDefault();
+        const users = [...addedUser]
+        users[index].U_mail = e.target.value;
+        setAddUser(users);
+      }
+
+      const handleType = (e, index) => {
+        e.preventDefault();
+        const users = [...addedUser]
+        users[index].U_type = e.target.value;
+        setAddUser(users);
+      }
+
+      const handlePermit = (e, index) => {
+        e.preventDefault();
+        const users = [...addedUser]
+        users[index].U_permit = e.target.value;
+        setAddUser(users);
+      }
 
     return (
         <div>
@@ -93,6 +162,49 @@ const NameTable = (props) => {
                             <td><button className="btn btn-secondary" onClick={() => openModal(user)}>edit</button></td>
                         </tr>
                     ))}
+                    {addedUser && addedUser.map((user, index) => (
+                        <tr key={index}>
+                            <th>new {index}</th>
+                            <td>
+                                <input className="form-control" type="text" placeholder="user name" defaultValue={''} onChange={(e) => handleName(e, index)}></input>
+                                <input className="form-control" type="text" placeholder="password" defaultValue={''} onChange={(e) => handlePass(e, index)} style={{marginTop: '2px'}}></input>
+                                </td>
+                            <td><input className="form-control" type="email" placeholder="email" defaultValue={''} onChange={(e) => handleMail(e, index)}></input></td>
+                            <td>
+                                <div className="form-check">
+                                    <input type="radio" value={'admin'} name={'type-check-'+index} onChange={(e) => handleType(e, index)} style={{ marginRight: '5px' }} />
+                                    <label>Admin</label>
+                                </div>
+                                <div className="form-check">
+                                    <input type="radio" value={'user'} name={'type-check-'+index} onChange={(e) => handleType(e, index)} style={{ marginRight: '5px' }} />
+                                    <label>User</label>
+                                </div>
+                            </td>
+                            <td>
+                            <div className="form-check">
+                                    <input type="radio" value={'1'} name={'permit-check-'+index} onChange={(e) => handlePermit(e, index)} style={{ marginRight: '5px' }} />
+                                    <label>Have Permission</label>
+                                </div>
+                                <div className="form-check">
+                                    <input type="radio" value={'0'} name={'permit-check-'+index} onChange={(e) => handlePermit(e, index)} style={{ marginRight: '5px' }} />
+                                    <label>No Permission</label>
+                                </div>
+                            </td>
+                            <td colSpan={2}></td>
+                        </tr>
+                        
+                    ))}
+                <tr>
+                        <td colSpan={7}>
+                            <div className="center">
+                            <button className="btn btn-light rounded-pill" onClick={handleAddUser} style={{margin: '5px'}}>+ add user</button>
+                            {Object.keys(addedUser).length > 0 && (
+                                <button className="btn btn-success rounded-pill" onClick={handleSave} style={{margin: '5px'}}>save</button>
+                            )}
+                            </div>
+                        </td>
+                    </tr>
+                    
                 </tbody>
             </table>
 

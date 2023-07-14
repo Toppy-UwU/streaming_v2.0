@@ -32,10 +32,6 @@ const VideoPlayer = ({ source, V_id, watchTime }) => {
 
     loadVideo();
 
-    return () => {
-      
-    }
-
   }, [source]);
 
   useEffect(() => {
@@ -45,7 +41,7 @@ const VideoPlayer = ({ source, V_id, watchTime }) => {
     const handleTime = async (e) => {
       const dif_time = video.currentTime - c_time;
       
-      if(dif_time >= 15) {
+      if(dif_time >= 20) {
         c_time = video.currentTime;
         const tmp = {
           'watchTime': video.currentTime,
@@ -87,7 +83,7 @@ const VideoPlayer = ({ source, V_id, watchTime }) => {
         video.removeEventListener('pause', handlePause);
       }
     }
-  }, [])
+  }, [V_id])
 
   useEffect(() => {
     const video = videoRef.current;

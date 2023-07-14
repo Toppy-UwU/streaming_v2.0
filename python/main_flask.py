@@ -45,7 +45,7 @@ def create_app(test_config = None):
         try:
             print('convert' + path)
             
-            if(vidData.get('videoThumbnail') == ''):
+            if(vidData.get('videoThumbnail') == '' or vidData.get('videoThumbnail') == None):
                 b64 = getThumbnail(path)
                 vidData['videoThumbnail'] = b64
 
@@ -277,6 +277,35 @@ def create_app(test_config = None):
             return jsonify({'message': 'Token has expired'}), 401
         except jwt.InvalidTokenError:
             return jsonify({'message': 'Invalid token'}), 401
+
+    @app.route('/insert/user/admin', methods=['POST'])
+    def insertUser_admin():
+        try:
+            data = request.get_json()
+        
+            conn = create_conn()
+            cursor = conn.cursor()
+            for user in data:
+
+                encode_password = str(user['U_pass']).encode('utf-8')
+                hashed_password = bcrypt.hashpw(encode_password, bcrypt.gensalt())
+                file_name = genFileName(user['U_name'])
+
+                cursor.execute(
+                    'INSERT INTO users (U_name, U_mail, U_pass, U_type, U_vid, U_permit, U_folder) VALUES (%s, %s, %s, %s, %s, %s, %s)',
+                    (user['U_name'], user['U_mail'], hashed_password, user['U_type'], 0, user['U_permit'], file_name)
+                )
+            conn.commit()
+            cursor.close()
+            conn.close()
+                
+            folder_path = '../upload/'+file_name #create folder for uploaded videos
+            os.makedirs(folder_path)
+                
+            return '',200
+        except Exception as e:
+            return ({'message': e}), 500
+
 
     @app.route('/upload', methods=['POST'])
     def upload():
@@ -936,6 +965,22 @@ def create_app(test_config = None):
             histories.append(history)
 
         return jsonify(histories), 200
+
+    @app.route('/delete/histories', methods=['POST'])
+    def deleteHistories():
+        data = request.get_json()
+
+        conn = create_conn()
+        cursor = conn.cursor()
+        cursor.execute(
+            'DELETE FROM histories WHERE U_ID = %s',
+            (data['user'],))
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return  ({'message': 'success'}), 200
+        
 
     @app.route('/get/histories/lastWatch', methods=['GET'])
     def getLastWatch():
