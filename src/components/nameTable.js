@@ -1,7 +1,6 @@
 import { useState } from "react";
 import ReactModal from "react-modal";
 import UserEditModal from "./userEditModal";
-import e from "cors";
 import { getToken } from "./session";
 
 
@@ -75,7 +74,7 @@ const NameTable = (props) => {
             body: JSON.stringify(addedUser)
         }).then(response => {
             if(response.ok) {
-                // window.location.reload();
+                window.location.reload();
             }
         }).catch(() => {});
       }

@@ -18,6 +18,7 @@ import bcrypt
 import psutil
 import os
 import time
+import sys
 from conn import create_conn
 
 def create_app(test_config = None):
@@ -40,27 +41,32 @@ def create_app(test_config = None):
         encode = new_name
         return encode
     
-    def convert(path, vidData):
-        # print(vidData.get('height'))
-        try:
-            print('convert' + path)
-            
-            if(vidData.get('videoThumbnail') == '' or vidData.get('videoThumbnail') == None):
-                b64 = getThumbnail(path)
-                vidData['videoThumbnail'] = b64
+    def monitor(ffmpeg, duration, time_, time_left, process, encode):
+        last_per = -1
+        
+        per = int(round(time_ / duration * 100))
+        if per % 10 == 0 and per != 0 and per != last_per:
+            updateVidData(per, encode)
+            last_per = per
+        # sys.stdout.write(
+        #     "\rTranscoding...(%s%%) %s left [%s%s]" %
+        #     (per, timedelta(seconds=int(time_left)), '#' * per, '-' * (100 - per))
+        # )
+        # sys.stdout.flush()
+    
+    def updateVidData(per, encode):
 
-            video = ffmpeg_streaming.input(path)
-            # print(video)
-            hls = video.hls(Formats.h264())
-            hls.auto_generate_representations()
-            print('convert')
-            hls.output('..\\upload\\'+vidData.get('path')+'\\' + vidData.get('encode') + '\\' + vidData.get('encode') + '.m3u8')
-            print('convert success')
-            os.remove(path)
-            insertVidData(vidData)
-        except Exception as e:
-            print('Error:', e)
-            pass
+        if(type(per) == int):
+            per = str(per) + '%'
+
+        conn = create_conn()
+
+        cursor = conn.cursor()
+        cursor.execute('UPDATE videos SET V_permit=%s WHERE V_encode = %s',
+                       (per, encode ))
+        conn.commit()
+        cursor.close()
+        conn.close()
 
     def insertVidData(data):
         try:
@@ -70,7 +76,7 @@ def create_app(test_config = None):
             cursor = conn.cursor()
             cursor.execute(
                 'INSERT INTO videos (V_title, V_view, V_length, V_size, V_pic, U_id, V_permit, V_encode, V_quality, V_desc) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
-                (data.get('videoName'), 0, data.get('videoDuration'), data.get('videoSize'), data.get('videoThumbnail'), data.get('videoOwner'), data.get('videoPermit'), data.get('encode'), data.get('height'), data.get('videoDesc'))
+                (data.get('videoName'), 0, data.get('videoDuration'), data.get('videoSize'), data.get('videoThumbnail'), data.get('videoOwner'), '0%', data.get('encode'), data.get('height'), data.get('videoDesc'))
             )
             
             for tag in data.get('tags'):
@@ -85,6 +91,32 @@ def create_app(test_config = None):
         except Exception as e:
             print('error:', e)
             shutil.rmtree(path)
+    
+    def convert(path, vidData):
+        # print(vidData.get('height'))
+        try:
+            print('convert' + path)
+            
+            if(vidData.get('videoThumbnail') == '' or vidData.get('videoThumbnail') == None):
+                b64 = getThumbnail(path)
+                vidData['videoThumbnail'] = b64
+
+            video = ffmpeg_streaming.input(path)
+            # print(video)
+
+            insertVidData(vidData)
+
+            hls = video.hls(Formats.h264())
+            hls.auto_generate_representations()
+            print('convert')
+            hls.output('..\\upload\\'+vidData.get('path')+'\\' + vidData.get('encode') + '\\' + vidData.get('encode') + '.m3u8',
+                        monitor=lambda ffmpeg, duration, time_, time_left, process: monitor(ffmpeg, duration, time_, time_left, process, vidData['encode']))
+            print('convert success')
+            updateVidData(vidData['videoPermit'], vidData['encode'])
+            os.remove(path)
+        except Exception as e:
+            print('Error:', e)
+            pass
 
     def getThumbnail(path):
         video = cv2.VideoCapture(path)
@@ -295,17 +327,15 @@ def create_app(test_config = None):
                     'INSERT INTO users (U_name, U_mail, U_pass, U_type, U_vid, U_permit, U_folder) VALUES (%s, %s, %s, %s, %s, %s, %s)',
                     (user['U_name'], user['U_mail'], hashed_password, user['U_type'], 0, user['U_permit'], file_name)
                 )
+                folder_path = '../upload/'+file_name #create folder for uploaded videos
+                os.makedirs(folder_path)
             conn.commit()
             cursor.close()
             conn.close()
                 
-            folder_path = '../upload/'+file_name #create folder for uploaded videos
-            os.makedirs(folder_path)
-                
             return '',200
         except Exception as e:
             return ({'message': e}), 500
-
 
     @app.route('/upload', methods=['POST'])
     def upload():
@@ -468,6 +498,37 @@ def create_app(test_config = None):
             print(e)
             return ({'message': 'Get Videos Fail'}), 500
     
+    @app.route('/get/videos/upload', methods=['GET'])
+    def getVideosUpload():
+        try:
+            U_id = request.args.get('u')
+            conn = create_conn()
+
+            cursor = conn.cursor()
+            cursor.execute(
+                'SELECT V_pic, V_encode, V_title, V_permit FROM videos WHERE V_permit NOT IN (%s, %s, %s) AND U_ID = %s', 
+                ('public', 'private', 'unlisted', U_id))
+            data = cursor.fetchall()
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            videos = []
+            for row in data:
+                tmp = str(row[0])
+                video = {
+                    'V_pic': tmp[2:-1],
+                    'V_encode': row[1],
+                    'V_title': row[2],
+                    'V_permit': row[3]
+                }
+                videos.append(video)
+
+            return jsonify(videos), 200
+        except Exception as e:
+            print(e)
+            return ({'message': 'Get Videos Fail'}), 500
+
     @app.route('/get/videos/tag', methods=['GET'])
     def getVideos_tag():
         try:
@@ -981,7 +1042,6 @@ def create_app(test_config = None):
 
         return  ({'message': 'success'}), 200
         
-
     @app.route('/get/histories/lastWatch', methods=['GET'])
     def getLastWatch():
         u = request.args.get('u')
