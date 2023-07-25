@@ -1,16 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { getlocalData, removelocalData, isSessionSet } from './session';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 import './../css/utilities.css';
+import './../css/sidebar.css';
 
 const Sidebar = ({ children }) => {
   const [search, setSearch] = useState('');
 
   const logoutHandler = (e) => {
-    // removelocalData('session');
-    // removelocalData('isLoggedIn');
-    // removelocalData('token');
-    // removelocalData('expDate');
-    // removelocalData('check');
     localStorage.clear()
   }
 
@@ -19,90 +17,126 @@ const Sidebar = ({ children }) => {
     setSearch(e.target.value);
   }
 
-  const goSearch =  (e) => {
+  const goSearch = (e) => {
     e.preventDefault();
     window.location.href = '/search?search=' + search;
   }
 
-  if(isSessionSet('session') && isSessionSet('isLoggedIn')) {
-      const expDate = getlocalData('expDate');
-      if (Date.now() >= expDate){
-        logoutHandler();
-        window.location.href = '/token-expired';
-      } else {
+  if (isSessionSet('session') && isSessionSet('isLoggedIn')) {
+    const expDate = getlocalData('expDate');
+    if (Date.now() >= expDate) {
+      logoutHandler();
+      window.location.href = '/token-expired';
+    } else {
       var session = getlocalData('session');
       var isLoggedIn = getlocalData('isLoggedIn');
-      }
+    }
   }
 
   return (
-    <div className="d-flex" style={{ minHeight: '100vh' }} id={'sideBar'}>
-      <div className="position-fixed h-100" style={{ width: '250px', backgroundColor: 'rgb(44,48,52)' }}>
-        <div className="col-12">
-          <form onSubmit={goSearch}>
-          <div className="input-group" style={{ padding: '15px' }}>
-            <input type="text" className="form-control rounded-end-0 rounded-start-pill" placeholder="search" aria-label="searchBar" aria-describedby="searchBtn" defaultValue={''} onChange={handleSearch}/>
-            <div className="input-group-append">
-              <button className="btn btn-light rounded-start-0 rounded-end-pill" type="submit" id="searchBtn" onClick={goSearch}>search</button>
+    <div className='container-fluid'>
+      <div className='row'>
+        {isLoggedIn ? (
+          <>
+            <div className='bg-dark col-2 col-md-2 min-vh-100 d-flex justify-content-betweet flex-column'>
+              <div>
+                <a className='text-decoration-none text-white d-none d-sm-inline d-flex align-itemcenter ms-3 mt-2' href='/'>
+                  <span className='ml-1 fs-4 d-none d-sm-inline'>CS HUB</span>
+                </a>
+                <hr className='text-secondary d-none d-sm-block' />
+
+                <ul className='nav nav-pills flex-column'>
+                  <li className='nav-item text-white fs-4 my-1 py-2 py-sm-0'>
+                    <a href='/' className='nav-link text-white fs-5' aria-current="page">
+                      <i className="bi bi-house"></i>
+                      <span className='ms-3 d-none d-sm-inline'>Home</span>
+                    </a>
+                  </li>
+
+                  <li className='nav-item text-white fs-4 my-1 py-2 py-sm-0'>
+                    <a href={`/profile?profile=${session.U_id}`} className='nav-link text-white fs-5' aria-current="page">
+                      <i class="bi bi-person"></i>
+                      <span className='ms-3 d-none d-sm-inline'>Profile</span>
+                    </a>
+                  </li>
+
+                  <li className='nav-item text-white fs-4 my-1 py-2 py-sm-0'>
+                    <a href='/history' className='nav-link text-white fs-5' aria-current="page">
+                      <i class="bi bi-clock-history"></i>
+                      <span className='ms-3 d-none d-sm-inline'>History</span>
+                    </a>
+                  </li>
+
+                  {session.U_permit === 1 && (
+                    <li className='nav-item text-white fs-4 my-1 py-2 py-sm-0'>
+                      <a href='/upload' className='nav-link text-white fs-5' aria-current="page">
+                        <i class="bi bi-upload"></i>
+                        <span className='ms-3 d-none d-sm-inline'>Upload Video</span>
+                      </a>
+                    </li>
+                  )}
+
+                  {session.U_type === 'admin' && (
+                    <li className='nav-item text-white fs-4 my-1 py-2 py-sm-0'>
+                      <a href='/admin' className='nav-link text-white fs-5' aria-current="page">
+                        <i class="bi bi-gear"></i>
+                        <span className='ms-3 d-none d-sm-inline'>Administration</span>
+                      </a>
+                    </li>
+                  )}
+
+                  <li className='nav-item text-white fs-4 my-1 py-2 py-sm-0'>
+                    <a href='/login' className='nav-link text-white fs-5' aria-current="page" onClick={logoutHandler}>
+                      <i class="bi bi-box-arrow-right"></i>
+                      <span className='ms-3 d-none d-sm-inline'>Logout</span>
+                    </a>
+                  </li>
+
+                </ul>
+              </div>
+
+              <div class="dropdown open">
+                <a class="text-decoration-none text-white dropdown-toggle p-3" type="button" id="triggerId" data-bs-toggle="dropdown" aria-haspopup="true"
+                  aria-expanded="false">
+                  <i class="bi bi-person-circle"></i><span className='ms-2 d-none d-sm-inline'>Adithep</span>
+                </a>
+                <div class="dropdown-menu" aria-labelledby="triggerId">
+                  <a href={`/profile?profile=${session.U_id}`} className='dropdown-item'>View Profile</a>
+                </div>
+              </div>
             </div>
-          </div>
-          </form>
-
-          <hr />
-
-          {/* menu start */}
-          <div className="container-fluid vh-100 flex-column">
-            <div className="row-cols-1" style={{ alignItems: 'center' }}>
-              <nav className="nav">
-                {isLoggedIn ? (
-                  <>
-                    <a href="/" style={{ marginTop: '20px' }}>
-                      <button className="btn btn-light rounded-pill" style={{ width: '230px', color: 'black' }}>Home</button>
-                    </a>
-                    {/* profile.php?profile=${session.U_id} */}
-                    <a href={`/profile?profile=${session.U_id}`} style={{ marginTop: '20px' }}>
-                      <button className="btn btn-light rounded-pill" style={{ width: '230px', color: 'black' }}>Profile</button>
-                    </a>
-                    <a href="/history" style={{ marginTop: '20px' }}>
-                      <button className="btn btn-light rounded-pill" style={{ width: '230px', color: 'black' }}>History</button>
-                    </a>
-
-                    {session.U_permit === 1 && (
-                      <a href='/upload' style={{ marginTop: '20px' }}>
-                        <button className="btn btn-light rounded-pill" data-toggle="modal" data-target="#uploadVid" style={{ width: '230px', color: 'black' }}>Upload Video</button>
-                      </a>
-                    )}
-
-                    {session.U_type === 'admin' && (
-                      <a href="/admin" style={{ marginTop: '20px' }}>
-                        <button className="btn btn-light rounded-pill" style={{ width: '230px', color: 'black' }}>Administration</button>
-                      </a>
-                    )}
-
-                    <a href="/login" style={{ marginTop: '20px' }}>
-                      <button className="btn btn-danger rounded-pill" style={{ width: '230px', color: 'black' }} onClick={logoutHandler}>Logout</button>
-                    </a>
-                  </>
-                ) : (
-                  <>
-                  <a href="/" style={{ marginTop: '20px' }}>
-                      <button className="btn btn-light rounded-pill" style={{ width: '230px', color: 'black' }}>Home</button>
-                    </a>
-                  <a href="/login" style={{ marginTop: '20px' }}>
-                    <button className="btn btn-light rounded-pill" style={{ width: '230px', color: 'black' }}>Login</button>
+          </>
+        ) : (
+          <div className='bg-dark col-2 col-md-2 min-vh-100 d-flex justify-content-betweet flex-column'>
+            <div>
+              <a className='text-decoration-none text-white d-none d-sm-inline d-flex align-itemcenter ms-3 mt-2' href='/'>
+                <span className='ml-1 fs-4 d-none d-sm-inline'>CS HUB</span>
+              </a>
+              <hr className='text-secondary d-none d-sm-block' />
+              <ul className='nav nav-pills flex-column'>
+                <li className='nav-item text-white fs-4 my-1 py-2 py-sm-0'>
+                  <a href='/' className='nav-link text-white fs-5' aria-current="page">
+                    <i className="bi bi-house"></i>
+                    <span className='ms-3 d-none d-sm-inline'>Home</span>
                   </a>
-                  </>
-                )}
-              </nav>
+                </li>
+
+                <li className='nav-item text-white fs-4 my-1 py-2 py-sm-0'>
+                  <a href='/login' className='nav-link text-white fs-5' aria-current="page" >
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    <span className='ms-3 d-none d-sm-inline'>Login</span>
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
-          {/* end of menu */}
-        </div>
-      </div>
-      {/* end of side bar */}
-      <div className="container-fluid" style={{ marginLeft: '250px', backgroundColor: 'rgb(56, 56, 56)', height: '100vh', overflow: 'auto', position: 'relative' }}>
-        <div className="row" >
-          {children}
+        )}
+
+        <div className='bg-dark col-10 col-md-10 min-vh-100 d-flex justify-content-betweet flex-column'>
+          <div className='sidebar-vertical-line d-md-none'></div>
+          <div className="row" >
+            {children}
+          </div>
         </div>
       </div>
     </div>

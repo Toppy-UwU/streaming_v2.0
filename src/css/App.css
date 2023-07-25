@@ -37,3 +37,7 @@
   }
 }
 
+element {
+  min-width: 50%; /* Set the minimum width to 50% of its container's width */
+  min-height: 10rem; /* Set the minimum height to 10 rems */
+}

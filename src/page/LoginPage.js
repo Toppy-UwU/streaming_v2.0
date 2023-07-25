@@ -114,7 +114,7 @@ const LoginPage = () => {
       <div className="col-12 my-center" style={{ backgroundColor: 'rgba(38, 38, 38, 0.85)', width: '100%', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         <div className="card mx-auto rounded" style={{ width: '300px', backgroundColor: 'rgb(55, 55, 55)' }}>
           <div className="card-body">
-            <h2 style={{ color: 'white', textAlign: 'center' }}>CS Streaming 888</h2>
+            <h2 style={{ color: 'white', textAlign: 'center' }}>CS HUB</h2>
             <h4 style={{ color: 'white', textAlign: 'center' }}>Login</h4>
             <br />
             <form onSubmit={handleSubmit}>
