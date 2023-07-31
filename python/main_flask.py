@@ -292,6 +292,79 @@ def create_app(test_config = None):
         
         return ''
 
+    @app.route('/get/mostWatch', methods=['GET'])
+    def mostWatch():
+        u = request.args.get('u')
+        conn = create_conn()
+
+        cursor = conn.cursor()
+        cursor.execute(
+            'SELECT v.*, u.U_name, u.U_folder \
+            FROM histories as h \
+            JOIN videos as v ON v.V_ID = h.V_ID \
+            JOIN users as u ON u.U_ID = V.U_ID \
+            WHERE h.U_ID = %s \
+            GROUP BY h.V_ID \
+            ORDER BY COUNT(h.V_ID) \
+            DESC LIMIT 1', (u,))
+        data = cursor.fetchone()
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        tmp = str(data[6])
+        video = [{
+            'V_ID': data[0],
+            'V_title': data[1],
+            'V_view': data[2],
+            'V_length': data[3],
+            'V_size': data[4],
+            'V_upload': data[5],
+            'V_pic': tmp[2:-1],
+            'U_ID': data[7],
+            'V_encode': data[9],
+            'V_quality': data[10],
+            'V_desc': data[11],
+            'U_name': data[12],
+            'U_folder': data[13]
+        }]
+        return jsonify(video), 200
+    
+    @app.route('/get/mostView', methods=['GET'])
+    def mostView():
+        u = request.args.get('u')
+        conn = create_conn()
+
+        cursor = conn.cursor()
+        cursor.execute(
+            'SELECT v.*, u.U_name, u.U_folder \
+            FROM videos as v \
+            JOIN users as u ON u.U_ID = v.U_ID \
+            WHERE v.U_ID = %s \
+            ORDER BY v.V_view DESC LIMIT 1', (u,))
+        data = cursor.fetchone()
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        tmp = str(data[6])
+        video = [{
+            'V_ID': data[0],
+            'V_title': data[1],
+            'V_view': data[2],
+            'V_length': data[3],
+            'V_size': data[4],
+            'V_upload': data[5],
+            'V_pic': tmp[2:-1],
+            'U_ID': data[7],
+            'V_encode': data[9],
+            'V_quality': data[10],
+            'V_desc': data[11],
+            'U_name': data[12],
+            'U_folder': data[13]
+        }]
+        return jsonify(video), 200
+    
     @app.route('/verify', methods=['POST'])
     def verify_token():
         raw_token = request.headers.get('Authorization')
@@ -458,6 +531,33 @@ def create_app(test_config = None):
         except Exception as e:
             print(e)
             return ({'message': 'Get Videos Fail'}), 500
+    
+    @app.route('/get/users/search', methods=['GET'])
+    def searchUsers():
+        user = request.args.get('u')
+        conn = create_conn()
+        user = '%' + user + '%'
+
+        cursor = conn.cursor()
+        cursor.execute('SELECT U_ID, U_name, U_pro_pic, U_folder FROM users WHERE U_name LIKE %s',
+                       (user,))
+        data = cursor.fetchall()
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        users = []
+        for row in data:
+            tmp = str(row[2])
+            user = {
+                'U_id': row[0],
+                'U_name': row[1],
+                'U_pro_pic': tmp[2:-1],
+                'U_folder': row[3]
+            }
+            users.append(user)
+
+        return jsonify(users), 200
     
     @app.route('/getVideos/public')
     def getVideos():
@@ -630,14 +730,21 @@ def create_app(test_config = None):
             conn = create_conn()
 
             cursor = conn.cursor()
-            cursor.execute(
-                'SELECT videos.*, users.U_name, users.U_folder FROM videos, users WHERE users.U_ID = videos.U_ID AND videos.U_ID = %s AND V_permit = %s ORDER BY videos.V_upload DESC LIMIT 10 ', 
-                (user, permit))
+            
+            if(permit != 'all'):
+                cursor.execute(
+                    'SELECT videos.*, users.U_name, users.U_folder FROM videos, users WHERE users.U_ID = videos.U_ID AND videos.U_ID = %s AND V_permit = %s ORDER BY videos.V_upload', 
+                    (user, permit))
+            else:
+                cursor.execute('SELECT videos.*, users.U_name, users.U_folder FROM videos, users WHERE users.U_ID = videos.U_ID AND videos.U_ID = %s ORDER BY videos.V_upload', 
+                    (user,))
+
+
             data = cursor.fetchall()
             conn.commit()
             cursor.close()
             conn.close()
-
+            
             videos = []
             for row in data:
                 tmp = str(row[6])
@@ -1162,8 +1269,56 @@ def create_app(test_config = None):
         else:
             return ({'message': 'token invalid'}), 400
 
+    @app.route('/get/tags/search', methods=['GET'])
+    def searchTag():
+        tag = request.args.get('t')
+        conn = create_conn()
+        tag = '%' + tag + '%'
 
+        cursor = conn.cursor()
+        cursor.execute('SELECT tg.T_ID, tg.T_name, COUNT(tv.V_ID) AS count \
+                       FROM tags AS tg \
+                       LEFT JOIN tag_video AS tv ON tv.T_ID = tg.T_ID \
+                       WHERE tg.T_name LIKE %s\
+                       GROUP BY tg.T_ID, tg.T_name', (tag,))
+        data = cursor.fetchall()
+        conn.commit()
+        cursor.close()
+        conn.close()
 
+        tags = []
+        for row in data:
+            tag = {
+                'T_ID': row[0],
+                'T_name': row[1],
+                'count': row[2]
+            }
+            tags.append(tag)
+
+        return jsonify(tags), 200
+    
+    @app.route('/insert/log', methods=['POST'])
+    def insertLog():
+        token = request.headers.get('Authorization')
+        
+        if(verify(token)):
+            data = request.get_json()
+
+            conn = create_conn()
+            cursor = conn.cursor()
+    
+            cursor.execute('INSERT INTO system_logs(U_ID, action) VALUES (%s, %s)',
+                           (data['U_id'], data['action']))
+                
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            return ({'message': 'success'}), 200
+        
+        else:
+            return({'message': 'token invalid'}), 400
+    
     @app.route('/server_resource')
     def server():
         #CPU INFO
