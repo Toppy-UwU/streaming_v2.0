@@ -101,3 +101,9 @@
     background-image: url('./../img/download.png');
     background-size: cover;
   }
+
+  .scroll-bar {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: visible;
+  }

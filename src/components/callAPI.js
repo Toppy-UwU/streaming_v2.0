@@ -1,10 +1,13 @@
+import '../config';
 
+const ip = global.config.ip.ip;
 // get API
-const getUserAPI = 'http://localhost:8900/getUsers';
-const getServerAPI = 'http://localhost:8900/server_resource';
-const getVideosPublic = 'http://localhost:8900/getVideos/public';
-const getUploadLog = 'http://localhost:8900/get/uploadLog';
-const getTag = 'http://localhost:8900/get/tags';
+const getUserAPI = ip+'/getUsers';
+const getServerAPI = ip+'/server_resource';
+const getVideosPublic = ip+'/getVideos/public';
+const getUploadLog = ip+'/get/uploadLog';
+const getTag = ip+'/get/tags';
+const getOwnVids = ip+'/get/tags';
 
 // post API
 

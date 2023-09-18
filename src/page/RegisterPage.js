@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import './../css/login.css';
-
-// const conn = require('../conn');
+import '../config';
 
 const RegisterPage = () => {
-  const api = 'http://localhost:8900/register' 
+  const ip = global.config.ip.ip;
+  const api = ip+'/register';
+  document.title = "Register";
 
   const [formData, setFormData] = useState({
     username: '',

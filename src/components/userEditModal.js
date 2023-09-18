@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { getToken } from "./session"
-
+import '../config';
 
 const UserEditModal = (props) => {
     let user = props.data
@@ -8,8 +8,9 @@ const UserEditModal = (props) => {
     const [mail, setMail] = useState(user.U_mail)
     const [permit, setPermit] = useState(user.U_permit)
     const [type, setType] = useState(user.U_type)
+    const ip = global.config.ip.ip;
 
-    const api = 'http://localhost:8900/update/user/admin';
+    const api = ip+'/update/user/admin';
 
     const handleSubmit = () => {
         const tmp = ({

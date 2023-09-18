@@ -1,0 +1,15 @@
+.showInfo img {
+    margin-left: 100px;
+    width: 150px;
+    height: 150px;
+}
+
+.showInfo span {
+    margin: 100px;
+    color: white;
+    font-size: large;
+}
+
+.nodecoration {
+    text-decoration: none;
+}

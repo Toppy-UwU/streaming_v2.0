@@ -1,20 +1,20 @@
 import { useEffect, useState } from "react"
 import { getToken } from "./session";
 import { getAPI } from "./callAPI";
+import '../config';
 
 
 const VideoUpdateModal = (props) => {
-    // desc, title, permit
-
     const [title, setTitle] = useState(props.title);
     const [desc, setDesc] = useState(props.desc);
     const [permit, setPermit] = useState(props.permit);
     const [isConfirm, setIsConfirm] = useState(false);
     const [tags, setTags] = useState(null);
     const [vidTags, setVidTags] = useState(props.tags);
+    const ip = global.config.ip.ip;
 
-    const updateApi = 'http://localhost:8900/update/video/user';
-    const deleteApi = 'http://localhost:8900/delete/video/user';
+    const updateApi = ip+'/update/video/user';
+    const deleteApi = ip+'/delete/video/user';
 
     useEffect(() => {
         getAPI('tags')
@@ -26,10 +26,6 @@ const VideoUpdateModal = (props) => {
     }, [])
 
     const handleSubmit = () => {
-        // console.log(props.id);
-        // console.log(title);
-        // console.log(desc);
-        // console.log(permit);
         const tmp = ({
             'V_id': props.V_id,
             'U_id': props.id,

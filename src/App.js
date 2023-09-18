@@ -18,26 +18,20 @@ import TokenExpirePage from './page/tokenExpirePage';
 import HistoryPage from './page/HistoryPage';
 import TagPage from './page/tagPage';
 import SearchPage from './page/searchPage';
+import UserVideos from './page/VideoPage'
+import VideoStatusPage from './page/PageStatus';
+import UserListPage from './page/userslist';
+import VideosListPage from './page/videoslist';
 
 import { getlocalData, isSessionSet, setlocalData } from './components/session';
 import { useEffect, useRef } from 'react';
+import AdminReport from './page/AdminReport';
+import AdminTag from './page/AdminTag';
+import AdminLog from './page/AdminLog';
+import Monitor from './page/Monitor';
+import UsersStorage from './page/UsersStorage';
 
 function App() {
-
-	// useEffect(() => {
-	// 	const handleUnload = () => {
-	// 	  if(!getlocalData('check')) {
-	// 		localStorage.clear();
-	// 	  }
-	// 	}
-	
-	// 	window.addEventListener('beforeunload', handleUnload)
-	
-	// 	return () => {
-	// 	  window.removeEventListener('beforeunload', handleUnload)
-	// 	}
-	//   }, [])
-
 	if(isSessionSet('session') && isSessionSet('isLoggedIn')) {
 		
 		return (
@@ -59,7 +53,16 @@ function App() {
 					<Route path='/history' element={<HistoryPage />} />
 					<Route path='/tag' element={<TagPage />} />
 					<Route path='/search' element={<SearchPage />} />
-
+					<Route path='/videos' element={<UserVideos/>} />
+					<Route path='/videosStatus' element={<VideoStatusPage/>} />
+					<Route path='/admin/users' element={<UserListPage/>} />
+					<Route path='/admin/videos' element={<VideosListPage/>} />
+					<Route path='/admin/report' element={<AdminReport/>} />
+					<Route path='/admin/tag' element={<AdminTag/>} />
+					<Route path='/admin/allLog' element={<AdminLog/>} />
+					<Route path='/admin/allLog' element={<AdminLog/>} />
+					<Route path='/admin/monitor' element={<Monitor/>} />
+					<Route path='/admin/storage' element={<UsersStorage/>} />
 					{/* not found page */}
 					<Route path='*' element={<NotFoundPage />} />	
 				</Routes>

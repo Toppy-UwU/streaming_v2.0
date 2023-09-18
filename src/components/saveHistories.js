@@ -1,23 +1,19 @@
 import { isSessionSet } from "./session"
+import '../config';
 
+const ip = global.config.ip.ip;
 export const insertHistories = async (data) => {
-    // const f = isSessionSet('session')
-    // await fetch('http://localhost:8900/test/json/get?t='+time, {}).catch(() => {})
-    // data.preventDefault();
-    // for(let i=0;i<2;i++) {
-        await fetch('http://localhost:8900/update/history/user', {
+    await fetch(ip+'/update/history/user', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(data)
-        }).then(response => { }).catch((error) => { })
-    // }
-    
+    }).then(response => { }).catch((error) => { })
 }
 
 export const createHistory = (data) => {
-    fetch('http://localhost:8900/insert/history', {
+    fetch(ip+'/insert/history', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

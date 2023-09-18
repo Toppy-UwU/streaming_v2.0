@@ -2,14 +2,16 @@ import { useState } from "react";
 import ReactModal from "react-modal";
 import UserEditModal from "./userEditModal";
 import { getToken } from "./session";
+import '../config'
 
 
 const NameTable = (props) => {
     const [isOpen, setIsOpen ] = useState(false);
     const [ selectedUser, setSelectedUser ] = useState(null);
     const [ addedUser, setAddUser ] = useState([]);
+    const ip = global.config.ip.ip;
 
-    const api = 'http://localhost:8900/insert/user/admin';
+    const api = ip+'/insert/user/admin';
 
     ReactModal.setAppElement('#root');
 

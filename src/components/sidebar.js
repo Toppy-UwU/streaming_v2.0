@@ -1,109 +1,213 @@
-import React, { useEffect, useState } from 'react';
-import { getlocalData, removelocalData, isSessionSet } from './session';
-import './../css/utilities.css';
+import React, { useState, useEffect } from 'react';
+import { Link } from "react-router-dom";
+import { getlocalData, isSessionSet } from './session';
+import 'bootstrap-icons/font/bootstrap-icons.css';
+import './../css/sidebar.css';
+import './../css/swal2theme.css';
+import Swal from 'sweetalert2';
 
 const Sidebar = ({ children }) => {
   const [search, setSearch] = useState('');
+  const [searchBox, setSearchBox] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
-  const logoutHandler = (e) => {
-    // removelocalData('session');
-    // removelocalData('isLoggedIn');
-    // removelocalData('token');
-    // removelocalData('expDate');
-    // removelocalData('check');
-    localStorage.clear()
-  }
+  const toggleSearchBox = () => {
+    setSearchBox(!searchBox);
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
     setSearch(e.target.value);
   }
 
-  const goSearch =  (e) => {
+  const Search = (e) => {
     e.preventDefault();
-    window.location.href = '/search?search=' + search;
+    if (search.trim() === '') {
+      return;
+    }
+    window.location.href = '/search?search=' + encodeURIComponent(search);
   }
 
-  if(isSessionSet('session') && isSessionSet('isLoggedIn')) {
-      const expDate = getlocalData('expDate');
-      if (Date.now() >= expDate){
-        logoutHandler();
-        window.location.href = '/token-expired';
-      } else {
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (windowWidth > 768) {
+      setSearchBox(false);
+    } else {
+      return;
+    }
+  }, [windowWidth]);
+
+  const logoutHandler = (e) => {
+    Swal.fire({
+      title: 'Are you need to logout?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: 'Logout Completed!',
+          icon: 'success'
+        }).then(() => {
+          localStorage.clear();
+          window.location.href = '/'
+        });
+      }
+    })
+  }
+
+  if (isSessionSet('session') && isSessionSet('isLoggedIn')) {
+    const expDate = getlocalData('expDate');
+    if (Date.now() >= expDate) {
+      localStorage.clear();
+      window.location.href = '/token-expired';
+    } else {
       var session = getlocalData('session');
       var isLoggedIn = getlocalData('isLoggedIn');
-      }
+    }
   }
 
   return (
-    <div className="d-flex" style={{ minHeight: '100vh' }} id={'sideBar'}>
-      <div className="position-fixed h-100" style={{ width: '250px', backgroundColor: 'rgb(44,48,52)' }}>
-        <div className="col-12">
-          <form onSubmit={goSearch}>
-          <div className="input-group" style={{ padding: '15px' }}>
-            <input type="text" className="form-control rounded-end-0 rounded-start-pill" placeholder="search" aria-label="searchBar" aria-describedby="searchBtn" defaultValue={''} onChange={handleSearch}/>
-            <div className="input-group-append">
-              <button className="btn btn-light rounded-start-0 rounded-end-pill" type="submit" id="searchBtn" onClick={goSearch}>search</button>
-            </div>
+    <div className='BarComponent'>
+      <nav className="navbar navbar-dark bg-dark">
+        <div className="container-fluid">
+          <div className='sidebar-btn ml-auto' style={{ display: searchBox ? "none" : "" }}>
+            <Link to="#offcanvasNavbar" data-bs-toggle="offcanvas" className='no-text-decoration'>
+              <i id="navbtn" className="bi bi-list" aria-hidden="true"></i>
+            </Link>
           </div>
+          <Link to="/" className='link'><div className='title ml-auto' style={{ display: searchBox ? "none" : "" }}>CS <span>MSU</span></div></Link>
+          <form className='searchBox' style={{ display: searchBox ? "flex" : "", width: searchBox ? "calc(90% - 10%)" : "" }} onSubmit={Search}>
+            <input type='text' placeholder='Search..' defaultValue={''} onChange={handleSearch} />
+            <button onClick={Search} className='searchbtn'><i className="bi bi-search"></i></button>
           </form>
 
-          <hr />
+          <div className='close-btn' onClick={toggleSearchBox} style={{ display: searchBox ? "inline-block" : "none" }}>
+            <i className='bi bi-x-lg'></i>
+          </div>
 
-          {/* menu start */}
-          <div className="container-fluid vh-100 flex-column">
-            <div className="row-cols-1" style={{ alignItems: 'center' }}>
-              <nav className="nav">
-                {isLoggedIn ? (
-                  <>
-                    <a href="/" style={{ marginTop: '20px' }}>
-                      <button className="btn btn-light rounded-pill" style={{ width: '230px', color: 'black' }}>Home</button>
-                    </a>
-                    {/* profile.php?profile=${session.U_id} */}
-                    <a href={`/profile?profile=${session.U_id}`} style={{ marginTop: '20px' }}>
-                      <button className="btn btn-light rounded-pill" style={{ width: '230px', color: 'black' }}>Profile</button>
-                    </a>
-                    <a href="/history" style={{ marginTop: '20px' }}>
-                      <button className="btn btn-light rounded-pill" style={{ width: '230px', color: 'black' }}>History</button>
-                    </a>
+          <div className='header-btn' style={{ display: searchBox ? "none" : "" }}>
+            {isLoggedIn ? (
+              <div>
+                <button type="button" className="bar-button hideBtn" onClick={toggleSearchBox}><span><i className="bi bi-search"></i></span></button>
+                <Link to="/upload" className="no-text-decoration"><button type="button" className="bar-button"><span><i className="bi bi-plus-circle"></i></span></button></Link>
+                <Link to='#dropdown-menu' type="button" id="triggerId" data-bs-toggle="dropdown" aria-haspopup="true"
+                  aria-expanded="false"><img src={`data:image/jpeg;base64, ${session.U_pro_pic}`} alt="profile" className='user-icon' /></Link>
+                <div class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="triggerId">
+                  <div className='UserInfo'>
+                    <span><img src={`data:image/jpeg;base64, ${session.U_pro_pic}`} alt="profile" className='user-icon' /> {session.username}</span>
+                  </div>
+                  <hr class="dropdown-divider"></hr>
+                  <Link class="dropdown-item" to={`/profile?profile=${session.U_id}`}><span><i className="bi bi-person-circle"></i> Profile</span></Link>
+                  <Link class="dropdown-item" to={`/profile?profile=${session.U_id}`}><span><i className="bi bi-gear"></i> Setting</span></Link>
+                  {session.U_type === 'admin' && (
+                    <Link class="dropdown-item" to="/admin"><span><i className="bi bi-nut"></i> Administation</span></Link>
+                  )}
+                  <hr class="dropdown-divider"></hr>
+                  <Link class="dropdown-item" to="#" onClick={logoutHandler}><span><i className="bi bi-box-arrow-right"></i> Logout</span></Link>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <button type="button" className="bar-button hideBtn" onClick={toggleSearchBox}><span><i className="bi bi-search"></i></span></button>
+                <Link to="/register"><button type="button" className="bar-button add"><span><i className="bi bi-person-add"></i></span></button></Link>
+                <Link to="/login"><button type="button" className="bar-button"><span><i className="bi bi-box-arrow-in-right"></i></span></button></Link>
+              </div>
+            )}
+          </div>
+          <div class="offcanvas offcanvas-start text-bg-dark" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasDarkNavbarLabel">
+            <div class="offcanvas-header">
+              <h5 className="offcanvas-title" id="offcanvasExampleLabel">CS <span>MSU</span></h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body">
+              {isLoggedIn ? (
+                <>
+                  <ul className="navbar-nav">
+                    <li className="nav-item">
+                      <Link className="nav-link active" aria-current="page" to="/"><i className="bi bi-house"></i><span> Home</span></Link>
+                    </li>
+
+                    <li className="nav-item">
+                      <Link className="nav-link active" to={`/profile?profile=${session.U_id}`}><i className="bi bi-person"></i><span> Profile</span></Link>
+                    </li>
+
+                    <li className="nav-item">
+                      <Link className="nav-link active" to="/videos"><i className="bi bi-camera-video"></i><span> Videos</span></Link>
+                    </li>
+
+                    <li className="nav-item">
+                      <Link className="nav-link active" to="/history"><i className="bi bi-clock-history"></i><span> History</span></Link>
+                    </li>
+
+                    <hr className='text-secondary d-md-block' />
 
                     {session.U_permit === 1 && (
-                      <a href='/upload' style={{ marginTop: '20px' }}>
-                        <button className="btn btn-light rounded-pill" data-toggle="modal" data-target="#uploadVid" style={{ width: '230px', color: 'black' }}>Upload Video</button>
-                      </a>
+                      <li className="nav-item">
+                        <Link className="nav-link active" to="/upload"><i className="bi bi-cloud-upload"></i><span> Upload</span></Link>
+                      </li>
                     )}
 
-                    {session.U_type === 'admin' && (
-                      <a href="/admin" style={{ marginTop: '20px' }}>
-                        <button className="btn btn-light rounded-pill" style={{ width: '230px', color: 'black' }}>Administration</button>
-                      </a>
+                    {session.U_permit === 1 && (
+                      <li className="nav-item">
+                        <Link className="nav-link active" to="/videosStatus"><i className="bi bi-list-ul"></i><span> Upload Status</span></Link>
+                      </li>
                     )}
 
-                    <a href="/login" style={{ marginTop: '20px' }}>
-                      <button className="btn btn-danger rounded-pill" style={{ width: '230px', color: 'black' }} onClick={logoutHandler}>Logout</button>
-                    </a>
-                  </>
-                ) : (
-                  <>
-                  <a href="/" style={{ marginTop: '20px' }}>
-                      <button className="btn btn-light rounded-pill" style={{ width: '230px', color: 'black' }}>Home</button>
-                    </a>
-                  <a href="/login" style={{ marginTop: '20px' }}>
-                    <button className="btn btn-light rounded-pill" style={{ width: '230px', color: 'black' }}>Login</button>
-                  </a>
-                  </>
-                )}
-              </nav>
+                    <hr className='text-secondary d-md-block' />
+
+                    <li className="nav-item">
+                      <Link className="nav-link active" to="/"><i className="bi bi-info-circle"></i><span> Log</span></Link>
+                    </li>
+
+                    <li className="nav-item">
+                      <Link className="nav-link active" to="/"><i className="bi bi-flag"></i><span> Report</span></Link>
+                    </li>
+
+                    <li className="nav-item">
+                      <Link className="nav-link active" to="/"><i className="bi bi-link"></i><span> Videos API</span></Link>
+                    </li>
+
+                    <li className="nav-item">
+                      <Link className="nav-link active" to="/"><i className="bi bi-person-fill-gear"></i><span> Setting</span></Link>
+                    </li>
+                  </ul>
+                </>
+              ) : (
+                <ul className="navbar-nav">
+                  <li className="nav-item">
+                    <Link className="nav-link active" to="/"><i className="bi bi-house"></i><span> Home</span></Link>
+                  </li>
+
+                  <hr className='text-secondary d-md-block' />
+
+                  <li className="nav-item">
+                    <Link className="nav-link active" to="/login"><i className="bi bi-box-arrow-in-right"></i><span> Log In</span></Link>
+                  </li>
+
+                  <li className="nav-item">
+                    <Link className="nav-link active" to="/register"><i className="bi bi-person-add"></i><span> Register</span></Link>
+                  </li>
+
+                </ul>
+              )}
             </div>
           </div>
-          {/* end of menu */}
         </div>
-      </div>
-      {/* end of side bar */}
-      <div className="container-fluid" style={{ marginLeft: '250px', backgroundColor: 'rgb(56, 56, 56)', height: '100vh', overflow: 'auto', position: 'relative' }}>
-        <div className="row" >
-          {children}
-        </div>
+      </nav>
+      <div className='childrenComponent'>
+        {children}
       </div>
     </div>
   );

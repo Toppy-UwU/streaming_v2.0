@@ -113,14 +113,6 @@ const VideoPlayer = ({ source, V_id, watchTime }) => {
           Your browser does not support the video tag.
         </video>
       </div>
-      <div>
-        <select onChange={resChange}>
-          <option value={'auto'}>Auto</option>
-          {resolutions && resolutions.map((res, index) => (
-            <option key={index} value={index} >{res.height}</option>
-          ))}
-        </select>
-      </div>
     </div>
   );
 };

@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
-// import { getlocalData, setlocalData } from '../components/localstorage';
 import { setlocalData, isSessionSet } from '../components/session';
 import './../css/login.css';
+import '../config';
 
 const LoginPage = () => {
+  const ip = global.config.ip.ip;
   if (isSessionSet('isLoggedIn')) {
-    window.location.href = '/'
+    window.location.href = '/';
   }
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  document.title = "Login";
   // login API
-  const api = 'http://localhost:8900/login'
+  const api = ip+'/login';
 
   const handleEmailChange = (e) => {
     setEmail(e.target.value);
@@ -57,7 +59,7 @@ const LoginPage = () => {
               if (checkbox.checked) {
                 expDate.setDate(expDate.getDate() + 30);
               } else {
-                expDate.setSeconds(expDate.getSeconds() + 3600);
+                expDate.setSeconds(expDate.getSeconds() + 86400);
               }
               
               setlocalData('session', data.data);
@@ -66,30 +68,8 @@ const LoginPage = () => {
               setlocalData('expDate', expDate.getTime());
 
              
-              window.location.href = '/'
+              window.location.href = '/';
 
-              // if(checkbox.checked) {
-              //   expDate.setDate(expDate.getDate() + 31);
-
-              //   setlocalData('session', data.data);
-              //   setlocalData('isLoggedIn', true);
-              //   setlocalData('check', true);
-              //   setlocalData('token', data.token);
-              //   setlocalData('expDate', expDate.getTime());
-              //   window.location.href = '/'
-              //   // console.log(data.data)
-              //   // console.log('local');
-              // }else {
-              //   expDate.setDate(expDate.getDate() + 31);
-
-              //   setSessionData('session', data.data);
-              //   setSessionData('isLoggedIn', true);
-              //   setlocalData('check', false);
-              //   setSessionData('token', data.token);
-              //   setSessionData('expDate', expDate.getTime());
-              //   window.location.href = '/'
-              //   // console.log('sesssion');
-              // }
             } else if (data.status === 'fail') {
               alert('wrong email or password')
             }
@@ -114,7 +94,7 @@ const LoginPage = () => {
       <div className="col-12 my-center" style={{ backgroundColor: 'rgba(38, 38, 38, 0.85)', width: '100%', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         <div className="card mx-auto rounded" style={{ width: '300px', backgroundColor: 'rgb(55, 55, 55)' }}>
           <div className="card-body">
-            <h2 style={{ color: 'white', textAlign: 'center' }}>CS Streaming 888</h2>
+            <h2 style={{ color: 'white', textAlign: 'center' }}>CS HUB</h2>
             <h4 style={{ color: 'white', textAlign: 'center' }}>Login</h4>
             <br />
             <form onSubmit={handleSubmit}>

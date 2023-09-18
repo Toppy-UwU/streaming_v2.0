@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import Sidebar from "../components/sidebar"
 import ShowVideos from "../components/showVideo";
 import { getAPI } from "../components/callAPI";
+import '../config';
 
 
 const TagPage = () => {
@@ -10,9 +11,11 @@ const TagPage = () => {
     const tag = param.get('tag');
 
     const [ videos, setVideos ] = useState(null);
-    const [ tags, setTags ] = useState(null)
+    const [ tags, setTags ] = useState(null);
+    const ip = global.config.ip.ip;
+    document.title = tag+" | Tags";
 
-    const api = 'http://localhost:8900/get/videos/tag?tag=' + tag;
+    const api = ip+'/get/videos/tag?tag=' + tag;
 
     const changeTag = (tag) => {
         if(tag === 'all') {

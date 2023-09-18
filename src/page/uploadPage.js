@@ -7,6 +7,7 @@ import './../css/upload.css';
 import Sidebar from "../components/sidebar";
 import ProgressBar from "../components/progressBar";
 import { getAPI } from "../components/callAPI";
+import '../config'
 
 import { getUser, getlocalData, isSessionSet } from "../components/session";
 
@@ -15,16 +16,17 @@ const UploadPage = () => {
     var session
     var token
     const user = getUser();
+    const ip = global.config.ip.ip;
+    document.title = "Upload Video";
 
     if (isSessionSet('token')) {
-        // console.log('in local');
         session = getlocalData('session');
         token = getlocalData('token')
     }
 
 
-    const uploadAPI = 'http://localhost:8900/upload';
-    const gatUploadApi = 'http://localhost:8900/get/videos/upload?u=' + user;
+    const uploadAPI = ip + '/upload';
+    const gatUploadApi = ip + '/get/videos/upload?u=' + user;
 
     const [file, setFile] = useState();
     const [vidDesc, setVidDesc] = useState('');
@@ -43,34 +45,10 @@ const UploadPage = () => {
     useEffect(() => {
         getAPI('tags')
             .then(response => {
-                // const removeID = vidTags.map(tmp => tmp.T_ID);
-                // const tmp_tag = response.filter(tag => !removeID.includes(tag.T_ID))
                 setTags(response);
                 setShowTags(response);
             })
     }, []);
-
-    useEffect(() => {
-        const fetchData = () => {
-            fetch(gatUploadApi)
-            .then((response) => {
-                return response.json();
-            })
-            .then((data) => {
-                setUploading(data);
-            })
-        }
-
-        let interval;
-
-        fetchData();
-        
-        if(windows === 'uploading') {
-            interval = setInterval(fetchData, 20000);
-        }
-
-        return () => clearInterval(interval);
-    }, [windows]);
 
     const checkDate = () => {
         const expDate = getlocalData('expDate');
@@ -85,7 +63,6 @@ const UploadPage = () => {
         const tmp_tags = showTags.filter(tmp_tag => tmp_tag !== tag);
         tmp_vidTags.push(tag);
         setVidTags(tmp_vidTags);
-        // setTags(tmp_tags);
         setShowTags(tmp_tags);
     }
 
@@ -96,7 +73,6 @@ const UploadPage = () => {
         const tmp = tmp_tags.map(tmp => tmp.T_ID);
         const show = tags.filter(tag => tmp.includes(tag.T_ID));
         setVidTags(tmp_vidTags);
-        // setTags(tmp_tags);
         setShowTags(show);
     }
 
@@ -118,7 +94,6 @@ const UploadPage = () => {
     };
 
     const handleFileChange = (e) => {
-        // console.log(e.target.files[0]);
         const tmpFile = e.target.files[0];
         if (tmpFile) {
             setFile(tmpFile);
@@ -249,21 +224,19 @@ const UploadPage = () => {
                     .then((response) => {
                         window.location.reload();
                     })
-                    
+
                     .catch((error) => {
                         console.error('Upload failed:', error);
                     });
             });
 
         } else {
-            // active button after upload function
             console.log('file not found');
         }
     }
 
     const cardClick = () => {
         document.getElementById('uploadBtn').click();
-        // handleClickUpload
     }
 
     const thumbnailClick = () => {
@@ -273,181 +246,134 @@ const UploadPage = () => {
     const logTest = () => {
         console.log('work!!!');
         console.log(vidPermit);
-    }
-
-    const changeWindows = (win) => {
-        if(win === 'upload') {
-            setUploading(null)
-        }
-        setWindows(win);
+        window.location.href = "/";
     }
 
     return (
         <div>
             <Sidebar>
-
                 <div className="container-fluid">
-                    {windows === 'upload' ?
-                        <div className="card card-margin" style={{ marginTop: '6%', backgroundColor: 'rgb(44,48,52)' }}>
-                            <div>
-                                <button className="btn" style={{ margin: '10px', backgroundColor: 'gray' }} onClick={() => changeWindows('upload')}>upload</button>
-                                <button className="btn" style={{ margin: '10px', backgroundColor: 'gray' }} onClick={() => changeWindows('uploading')}>uploading video</button>
+                    <div className="card card-margin" style={{ backgroundColor: 'rgb(44,48,52)' }}>
+                        <div className='card-header text-white d-flex justify-content-between align-items-center'>
+                            <div style={{ flex: 1, marginRight: '20px', maxWidth: '80%' }}>
+                                {tmp.length > 0 ?
+                                    <h4>{tmp}</h4>
+                                    :
+                                    <h4>Upload Video</h4>
+                                }
                             </div>
-                            <div className="card-body">
-                                <div className="row">
-                                    <div className="col-7">
-                                        <div>
-                                            {videoUrl ? (
-                                                <div className="card" style={{ height: '65.7vh' }}>
-                                                    <div className="card-body">
-                                                        <video key={videoKey} controls style={{ width: '100%' }} >
-                                                            <source src={videoUrl} type="video/mp4" />
-                                                        </video>
+                            <div style={{ flex: 0 }}>
+                                <a href="/" className="btn btn-secondary">
+                                    <i className="bi bi-house"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <div className="card-body">
+                            <div className="center">
+                                {videoUrl ? (
+                                    <div className="card" style={{ width: '70%'}}>
+                                        <div className="card-body">
+                                            <video key={videoKey} controls style={{ width: '100%', maxHeight: "320px" }} >
+                                                <source src={videoUrl} type="video/mp4" />
+                                            </video>
 
-                                                        <div className="center">
-                                                            <button className="btn btn-primary" onClick={cardClick} style={{ marginRight: '5px' }}>
-                                                                Change Video
-                                                            </button>
-                                                            <button className="btn btn-primary" onClick={thumbnailClick} style={{ marginLeft: '5px' }}>
-                                                                Select Thumbnail
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                            ) : (
-                                                <div className="card upload-card" onClick={cardClick} style={{ height: '65.7vh' }}>
-                                                    <div className="card-body">
-                                                        <h4 className="card-title center" style={{ marginTop: '20%' }}>Video Upload</h4>
-                                                        <p className="card-text center">Choose a video to upload.</p>
-                                                    </div>
-                                                    {/* <input className="form-control-file" id="uploadBtn" type="file" accept="video/*" style={{ display: 'none' }} onChange={handleFileChange} /> */}
-                                                </div>
-                                            )}
-
-                                            <input className="form-control-file" id="uploadBtn" type="file" accept="video/*" style={{ display: 'none' }} onChange={handleFileChange} />
-                                            <input className="form-control-file" id="imgBtn" type="file" accept="image/png, image/jpeg" style={{ display: 'none' }} onChange={handleThumbnail} />
-
+                                            <div className="center">
+                                                <button className="btn btn-primary btn-card" onClick={cardClick}>
+                                                    Change Video
+                                                </button>
+                                                <button className="btn btn-primary btn-card" onClick={thumbnailClick} style={{ marginLeft: '5px' }}>
+                                                    Select Thumbnail
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="col-5" style={{ color: 'white' }}>
-                                        <div className="row" >
-                                            <h4>Video Name</h4>
-                                            <div className="input-group row mb-3">
-                                                <input type="text" className="form-control" placeholder='' value={tmp} onChange={handleVidName} ></input>
-                                            </div>
+                                ) : (
+                                    <div className="card upload-card" onClick={cardClick}>
+                                        <div className="card-body">
+                                            <i className="bi bi-cloud-upload center" style={{ fontSize: "40px" }}></i>
+                                            <p className="card-text center">Click to choose a video to upload.</p>
                                         </div>
-                                        <div className="input-group row">
-                                            <div className="col">
-                                                <h4>Video Description</h4>
-                                                <textarea className="form-control" onChange={handleVidDesc} rows="4"></textarea>
-                                            </div>
-                                            <div className="col">
-                                                <h4>Video Permission</h4>
-                                                <select className="form-control custom-select mb-3" value={vidPermit} onChange={handleSelect}>
-                                                    <option value='public'>Public</option>
-                                                    <option value="private">Private</option>
-                                                    <option value="unlisted">Unlisted</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div className="input-group row" style={{ marginTop: '15px' }}>
-                                            <label>Tag</label>
-                                            {tags &&
-                                                <h6>
-                                                    <div className="row">
-                                                        {vidTags && vidTags.map((tag, index) => (
-                                                            <div className="col-auto" key={index}>
-                                                                <div className="" style={{ width: 'fit-content', backgroundColor: 'white', borderRadius: '10px' }}>
-                                                                    <div style={{ marginRight: '8px', marginTop: '5px', color: 'black' }}>
-                                                                        <button onClick={() => removeTag(tag)} className="btn">x</button>
-                                                                        {tag.T_name}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                        <div className="col-auto">
-                                                            <div style={{ width: 'fit-content', backgroundColor: 'white', borderRadius: '10px' }}>
-                                                                <div className="dropdown" style={{ marginTop: '5px', color: 'black' }}>
-                                                                    <button className="btn" type="button" id="dropdownTag" aria-haspopup="true" data-bs-toggle="dropdown" aria-expanded="false">+</button>
-                                                                    <div className='dropdown-menu dropdown-menu-dark ' aria-labelledby='dropdownTag'>
-                                                                        <div className="col input-group">
-                                                                            <input type="text" className="form-control" placeholder="search tag" onChange={searchTag} defaultValue={''} />
-                                                                        </div>
-                                                                        {showTags && showTags.slice(0, 5).map((d_tag, index) => (
-                                                                            <button key={index} className='dropdown-item' onClick={() => handleTag(d_tag)}>+ {d_tag.T_name}</button>
-                                                                        ))}
-                                                                    </div>
+                                    </div>
+                                )}
+                                <input className="form-control-file" id="uploadBtn" type="file" accept="video/*" style={{ display: 'none' }} onChange={handleFileChange} />
+                                <input className="form-control-file" id="imgBtn" type="file" accept="image/png, image/jpeg" style={{ display: 'none' }} onChange={handleThumbnail} />
+                            </div>
+                            <div style={{ color: 'white', marginTop: "20px" }}>
+                                <div className="input-group row" >
+                                    <h4 className="fs-6">Video Name</h4>
+                                    <div className="input-group row mb-3">
+                                        <input type="text" className="form-control" placeholder="Enter your video name." value={tmp} onChange={handleVidName} ></input>
+                                    </div>
+                                </div>
+                                <div className="input-group row">
+                                    <div className="col">
+                                        <h4 className="fs-6">Video Description</h4>
+                                        <textarea className="form-control" placeholder="Let's tell your viewer a bit about this video. :)" onChange={handleVidDesc} rows="3"></textarea>
+                                    </div>
+                                </div>
+                                <div className="input-group row" style={{ marginTop: "20px" }}>
+                                    <div className="col">
+                                        <h4 className="fs-6">Video Permission</h4>
+                                        <select className="form-control custom-select mb-3" value={vidPermit} onChange={handleSelect}>
+                                            <option value='public'>Public</option>
+                                            <option value="private">Private</option>
+                                            <option value="unlisted">Unlisted</option>
+                                        </select>
+                                    </div>
+                                    <div className="col">
+                                        <h4 className="fs-6">Tag</h4>
+                                        {tags &&
+                                            <h6>
+                                                <div className="row">
+                                                    {vidTags && vidTags.map((tag, index) => (
+                                                        <div className="col-auto" key={index}>
+                                                            <div className="" style={{ width: 'fit-content', backgroundColor: 'white', borderRadius: '10px' }}>
+                                                                <div style={{ marginRight: '8px', color: 'black' }}>
+                                                                    <button onClick={() => removeTag(tag)} className="btn">x</button>
+                                                                    {tag.T_name}
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                </h6>
-                                            }
-                                        </div>
-                                        <div className="row" style={{ marginTop: '10%' }}>
-                                            <div className="col btn-margin center">
-                                                <button className="btn btn-primary rounded-pill" style={{ flex: '1', height: '130%' }} id="submitBtn" onClick={handleClickUpload}>upload</button>
-                                                <button className="btn btn-danger rounded-pill" style={{ flex: '1', height: '130%' }} id="cancleBtn" onClick={logTest}>cancle</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <br></br>
-                                <div className="row" style={{ marginLeft: '2px', marginRight: '2px' }}>
-                                    <div className="col-12">
-                                        <div className="progress">
-                                            <ProgressBar value={upProgress + '%'} />
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
-                        :
-                        <div className="card card-margin" style={{ marginTop: '6%', backgroundColor: 'rgb(44,48,52)' }}>
-                            <div>
-                                <button className="btn" style={{ margin: '10px', backgroundColor: 'gray' }} onClick={() => changeWindows('upload')}>upload</button>
-                                <button className="btn" style={{ margin: '10px', backgroundColor: 'gray' }} onClick={() => changeWindows('uploading')}>uploading video</button>
-                            </div>
-                            <div className="card-body" style={{color: 'white'}}>
-                                {Object.keys(uploading).length > 0 ? 
-                                    <table>
-                                        <tr>
-                                            <th scope="col-3">Video</th>
-                                            <th scope="col">Coverting</th>
-                                        </tr>
-                                    
-                                {uploading.map((upload, index) => (
-                                     <tr key={index}> 
-                                        <td className="col-3">
-                                            <div>
-                                            <img className="card-img-top " src={'data:image/jpeg;base64,' + upload.V_pic} style={{marginBottom: '5px', borderRadius: '20px'}} alt={upload.V_title+' thumbnail'} />
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div className="row">
-                                                <div className="col-12" style={{marginLeft: '10px'}}>
-                                                    <div><h5>{upload.V_title} : {upload.V_encode}</h5></div>
-                                                    <div className="progress">
-                                                        <ProgressBar value={upload.V_permit} />
+                                                    ))}
+                                                    <div className="col-auto">
+                                                        <div style={{ width: 'fit-content', backgroundColor: 'white', borderRadius: '10px' }}>
+                                                            <div className="dropdown" style={{ color: 'black' }}>
+                                                                <button className="btn" type="button" id="dropdownTag" aria-haspopup="true" data-bs-toggle="dropdown" aria-expanded="false">+</button>
+                                                                <div className='dropdown-menu dropdown-menu-dark ' aria-labelledby='dropdownTag'>
+                                                                    <div className="col input-group">
+                                                                        <input type="text" className="form-control" placeholder="search tag" onChange={searchTag} defaultValue={''} />
+                                                                    </div>
+                                                                    {showTags && showTags.slice(0, 5).map((d_tag, index) => (
+                                                                        <button key={index} className='dropdown-item' onClick={() => handleTag(d_tag)}>+ {d_tag.T_name}</button>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                                </table>
-                            :  
-                            <div className="center" style={{color: 'white'}}>
-                                <h3>
-                                    No video uploadig
-                                </h3>
-                            </div> 
-                            }
+                                            </h6>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            <br></br>
+                            <div className="justify-content-center">
+                                <div className="btn-margin center">
+                                    <button className="btn btn-primary rounded-pill btn-button" id="submitBtn" onClick={handleClickUpload}>Upload</button>
+                                    <button className="btn btn-danger rounded-pill btn-button" id="cancleBtn" onClick={logTest}>Cancel</button>
+                                </div>
+                            </div>
+                            <br></br>
+                            <div className="row" style={{ marginLeft: '2px', marginRight: '2px' }}>
+                                <div className="col-12">
+                                    <div className="progress">
+                                        <ProgressBar value={upProgress + '%'} />
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
-                    }
+                    </div>
                 </div>
             </Sidebar>
         </div>

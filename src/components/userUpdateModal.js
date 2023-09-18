@@ -1,24 +1,23 @@
-import { useState } from "react";
+import React, { useState } from 'react';
 import { getToken } from "./session";
+import '../config';
 
 const UserUpdate = (props) => {
-
     const session = props.data;
     const [username, setUsername] = useState(session.U_name);
     const [email, setEmail] = useState(session.U_mail);
     const [propic, setPropic] = useState(null);
     const [bannerpic, setBannerpic] = useState(null);
+    const ip = global.config.ip.ip;
 
-    const api = 'http://localhost:8900/update/user/user';
+    const api = ip + '/update/user/user';
 
     const handleUsername = (e) => {
         setUsername(e.target.value);
-        e.preventDefault();
     }
 
     const handleEmail = (e) => {
         setEmail(e.target.value);
-        e.preventDefault();
     }
 
     const handlePropic = (e) => {
@@ -36,72 +35,66 @@ const UserUpdate = (props) => {
             'username': username,
             'email': email
         }
-        
+
         formData.append('data', JSON.stringify(data));
         formData.append('pro', propic);
         formData.append('banner', bannerpic);
 
         const token = getToken();
-        console.log(data);
-            fetch(api, {
-                method: 'POST',
-                headers: {
-                    'Authorization': 'Bearer '+ token
-                },
-                body: formData
-            })
-            .then((response) => {
-                if(response.ok){
-                    props.update();
-                }
-            })
-            .catch((e) => {
-                console.error(e);
-            })
+
+        fetch(api, {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + token
+            },
+            body: formData
+        })
+        .then((response) => {
+            if (response.ok) {
+                props.update();
+            }
+        })
+        .catch((e) => {
+            console.error(e);
+        })
+        {console.log(data)}
     }
 
     return (
-        <div className='container-fluid'>
-            <div className='row' style={{ color: 'white' }}>
-                <div className='col center'><h5>User Setting</h5></div>
-            </div>
-            <div className='row'>
-                <div className='col' style={{ color: 'white' }}>
+        <div className='container' style={{maxWidth : "700px" , margin : "0 auto" , padding : "20px"}}>
+            <div className='card'>
+                <div className='card-header'>
+                    <h5>User Settings</h5>
+                </div>
+                <div className='card-body'>
                     <form>
-                        <h5>
-                            <div className="form-group">
-                                <label htmlFor='nameInput'>User Name</label>
-                                <input type="text" className="from-control" id="nameInput" placeholder="" value={username} style={{ width: '100%' }} onChange={handleUsername} />
-                            </div>
-                            <br />
-                            <div className="form-group">
-                                <label htmlFor='mailInput'>Email</label>
-                                <input type="email" className="from-control" id="mailInput" placeholder="" value={email} style={{ width: '100%' }} onChange={handleEmail} />
-                            </div>
-                            <br />
-                            <div className="form-gropup">
-                                <label htmlFor='imgInput'>User Profile Image</label>
-                                <input type="file" className="from-control" accept="image/*" id="imgInput" style={{ width: '100%' }} onChange={handlePropic} />
-                            </div>
-                            <br />
-                            <div className="form-gropup">
-                                <label htmlFor='bannerInput'>Banner Image</label>
-                                <input type="file" className="from-control" accept="image/*" id="bannerInput" style={{ width: '100%' }} onChange={handleBanner} />
-                            </div>
-                        </h5>
-
+                        <div className='form-group'>
+                            <label htmlFor='bannerInput'>Banner Image</label>
+                            <input type='file' className='form-control' accept='image/*' id='bannerInput' onChange={handleBanner} />
+                            {bannerpic && <img src={URL.createObjectURL(bannerpic)} alt='Banner' style={{ width: '100%', maxHeight: '200px' }} />}
+                        </div>
+                        <div className='form-group'>
+                            <label htmlFor='imgInput'>User Profile Image</label>
+                            <input type='file' className='form-control' accept='image/*' id='imgInput' onChange={handlePropic} />
+                            {propic && <img src={URL.createObjectURL(propic)} alt='Profile' style={{ width: '50%', maxHeight: '50%' }} />}
+                        </div>
+                        <div className='form-group'>
+                            <label htmlFor='nameInput'>User Name</label>
+                            <input type='text' className='form-control' id='nameInput' value={username} onChange={handleUsername} />
+                        </div>
+                        <div className='form-group'>
+                            <label htmlFor='mailInput'>Email</label>
+                            <input type='email' className='form-control' id='mailInput' value={email} onChange={handleEmail} />
+                        </div>
                     </form>
                 </div>
-
-            </div>
-            <div className='row'>
-                <div className='col center'>
-                    <button className='btn btn-primary rounded-pill'onClick={sendRequest} style={{ margin: '5px' }}>save</button>
-                    <button className='btn btn-danger rounded-pill' onClick={props.closeModal} style={{ margin: '5px' }}>cancle</button>
+                <div className='card-footer'>
+                    <button className='btn btn-primary' onClick={sendRequest}>Save</button>
+                    <button className='btn btn-secondary' onClick={props.closeModal}>Cancel</button>
                 </div>
             </div>
         </div>
-    )
+    );
 }
 
-export default UserUpdate
+export default UserUpdate;
