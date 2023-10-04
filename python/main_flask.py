@@ -15,10 +15,60 @@ import threading
 import subprocess
 import bcrypt
 import psutil
+from psutil import net_io_counters
 import os
 import time
 import sys
 from conn import create_conn
+
+
+KB = float(1024)
+MB = float(KB**2)  # 1,048,576
+GB = float(KB**3)  # 1,073,741,824
+TB = float(KB**4)  # 1,099,511,627,776
+
+
+def size(B):
+    B = float(B)
+    if B < KB:
+        return f"{B} Bytes"
+    elif KB <= B < MB:
+        return f"{B/KB:.2f} KB"
+    elif MB <= B < GB:
+        return f"{B/MB:.2f} MB"
+    elif GB <= B < TB:
+        return f"{B/GB:.2f} GB"
+    elif TB <= B:
+        return f"{B/TB:.2f} TB"
+
+
+last_upload, last_download, upload_speed, down_speed = 0, 0, 0, 0
+
+
+def update_network_stats():
+    global last_upload, last_download, upload_speed, down_speed
+    counter = net_io_counters()
+
+    upload = counter.bytes_sent
+    download = counter.bytes_recv
+    total = upload + download
+
+    if last_upload > 0:
+        if upload < last_upload:
+            upload_speed = 0
+        else:
+            upload_speed = upload - last_upload
+
+    if last_download > 0:
+        if download < last_download:
+            down_speed = 0
+        else:
+            down_speed = download - last_download
+
+    last_upload = upload
+    last_download = download
+
+    return size(upload), size(download), size(total), size(upload_speed), size(down_speed)
 
 
 def create_app(test_config=None):
@@ -574,8 +624,7 @@ def create_app(test_config=None):
 
             return jsonify(user), 200
         except Exception as e:
-            print(e)
-            return ({"message": "Get Videos Fail"}), 500
+            print(e), 500
 
     @app.route("/get/users/search", methods=["GET"])
     def searchUsers():
@@ -599,8 +648,8 @@ def create_app(test_config=None):
             user = {
                 "U_id": row[0],
                 "U_name": row[1],
-                "U_mail" : row[2],
-                'U_vid': row[3] ,
+                "U_mail": row[2],
+                "U_vid": row[3],
                 "U_pro_pic": tmp[2:-1],
                 "U_folder": row[5],
             }
@@ -1425,29 +1474,22 @@ def create_app(test_config=None):
         disk_used_percent = round(disk_usage.percent, 2)
 
         # Network INFO
-        inf = "Wi-Fi"
-        net_stat = psutil.net_io_counters(pernic=True, nowrap=True)[inf]
-        net_in_1 = net_stat.bytes_recv
-        net_out_1 = net_stat.bytes_sent
-        time.sleep(1)
-        net_stat = psutil.net_io_counters(pernic=True, nowrap=True)[inf]
-        net_in_2 = net_stat.bytes_recv
-        net_out_2 = net_stat.bytes_sent
-
-        net_in = round((net_in_2 - net_in_1) / 1024 / 1024, 3)
-        net_out = round((net_out_2 - net_out_1) / 1024 / 1024, 3)
+        upload, download, total, upload_speed, down_speed = update_network_stats()
 
         return (
             jsonify(
                 {
-                    "CPU_Used": str(cpu_used) + "%",
-                    "Memory_Used": str(mem) + "%",
-                    "Disk_Total": str(disk_total) + " GB",
-                    "Disk_Used": str(disk_used) + " GB",
-                    "Disk_Free": str(disk_free) + " GB",
-                    "Disk_Used_Percent": str(disk_used_percent) + "%",
-                    "Network_Download": str(net_in) + " MB/s",
-                    "Network_Upload": str(net_out) + " MB/s",
+                    "CPU_Used": str(cpu_used),
+                    "Memory_Used": str(mem),
+                    "Disk_Total": str(disk_total),
+                    "Disk_Used": str(disk_used),
+                    "Disk_Free": str(disk_free),
+                    "Disk_Used_Percent": str(disk_used_percent),
+                    "Network_Download": str(download),
+                    "Network_Upload": str(upload),
+                    "Network_Total": str(total),
+                    "Network_Upload_Speed": str(upload_speed),
+                    "Network_Download_Speed": str(down_speed),
                 }
             ),
             200,
