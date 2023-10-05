@@ -7,7 +7,7 @@ import { getAPI } from '../components/callAPI';
 import 'video.js/dist/video-js.css';
 import { useState, useEffect } from 'react';
 import ShowVideos from '../components/showVideo';
-import { checkVidPermit, getUser, isAdmin, isSessionSet } from '../components/session';
+import { checkVidPermit, getToken, getUser, isAdmin, isSessionSet } from '../components/session';
 import ReactModal from 'react-modal';
 import VideoUpdateModal from '../components/videoUpdateModal';
 import { createHistory } from '../components/saveHistories';
@@ -24,6 +24,7 @@ const WatchPage = () => {
     const c_user = getUser();
 
     const url = 'http://localhost:80/hls/upload/' + user + '/' + video + '/' + video + '.m3u8';
+    // const url = 'http://localhost:8900/get/hls/262b8d113dddc5494a5026e96dadf267/pPbCLsM2QxMZ/zKQqTOooEeHX'
     const api = 'http://localhost:8900/get/video/info?v=' + video + '&u=' + c_user;
 
     ReactModal.setAppElement('#root');
@@ -62,7 +63,12 @@ const WatchPage = () => {
 
         const downloadAPI = 'http://localhost:8900/download?u='+ vidDetail.U_folder +'&v='+ vidDetail.V_encode
 
-        fetch(downloadAPI)
+        fetch(downloadAPI, {
+            method: 'GET',
+            headers: {
+                'Authorization': 'Bearer ' + getToken()
+            }
+        })
             .then(response => {
                 if (response.ok) {
                     return response.blob();

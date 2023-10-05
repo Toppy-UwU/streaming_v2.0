@@ -24,7 +24,7 @@ const UploadPage = () => {
 
 
     const uploadAPI = 'http://localhost:8900/upload';
-    const gatUploadApi = 'http://localhost:8900/get/videos/upload?u=' + user;
+    const getUploadApi = 'http://localhost:8900/get/videos/upload?u=' + user;
 
     const [file, setFile] = useState();
     const [vidDesc, setVidDesc] = useState('');
@@ -52,7 +52,7 @@ const UploadPage = () => {
 
     useEffect(() => {
         const fetchData = () => {
-            fetch(gatUploadApi)
+            fetch(getUploadApi)
             .then((response) => {
                 return response.json();
             })
@@ -70,7 +70,7 @@ const UploadPage = () => {
         }
 
         return () => clearInterval(interval);
-    }, [windows]);
+    }, [windows, getUploadApi]);
 
     const checkDate = () => {
         const expDate = getlocalData('expDate');

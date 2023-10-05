@@ -1,14 +1,16 @@
 
 import io
 import random
+import secrets
 import shutil
 import string
-from flask import Flask, json, request, jsonify, send_file
+from flask import Flask, json, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS, cross_origin
 from ffmpeg_streaming import Formats
 from PIL import Image
 import ffmpeg_streaming
 import jwt
+from jwt.exceptions import ExpiredSignatureError, DecodeError
 from datetime import datetime, timedelta
 import base64
 import cv2
@@ -23,12 +25,12 @@ from conn import create_conn
 
 def create_app(test_config = None):
     app = Flask(__name__)
-    app.config['SECRET_KEY'] = '123'
     
     CORS(app)
     app.config['CORS_ORIGINS'] = ['http://localhost:3000']
     app.config['CORS_METHODS'] = ['GET', 'POST', 'OPTIONS']
     app.config['CORS_HEADERS'] = ['Content-Type']
+    
 
 # function section
     # use to gen new video name for store in db
@@ -130,23 +132,6 @@ def create_app(test_config = None):
         flag, img = cv2.imencode('.jpg', re_frame)
         b64_img = base64.b64encode(img.tobytes())
         return b64_img
-    
-    def verify(raw_token):
-        if raw_token is None or not raw_token.startswith('Bearer '):
-            # invalid token
-            return False
-
-        token = raw_token.split(' ')[-1]
-        try:
-            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
-            
-            return True
-        except jwt.ExpiredSignatureError:
-            # return jsonify({'message': 'Token has expired'}), 401
-            return False
-        except jwt.InvalidTokenError:
-            # return jsonify({'message': 'Invalid token'}), 401
-            return False
 
     def imgResize(file, w, h):
         # pro 400x400
@@ -163,6 +148,45 @@ def create_app(test_config = None):
         buffer.truncate()
         return b64
 
+    def getJwtKey():
+        conn = create_conn()
+
+        cursor = conn.cursor()
+        cursor.execute('SELECT en.Key FROM encryptionkeys AS en WHERE K_action = %s ORDER BY K_create DESC', ('jwt',))
+        data = cursor.fetchone()
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return data[0]
+    
+    app.config['SECRET_KEY'] = getJwtKey()
+    
+    def token_required(f):
+        def jwt_decode(*args, **kwargs):
+            
+            tmp = request.headers.get('Authorization')
+            token = tmp.split(' ')
+
+            if not tmp:
+                print('Token is missing')
+                return jsonify({'message': 'Token is missing'}), 401
+
+            try:
+                # Verify and decode the token
+                print('working...')
+                payload = jwt.decode(token[-1], app.config['SECRET_KEY'], algorithms=['HS256'])
+            except ExpiredSignatureError:
+                print('Token has expired')
+                return jsonify({'message': 'Token has expired'}), 401
+            except DecodeError:
+                print('Token is invalid')
+                return jsonify({'message': 'Token is invalid'}), 401
+
+            return f(*args, **kwargs)
+
+        return jwt_decode
+    
+    
 
 # api section
     @app.route('/')
@@ -364,24 +388,6 @@ def create_app(test_config = None):
             'U_folder': data[13]
         }]
         return jsonify(video), 200
-    
-    @app.route('/verify', methods=['POST'])
-    def verify_token():
-        raw_token = request.headers.get('Authorization')
-
-        if raw_token is None or not raw_token.startswith('Bearer '):
-            return 'Invalid token', 401
-
-        token = raw_token.split(' ')[-1]
-        try:
-            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
-            
-            # Additional verification or processing can be done here
-            return jsonify(payload), 200
-        except jwt.ExpiredSignatureError:
-            return jsonify({'message': 'Token has expired'}), 401
-        except jwt.InvalidTokenError:
-            return jsonify({'message': 'Invalid token'}), 401
 
     @app.route('/insert/user/admin', methods=['POST'])
     def insertUser_admin():
@@ -451,6 +457,7 @@ def create_app(test_config = None):
             return ({'message': 'token invalid'}), 401
 
     @app.route('/download', methods=['GET'])
+    @token_required
     def download():
         video = request.args.get('v')
         user = request.args.get('u')
@@ -1007,48 +1014,42 @@ def create_app(test_config = None):
 
     @app.route('/delete/video/user', methods=['POST'])
     def deleteVideo_user():
-        token = request.headers.get('Authorization')
+        
+        tmp = token.split(' ')[-1]
+        payload = jwt.decode(tmp, app.config['SECRET_KEY'], algorithms=['HS256'])
+        data = request.get_json()
 
-        if(verify(token)):
-            tmp = token.split(' ')[-1]
-            payload = jwt.decode(tmp, app.config['SECRET_KEY'], algorithms=['HS256'])
-            data = request.get_json()
-
-            if(payload.get('U_id') == data['U_id'] or payload.get('U_type') == 'admin'):
-                print(data)
-                conn = create_conn()
-                cursor = conn.cursor()
-                path = '../upload/'+ data['U_folder'] + '/' + data['V_encode']
+        if(payload.get('U_id') == data['U_id'] or payload.get('U_type') == 'admin'):
+            print(data)
+            conn = create_conn()
+            cursor = conn.cursor()
+            path = '../upload/'+ data['U_folder'] + '/' + data['V_encode']
                 
-                cursor.execute(
-                    'DELETE FROM tag_video WHERE V_ID = \
-                        (SELECT V_encode \
-                        FROM videos \
-                        WHERE V_encode = %s)',
-                    (data['V_encode'],)
+            cursor.execute(
+                'DELETE FROM tag_video WHERE V_ID = \
+                    (SELECT V_encode \
+                    FROM videos \
+                    WHERE V_encode = %s)',
+                (data['V_encode'],)
+            )
+            conn.commit()
+
+            cursor.execute(
+                    'DELETE FROM videos WHERE U_ID=%s AND V_encode=%s' 
+                    ,(data['U_id'], data['V_encode'])
                 )
-                conn.commit()
 
-                cursor.execute(
-                        'DELETE FROM videos WHERE U_ID=%s AND V_encode=%s' 
-                        ,(data['U_id'], data['V_encode'])
-                    )
+            conn.commit()
+            cursor.close()
+            conn.close()
 
-                conn.commit()
-                cursor.close()
-                conn.close()
-
-                try:
-                    shutil.rmtree(path)
-                except OSError as e:
-                    pass
-
-
-                return ({'message': 'success'}), 200
-            else:
-                return ({'message': 'no permission'}), 400
+            try:
+                shutil.rmtree(path)
+            except OSError as e:
+                pass
+            return ({'message': 'success'}), 200
         else:
-            return ({'message': 'token invalid'}), 401
+            return ({'message': 'no permission'}), 400
 
     @app.route('/insert/history', methods=['POST'])
     def insertHistory():
@@ -1074,7 +1075,6 @@ def create_app(test_config = None):
         return ({'message': 'success'}), 200
 
     @app.route('/update/history/user', methods=['POST'])
-    @cross_origin()
     def updateHistory():
         data = request.get_json()
         conn = create_conn()
@@ -1309,7 +1309,7 @@ def create_app(test_config = None):
     
             cursor.execute('INSERT INTO system_logs(U_ID, action) VALUES (%s, %s)',
                            (data['U_id'], data['action']))
-                
+            
             conn.commit()
             cursor.close()
             conn.close()
@@ -1318,6 +1318,144 @@ def create_app(test_config = None):
         
         else:
             return({'message': 'token invalid'}), 400
+    
+    @app.route('/get/dynamicUrl', methods=['POST'])
+    def getDynamic():
+        data = request.get_json()
+
+        conn = create_conn()
+
+        email = data.get('email')
+        plain_password = data.get('password')
+        vid_url = data.get('vid_url')
+
+        # get password
+        cursor = conn.cursor()
+        cursor.execute(
+            'SELECT U_pass FROM users WHERE U_mail=%s',
+            (email,)
+        )
+        data = cursor.fetchone()
+
+        if data is not None:
+            hashed_password = data[0]
+
+            if bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8')):
+                url_token = secrets.token_hex(16)
+
+                vid_url = vid_url.split('watch?')
+                path = vid_url[-1].split('&')
+                u = path[0][2:]
+                v = path[1][2:]
+
+                dynamic_url = f"http://localhost:8900/get/hls/{url_token}/{u}/{v}"
+
+                cursor.execute(
+                    'INSERT INTO url_token(url) VALUES (%s)',
+                    (url_token,)
+                )
+
+                conn.commit()
+                cursor.close()
+                conn.close()
+
+                return jsonify({'url': dynamic_url}), 200
+                
+            else:
+                conn.commit()
+                cursor.close()
+                conn.close()
+                return ({'message': 'unauthenlized'}), 400
+        
+        else:
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return({'message': 'unauthenlized'}), 400
+
+    @app.route('/get/dynamicUrl/token', methods=['POST'])
+    def getDynamicWToken():
+        token = request.headers.get('Authorization')
+        
+        if(verify(token)):
+            data = request.get_json()
+
+            vid_url = data.get('vid_url')
+            url_token = secrets.token_hex(16)
+
+            conn = create_conn()
+            cursor = conn.cursor()
+
+            cursor.execute(
+                    'INSERT INTO url_token(url) VALUES (%s)',
+                    (url_token,)
+                )
+
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            vid_url = vid_url.split('watch?')
+            path = vid_url[-1].split('&')
+            u = path[0][2:]
+            v = path[1][2:]
+
+            dynamic_url = f"http://localhost:8900/get/hls/{url_token}/{u}/{v}"
+
+            return jsonify({'url': dynamic_url}), 200
+        else:
+            return ({'message': 'token invalid'}), 401
+    
+    @app.route('/get/hls/<path:url_token>/<path:u>/<path:v>')
+    def getHls(url_token, u, v):
+        conn = create_conn()
+        cursor = conn.cursor()
+
+        cursor.execute(
+                'SELECT url_status FROM url_token WHERE url = %s',
+                (url_token,)
+            )
+        data = cursor.fetchone()
+        if(data[0] == 1 or data[0] == '1'):
+            # cursor.execute(
+            #     'UPDATE url_token SET url_status = 0 WHERE url = %s AND url_status = 1',
+            #     (url_token,)
+            # )
+        
+            conn.commit()
+            cursor.close()
+            conn.close()
+            if '.m3u8' in v:
+                hls = v.split('.')
+                res = hls[0].split('_')
+                if(os.path.exists('../upload/' + u + '/' + res[0] + '/' + hls[0] + '.m3u8')):
+                    path = './../upload/' + u + '/' + res[0] + '/'
+                    vid = hls[0] + '.m3u8'
+                    return send_from_directory(path, vid), 200
+                else:
+                    return({'message': 'file not found'}), 500
+            if '.ts' in v:
+                hls = v.split('.')
+                res = hls[0].split('_')
+                if(os.path.exists('../upload/' + u + '/' + res[0] + '/' + hls[0] + '.ts')):
+                    path = './../upload/' + u + '/' + res[0] + '/'
+                    vid = hls[0] + '.ts'
+                    return send_from_directory(path, vid), 200
+                else:
+                    return({'message': 'file not found'}), 500
+            else:  
+                if(os.path.exists('../upload/' + u + '/' + v + '/' + v + '.m3u8')):
+                    path = './../upload/' + u + '/' + v + '/'
+                    vid = v + '.m3u8'
+                    return send_from_directory(path, vid), 200
+                else:
+                    return({'message': 'file not found'}), 500
+
+        else:
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return ({'message': 'unauthorized'}), 403
     
     @app.route('/server_resource')
     def server():
