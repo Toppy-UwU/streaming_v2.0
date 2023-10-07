@@ -1,10 +1,11 @@
 
+from functools import wraps
 import io
 import random
 import secrets
 import shutil
 import string
-from flask import Flask, json, request, jsonify, send_file, send_from_directory
+from flask import Flask, Response, json, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS, cross_origin
 from ffmpeg_streaming import Formats
 from PIL import Image
@@ -109,6 +110,7 @@ def create_app(test_config = None):
             insertVidData(vidData)
 
             hls = video.hls(Formats.h264())
+            hls.encryption('../key/' + vidData['encode'] + '.bin', 'http://localhost:80/hls/key/' + vidData['encode'] + '.bin') #encrypt key maybe can change into api
             hls.auto_generate_representations()
             print('convert')
             hls.output('..\\upload\\'+vidData.get('path')+'\\' + vidData.get('encode') + '\\' + vidData.get('encode') + '.m3u8',
@@ -119,7 +121,7 @@ def create_app(test_config = None):
         except Exception as e:
             print('Error:', e)
             pass
-
+        
     def getThumbnail(path):
         video = cv2.VideoCapture(path)
         frame_count = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -132,6 +134,23 @@ def create_app(test_config = None):
         flag, img = cv2.imencode('.jpg', re_frame)
         b64_img = base64.b64encode(img.tobytes())
         return b64_img
+
+    def verify(raw_token):
+        if raw_token is None or not raw_token.startswith('Bearer '):
+            # invalid token
+            return False
+
+        token = raw_token.split(' ')[-1]
+        try:
+            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+            
+            return True
+        except jwt.ExpiredSignatureError:
+            # return jsonify({'message': 'Token has expired'}), 401
+            return False
+        except jwt.InvalidTokenError:
+            # return jsonify({'message': 'Invalid token'}), 401
+            return False
 
     def imgResize(file, w, h):
         # pro 400x400
@@ -159,11 +178,12 @@ def create_app(test_config = None):
         conn.close()
         return data[0]
     
-    app.config['SECRET_KEY'] = getJwtKey()
-    
+    app.config['SECRET_KEY'] = '123test'# getJwtKey()
+
     def token_required(f):
+        @wraps(f)
         def jwt_decode(*args, **kwargs):
-            
+
             tmp = request.headers.get('Authorization')
             token = tmp.split(' ')
 
@@ -175,6 +195,7 @@ def create_app(test_config = None):
                 # Verify and decode the token
                 print('working...')
                 payload = jwt.decode(token[-1], app.config['SECRET_KEY'], algorithms=['HS256'])
+                print('yes')
             except ExpiredSignatureError:
                 print('Token has expired')
                 return jsonify({'message': 'Token has expired'}), 401
@@ -390,6 +411,7 @@ def create_app(test_config = None):
         return jsonify(video), 200
 
     @app.route('/insert/user/admin', methods=['POST'])
+    @token_required
     def insertUser_admin():
         try:
             data = request.get_json()
@@ -417,45 +439,43 @@ def create_app(test_config = None):
             return ({'message': e}), 500
 
     @app.route('/upload', methods=['POST'])
+    @token_required
     def upload():
         token = request.headers.get('Authorization')
         
-        if(verify(token)):
-            tmp = token.split(' ')[-1]
-            payload = jwt.decode(tmp, app.config['SECRET_KEY'], algorithms=['HS256'])
-            
-            if(payload.get('U_permit') == 1):
-                file = request.files['video']
-                data = request.form['data']
+        tmp = token.split(' ')[-1]
+        payload = jwt.decode(tmp, app.config['SECRET_KEY'], algorithms=['HS256'])
+        
+        if(payload.get('U_permit') == 1):
+            file = request.files['video']
+            data = request.form['data']
 
-                vid_data = json.loads(data)
-                vidName = file.filename
-                new_name = genFileName(vidName.split('.')[0])
+            vid_data = json.loads(data)
+            vidName = file.filename
+            new_name = genFileName(vidName.split('.')[0])
 
-                vid_data['encode'] = new_name
+            vid_data['encode'] = new_name
 
-                # print(vid_data)
+            # print(vid_data)
 
-                if file:
-                    save_path = '../upload/'+ vid_data['path'] +'/'+ new_name + '.' + vid_data['videoType']
-                    file.save(save_path)
+            if file:
+                save_path = '../upload/'+ vid_data['path'] +'/'+ new_name + '.' + vid_data['videoType']
+                file.save(save_path)
 
-                    # Wait until the file is successfully saved
-                    while not os.path.exists(save_path):
-                        time.sleep(1)
+                # Wait until the file is successfully saved
+                while not os.path.exists(save_path):
+                    time.sleep(1)
 
-                    thread = threading.Thread(target=convert, args=(save_path, vid_data))
-                    thread.start()
-                    # convert(save_path, vid_data)
-                    time.sleep(0.8)
-                    return ({'message': 'upload success, converting'}), 200
-                else:
-                    return ({'message': 'upload/convert error'}), 500
+                thread = threading.Thread(target=convert, args=(save_path, vid_data))
+                thread.start()
+                # convert(save_path, vid_data)
+                time.sleep(0.8)
+                return ({'message': 'upload success, converting'}), 200
             else:
-                return ({'message': 'No Permission'}), 406
+                return ({'message': 'upload/convert error'}), 500
         else:
-            return ({'message': 'token invalid'}), 401
-
+            return ({'message': 'No Permission'}), 406
+    
     @app.route('/download', methods=['GET'])
     @token_required
     def download():
@@ -464,17 +484,30 @@ def create_app(test_config = None):
 
         video_url = 'http://localhost:80/hls/upload/'+user+'/'+video+'/'+video+'.m3u8'
 
-        subprocess.run(['ffmpeg', '-i', video_url, 'output.mp4', '-y'])
-        response = send_file('output.mp4', as_attachment=True)
+        output = '../output/' + user + '_' + video + '.mp4'
+
+        subprocess.run(['ffmpeg', '-i', video_url, output, '-y'])
+
+        response = send_file(output, as_attachment=True)
 
         return response
     
+    @app.route('/delete/download', methods=['GET'])
+    def deleteDownload():
+        video = request.args.get('v')
+        user = request.args.get('u')
+
+        output = '../output/' + user + '_' + video + '.mp4'
+
+        os.remove(output)
+        return ''
+
     @app.route('/getUsers')
     def getUsers():
         conn = create_conn()
 
         cursor = conn.cursor()
-        cursor.execute('SELECT U_id, U_name, U_mail, U_vid, U_type, U_permit FROM users')
+        cursor.execute('SELECT U_id, U_name, U_mail, U_vid, U_type, U_permit, U_folder, U_storage FROM users')
         data = cursor.fetchall()
         conn.commit()
         cursor.close()
@@ -488,7 +521,9 @@ def create_app(test_config = None):
                 'U_mail': row[2],
                 'U_vid': row[3],
                 'U_type': row[4],
-                'U_permit': row[5]
+                'U_permit': row[5],
+                'U_folder': row[6],
+                'U_storage': row[7]
             }
             users.append(user)
 
@@ -506,9 +541,7 @@ def create_app(test_config = None):
                 'SELECT * FROM users WHERE U_ID = %s', 
                 (u_id,))
             data = cursor.fetchone()
-            conn.commit()
-            cursor.close()
-            conn.close()
+            
 
             folder_name = data[9]
             folder_path = '../upload/'+folder_name
@@ -521,6 +554,13 @@ def create_app(test_config = None):
 
             size = round(size/(1048576)) # bytes to mb
 
+            cursor.execute(
+                'UPDATE users SET U_storage = %s WHERE U_ID = %s',(size, data[0])
+            )
+
+            conn.commit()
+            cursor.close()
+            conn.close()
             tmp = str(data[6])
             tmp2 = str(data[10])
             user = {
@@ -957,11 +997,36 @@ def create_app(test_config = None):
 
                 return ({'message': 'success'}), 200
             else:
-                print('2')
+                # print('2')
                 return ({'message': 'have no permission'}), 400
         else:
-            print('3')
+            # print('3')
             return ({'message': 'token invalid'}), 400
+
+    @app.route('/delete/user', methods=['POST'])
+    def delete_user():
+        data = request.get_json()
+    
+        path = '../upload/'+ data['U_folder'] 
+
+        try:
+            shutil.rmtree(path)
+
+            conn = create_conn()
+            cursor = conn.cursor()
+
+            cursor.execute(
+                'DELETE FROM users WHERE U_ID=%s AND U_folder=%s'
+                ,(data['U_ID'], data['U_folder'])
+            )
+
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            return ({'message': 'success'}), 200
+        except OSError as e:
+            return ({'message': 'server error'}), 500
 
     @app.route('/update/video/user', methods=['POST'])
     def updateVideo_user():
@@ -1014,42 +1079,46 @@ def create_app(test_config = None):
 
     @app.route('/delete/video/user', methods=['POST'])
     def deleteVideo_user():
+        token = request.headers.get('Authorization')
         
-        tmp = token.split(' ')[-1]
-        payload = jwt.decode(tmp, app.config['SECRET_KEY'], algorithms=['HS256'])
-        data = request.get_json()
+        if verify(token):
+            tmp = token.split(' ')[-1]
+            payload = jwt.decode(tmp, app.config['SECRET_KEY'], algorithms=['HS256'])
+            data = request.get_json()
 
-        if(payload.get('U_id') == data['U_id'] or payload.get('U_type') == 'admin'):
-            print(data)
-            conn = create_conn()
-            cursor = conn.cursor()
-            path = '../upload/'+ data['U_folder'] + '/' + data['V_encode']
-                
-            cursor.execute(
-                'DELETE FROM tag_video WHERE V_ID = \
-                    (SELECT V_encode \
-                    FROM videos \
-                    WHERE V_encode = %s)',
-                (data['V_encode'],)
-            )
-            conn.commit()
-
-            cursor.execute(
-                    'DELETE FROM videos WHERE U_ID=%s AND V_encode=%s' 
-                    ,(data['U_id'], data['V_encode'])
+            if(payload.get('U_id') == data['U_id'] or payload.get('U_type') == 'admin'):
+                print(data)
+                conn = create_conn()
+                cursor = conn.cursor()
+                path = '../upload/'+ data['U_folder'] + '/' + data['V_encode']
+                    
+                cursor.execute(
+                    'DELETE FROM tag_video WHERE V_ID = \
+                        (SELECT V_encode \
+                        FROM videos \
+                        WHERE V_encode = %s)',
+                    (data['V_encode'],)
                 )
+                conn.commit()
 
-            conn.commit()
-            cursor.close()
-            conn.close()
+                cursor.execute(
+                        'DELETE FROM videos WHERE U_ID=%s AND V_encode=%s' 
+                        ,(data['U_id'], data['V_encode'])
+                    )
 
-            try:
-                shutil.rmtree(path)
-            except OSError as e:
-                pass
-            return ({'message': 'success'}), 200
+                conn.commit()
+                cursor.close()
+                conn.close()
+
+                try:
+                    shutil.rmtree(path)
+                except OSError as e:
+                    pass
+                return ({'message': 'success'}), 200
+            else:
+                return ({'message': 'no permission'}), 400
         else:
-            return ({'message': 'no permission'}), 400
+            return ({'message': 'token invalid'}), 400
 
     @app.route('/insert/history', methods=['POST'])
     def insertHistory():
@@ -1342,6 +1411,7 @@ def create_app(test_config = None):
 
             if bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8')):
                 url_token = secrets.token_hex(16)
+                expiration_time = time.time() + 86400
 
                 vid_url = vid_url.split('watch?')
                 path = vid_url[-1].split('&')
@@ -1351,8 +1421,8 @@ def create_app(test_config = None):
                 dynamic_url = f"http://localhost:8900/get/hls/{url_token}/{u}/{v}"
 
                 cursor.execute(
-                    'INSERT INTO url_token(url) VALUES (%s)',
-                    (url_token,)
+                    'INSERT INTO url_token(url, url_expire) VALUES (%s, %s)',
+                    (url_token, expiration_time)
                 )
 
                 conn.commit()
@@ -1376,19 +1446,18 @@ def create_app(test_config = None):
     @app.route('/get/dynamicUrl/token', methods=['POST'])
     def getDynamicWToken():
         token = request.headers.get('Authorization')
-        
         if(verify(token)):
             data = request.get_json()
-
             vid_url = data.get('vid_url')
             url_token = secrets.token_hex(16)
+            expiration_time = time.time() + 86400
 
             conn = create_conn()
             cursor = conn.cursor()
 
             cursor.execute(
-                    'INSERT INTO url_token(url) VALUES (%s)',
-                    (url_token,)
+                    'INSERT INTO url_token(url, url_expire) VALUES (%s, %s)',
+                    (url_token, expiration_time)
                 )
 
             conn.commit()
@@ -1412,11 +1481,12 @@ def create_app(test_config = None):
         cursor = conn.cursor()
 
         cursor.execute(
-                'SELECT url_status FROM url_token WHERE url = %s',
+                'SELECT url_expire FROM url_token WHERE url = %s',
                 (url_token,)
             )
         data = cursor.fetchone()
-        if(data[0] == 1 or data[0] == '1'):
+        
+        if(time.time() <= data[0]):
             # cursor.execute(
             #     'UPDATE url_token SET url_status = 0 WHERE url = %s AND url_status = 1',
             #     (url_token,)
@@ -1455,7 +1525,8 @@ def create_app(test_config = None):
             conn.commit()
             cursor.close()
             conn.close()
-            return ({'message': 'unauthorized'}), 403
+            return ({'message': 'content unavarible'}), 403
+
     
     @app.route('/server_resource')
     def server():

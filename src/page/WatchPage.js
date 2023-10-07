@@ -17,17 +17,40 @@ const WatchPage = () => {
     const [videos, setVideos] = useState(null); //show video
     const [vidDetail, setVidDetail] = useState(null); // played video data
     const [ isOpen, setIsOpen ] = useState(false);
+    const [ url, setUrl ] = useState('')
 
     const user = param.get('u');
     const video = param.get('v');
     var flag = true
     const c_user = getUser();
 
-    const url = 'http://localhost:80/hls/upload/' + user + '/' + video + '/' + video + '.m3u8';
-    // const url = 'http://localhost:8900/get/hls/262b8d113dddc5494a5026e96dadf267/pPbCLsM2QxMZ/zKQqTOooEeHX'
+    // const url = 'http://localhost:80/hls/upload/' + user + '/' + video + '/' + video + '.m3u8';
+    // const url = 'http://localhost:8900/get/hls/262b8d113dddc5494a5026e96dadf267/I7J5dDzb2hSL/i8eYEAxNVZIO'
     const api = 'http://localhost:8900/get/video/info?v=' + video + '&u=' + c_user;
+    const dynamicAPI = 'http://localhost:8900/get/dynamicUrl/token'
 
     ReactModal.setAppElement('#root');
+
+    useEffect(() => {
+
+        const tmp = {
+            'vid_url': '/watch?u=' + user + '&v=' + video
+        } 
+        console.log(getToken());
+        fetch(dynamicAPI, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + getToken()
+            },
+            body: JSON.stringify(tmp)
+
+        }).then(response => response.json())
+        .then(data => {
+            setUrl(data.url)
+        })
+        .catch(() => {})
+    }, [dynamicAPI])
 
     useEffect(() => {
         fetch(api)
@@ -62,7 +85,7 @@ const WatchPage = () => {
     const handleDownloadBtn = (e) => {
 
         const downloadAPI = 'http://localhost:8900/download?u='+ vidDetail.U_folder +'&v='+ vidDetail.V_encode
-
+        // console.log('converting');
         fetch(downloadAPI, {
             method: 'GET',
             headers: {
@@ -75,6 +98,7 @@ const WatchPage = () => {
                 }
             })
             .then(blob => {
+                // console.log('finish');
                 const downloadUrl = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = downloadUrl;
@@ -82,11 +106,21 @@ const WatchPage = () => {
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
+                return ''
+            }).then(result => {
+                // console.log('delete');
+                deleteDownload();
             })
             .catch(e => {
                 console.error('Error:', e);
             });
 
+    }
+
+    const deleteDownload = () => {
+        fetch(('http://localhost:8900/delete/download?u='+ vidDetail.U_folder +'&v='+ vidDetail.V_encode), {
+            method: 'GET'
+        }).catch(e => {})
     }
 
     const openModal = () => {
