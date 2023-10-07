@@ -1,129 +1,182 @@
 import { useEffect, useState } from "react"
 import AdminSidebar from "../components/AdminSidebar";
-import { getToken, getUser } from "../components/session"
+import "../css/admin.css"
+import DataTable, { createTheme, Media } from "react-data-table-component";
+import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
 import '../config'
 
 const UsersStorage = () => {
-    const [histories, setHistories] = useState(null);
-    const [isOpen, setIsOpen] = useState(false);
-    const ip = global.config.ip.ip;
+    const [storage, setStorage] = useState([]);
+    const [search, setSearch] = useState('');
+    const [filter, setFilter] = useState([]);
+    document.title = "Storage | Administrator";
 
-    const u = getUser();
-    const api = ip + '/get/histories?u=' + u;
-
-    const clearApi = ip + '/delete/histories';
-    document.title = "Videos";
+    const initialStorage = [
+        { U_id: 1, U_name: 'John', U_vid: 5, U_storage: 580 },
+        { U_id: 2, U_name: 'Alice', U_vid: 7, U_storage: 1204 },
+        { U_id: 3, U_name: 'Bob', U_vid: 0, U_storage: 350 },
+        { U_id: 4, U_name: 'Charlie', U_vid: 4, U_storage: 3672 },
+        { U_id: 5, U_name: 'David', U_vid: 2, U_storage: 5463 },
+        { U_id: 6, U_name: 'Eve', U_vid: 1, U_storage: 6666 },
+        { U_id: 7, U_name: 'Frank', U_vid: 0, U_storage: 10897 },
+        { U_id: 8, U_name: 'Grace', U_vid: 0, U_storage: 8903 },
+        { U_id: 9, U_name: 'Hank', U_vid: 1, U_storage: 5269 },
+        { U_id: 10, U_name: 'Ivy', U_vid: 10, U_storage: 4585 },
+    ];
 
     useEffect(() => {
-        fetch(api)
-            .then(response => response.json())
-            .then(data => {
-                setHistories(data);
-                console.log(data);
-            })
-            .catch(() => { });
-    }, [api])
-
-    const handleBtn = () => {
-        Swal.fire({
-            title: 'Are you sure?',
-            text: "All of your history will be deleted!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Clear'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire({
-                    title: 'Deleted!',
-                    text: 'Your history has been deleted.',
-                    icon: 'success',
-                    confirmButtonText: 'OK'
-                }).then(() => {
-                    handleClear();
-                    window.location.reload();
-                });
-            }
+        const result = storage.filter((item) => {
+            return item.U_name.toLowerCase().match(search.toLocaleLowerCase());
         });
-    }
+        setFilter(result);
+    }, [search]);
 
-    const handleClear = () => {
-        const token = getToken();
-        const user = getUser();
-        const tmp = {
-            'user': user
+    useEffect(() => {
+        setFilter(initialStorage);
+        setStorage(initialStorage);
+    }, []);
+
+    const columns = [
+        {
+            name: 'UID',
+            selector: row => row.U_id,
+            sortable: true,
+            hide: Media.SM
+        },
+        {
+            name: 'Name',
+            selector: row => row.U_name,
+            sortable: true
+        },
+        {
+            name: 'Videos',
+            selector: row => row.U_vid,
+            sortable: true,
+            hide: Media.SM
+        },
+        {
+            name: 'Used',
+            selector: row => row.U_storage,
+            sortable: true,
+            cell: (row) => (row.U_storage >= 1000 ? `${(row.U_storage / 1000).toFixed(2)} GB` : `${row.U_storage} MB`),
+        },
+        {
+            name: 'Action',
+            cell: (row) => (
+                <div className="dropdown">
+                    <button
+                        className="btn btn-secondary dropdown-toggle"
+                        type="button"
+                        id={`dropdown-${row.id}`}
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                    >
+                        <i className="bi bi-gear"></i>
+                    </button>
+                    <ul className="dropdown-menu dropdown-menu-dark" aria-labelledby={`dropdown-${row.id}`}>
+                        <li>
+                            <Link className="dropdown-item" to={`/profile?profile=${row.U_id}`}>
+                                <span><i className="bi bi-person"></i> View Profile</span>
+                            </Link>
+                        </li>
+                        <li>
+                            <Link className="dropdown-item" to="#">
+                                <span><i className="bi bi-gear"></i> Setting</span>
+                            </Link>
+                        </li>
+                        <li>
+                            <Link className="dropdown-item" to="#">
+                                <span><i className="bi bi-trash3"></i> Delete</span>
+                            </Link>
+                        </li>
+                    </ul>
+                </div>
+            ),
         }
+    ]
 
-        fetch(clearApi, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-            },
-            body: JSON.stringify(tmp)
-        }).then(response => {
-            if (!response.ok) {
-                throw new Error('Clearing failed');
+    const tableHeaderStyle = {
+        headCells: {
+            style: {
+                fontWeight: "bold",
+                fontSize: "16px"
             }
-        }).catch(() => { });
+        },
+        cells: {
+            style: {
+                fontSize: "16px",
+            }
+        },
     }
 
+    createTheme('solarized', {
+        text: {
+            primary: '#FFFFFF',
+            secondary: '#BDC0C5',
+        },
+        background: {
+            default: '#2C3034',
+        },
+        context: {
+            background: '#222E3C',
+            text: '#FFFFFF',
+        },
+        divider: {
+            default: '#073642',
+        },
+        action: {
+            button: 'rgba(0,0,0,.54)',
+            hover: 'rgba(0,0,0,.08)',
+        },
+    }, 'dark');
 
-    if (histories !== null) {
-        return (
-            <AdminSidebar>
-                <div className="container-fluid">
-                    <br />
-                    <div className="row d-flex justify-content-between align-items-center">
-                        <div style={{ flex: 1, marginRight: '20px' }}>
-                            <h3 className="text-white">Watch History</h3>
+    return (
+        <AdminSidebar>
+            <div className="container-fluid">
+                <br />
+                <div className='PageTitle'>
+                    <h2><i className="bi bi-sd-card-fill"></i> Users Storage</h2>
+                </div>
+
+                <div className='user-table'>
+                    <div className="card">
+                        <div className="card-body">
+                            <DataTable
+                                customStyles={tableHeaderStyle}
+                                columns={columns}
+                                data={filter}
+                                pagination
+                                fixedHeader
+                                highlightOnHover
+                                theme="solarized"
+                                subHeader
+                                subHeaderComponent={
+                                    <input type="text"
+                                        className="w-25 form-control"
+                                        placeholder="Search..."
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                    />
+                                }
+                            ></DataTable>
                         </div>
-                        {histories.length > 0 && (
-                            <div style={{ flex: 0 }}>
-                                <button type="button" class="btn btn-danger" onClick={handleBtn}><i class="bi bi-trash3"></i></button>
-                            </div>
-                        )}
                     </div>
-                    <table class="table table-dark table-hover">
-                        <thead>
-                            <tr>
-                                <th scope="col">Thumbnail</th>
-                                <th scope="col">Title</th>
-                                <th scope="col">Watch Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {histories.length > 0 ? (
-                                histories.map(history => (
-                                    <tr key={history.H_ID}>
-                                        <td> <img className="card-img-top" src={'data:image/jpeg;base64,' + history.V_pic} style={{ borderRadius: '20px', maxHeight: '200px', maxWidth: '200px' }} alt={history.V_title + ' thumbnail'} /></td>
-                                        <td><a className="href-noline-in" href={'/watch?u=' + history.U_folder + '&v=' + history.V_encode}>{history.V_title}</a></td>
-                                        <td>{history.H_watchDate}</td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colspan="3" className="text-center text-white">- No Watch History! -</td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                    <br />
                 </div>
-            </AdminSidebar>
-        )
-    } else {
-        return (
-            <AdminSidebar>
-                <div className="center">
-                    <div className="loading" />
-                </div>
-            </AdminSidebar>
-        )
-    }
+            </div>
+        </AdminSidebar>
+    )
 
-
+    // } else {
+    //     return (
+    //         <AdminSidebar>
+    //             <div className="center">
+    //                 <div className="loading" />
+    //             </div>
+    //         </AdminSidebar>
+    //     )
+    // }
 }
 
 export default UsersStorage;

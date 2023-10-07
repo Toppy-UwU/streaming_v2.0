@@ -108,7 +108,9 @@ const AdminSidebar = ({ children }) => {
                 </div>
                 <hr class="dropdown-divider"></hr>
                 <Link class="dropdown-item" to={`/profile?profile=${session.U_id}`}><span><i className="bi bi-person-circle"></i> Profile</span></Link>
-                <Link class="dropdown-item" to={`/profile?profile=${session.U_id}`}><span><i className="bi bi-gear"></i> Setting</span></Link>
+                <Link class="dropdown-item" to="/"><span><i className="bi bi-house"></i> Home</span></Link>
+                <hr class="dropdown-divider"></hr>
+                <Link class="dropdown-item" to="/setting"><span><i className="bi bi-person-fill-gear"></i> Setting</span></Link>
                 {session.U_type === 'admin' && (
                   <Link class="dropdown-item" to="/admin"><span><i className="bi bi-nut"></i> Administation</span></Link>
                 )}
@@ -131,7 +133,7 @@ const AdminSidebar = ({ children }) => {
                 <hr className='text-secondary d-md-block' />
 
                 <li className="nav-item">
-                  <Link className="nav-link active" to='/admin'><i className="bi bi-menu-button-wide"></i><span> Dashboard</span></Link>
+                  <Link className="nav-link active" to='/admin'><i className="bi bi-box-fill"></i><span> Dashboard</span></Link>
                 </li>
 
                 <li className="nav-item">
@@ -139,25 +141,25 @@ const AdminSidebar = ({ children }) => {
                 </li>
 
                 <li className="nav-item">
-                  <Link className="nav-link active" to="/admin/videos"><i className="bi bi-file-earmark-play"></i><span> Users Videos</span></Link>
+                  <Link className="nav-link active" to="/admin/videos"><i className="bi bi-collection-play-fill"></i><span> Users Videos</span></Link>
                 </li>
 
                 <li className="nav-item">
-                  <Link className="nav-link active" to="/admin/report"><i className="bi bi-flag"></i><span> Report</span></Link>
+                  <Link className="nav-link active" to="/admin/report"><i className="bi bi-flag-fill"></i><span> Report</span></Link>
                 </li>
 
                 <li className="nav-item">
-                  <Link className="nav-link active" to="/admin/tag"><i className="bi bi-tags"></i><span> Tags</span></Link>
+                  <Link className="nav-link active" to="/admin/tag"><i className="bi bi-tags-fill"></i><span> Tags</span></Link>
                 </li>
 
                 <hr className='text-secondary d-md-block' />
 
                 <li className="nav-item">
-                  <Link className="nav-link active" to="/admin/allLog"><i className="bi bi-info-circle"></i><span> Access Log</span></Link>
+                  <Link className="nav-link active" to="/admin/allLog"><i className="bi bi-info-circle-fill"></i><span> Upload Log</span></Link>
                 </li>
 
                 <li className="nav-item">
-                  <Link className="nav-link active" to="/admin/allLog"><i className="bi bi-info-circle"></i><span> All Log</span></Link>
+                  <Link className="nav-link active" to="/admin/allLog"><i className="bi bi-info-circle-fill"></i><span> All Log</span></Link>
                 </li>
 
                 <li className="nav-item">
@@ -165,7 +167,7 @@ const AdminSidebar = ({ children }) => {
                 </li>
 
                 <li className="nav-item">
-                  <Link className="nav-link active" to="/admin/storage"><i className="bi bi-sd-card"></i><span> Storage</span></Link>
+                  <Link className="nav-link active" to="/admin/storage"><i className="bi bi-sd-card-fill"></i><span> Storage</span></Link>
                 </li>
               </ul>
             </div>

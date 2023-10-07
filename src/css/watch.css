@@ -2,7 +2,7 @@
     font-family: 'Prompt', sans-serif;
 }
 
-.row {
+.play-container .row {
     margin-top: 10px;
     display: flex;
     justify-content: space-between;

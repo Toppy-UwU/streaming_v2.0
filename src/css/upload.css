@@ -1,3 +1,9 @@
+.Title h2 {
+    color: white;
+    font-weight: 600;
+    margin-left: 20px;
+}
+
 .upload-card {
     background-color: darkgray;
     transition: 0.5s;
@@ -5,7 +11,7 @@
 
 .upload-card:hover {
     background-color: lightgray;
-    color: lightgray;
+    color: black;
 }
 
 .btn-button {
@@ -23,4 +29,14 @@
     border-radius: 20px;
     margin-top: 10px;
     cursor: pointer;
+}
+
+.vidNameTitle h5 {
+    color: white;
+    font-weight: bold;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }

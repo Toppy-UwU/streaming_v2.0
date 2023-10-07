@@ -16,3 +16,12 @@
     background-color: #313131;
     color: white;
 }
+
+.swal2-footer a {
+    color: white;
+    text-decoration: none;
+}
+
+.swal2-footer a:hover {
+    text-decoration: underline;
+}

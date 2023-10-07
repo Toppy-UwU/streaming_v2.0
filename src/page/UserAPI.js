@@ -1,42 +1,46 @@
-import { useEffect, useState } from "react"
-import AdminSidebar from "../components/AdminSidebar";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import Sidebar from "../components/sidebar";
 import DataTable, { createTheme, Media } from "react-data-table-component";
-import Swal from "sweetalert2";
-import '../config'
+import config from '../config'; // Make sure to import config properly
+import { Link } from "react-router-dom";
 
-const AdminReport = () => {
-    document.title = "Report | Administration";
-    const [report, setReport] = useState([]);
-    const [search, setSearch] = useState('');
-    const [filter, setFilter] = useState([]);
+const UserAPI = () => {
+    document.title = "Videos API";
+    const [api, setAPI] = useState([]);
+
+    const initialStorage = [
+        { video: 1, title: 'Login', link: 'http://localhost:3000/watch?u=INIsUKmUO2Pn&v=gzIBQRkGAoPd', time: '13/09/2023' },
+        { video: 2, title: 'Logout', link: 'http://localhost:3000/watch?u=INIsUKmUO2Pn&v=gzIBQRkGAoPd', time: '13/09/2023' },
+        { video: 3, title: 'Login', link: 'http://localhost:3000/watch?u=INIsUKmUO2Pn&v=gzIBQRkGAoPd', time: '16/09/2023' },
+        { video: 4, title: 'Login', link: 'http://localhost:3000/watch?u=INIsUKmUO2Pn&v=gzIBQRkGAoPd', time: '20/09/2023' },
+        { video: 5, title: 'Logout', link: 'http://localhost:3000/watch?u=INIsUKmUO2Pn&v=gzIBQRkGAoPd', time: '22/09/2023' },
+        { video: 6, title: 'Login', link: 'http://localhost:3000/watch?u=INIsUKmUO2Pn&v=gzIBQRkGAoPd', time: '22/09/2023' },
+        { video: 7, title: 'Logout', link: 'http://localhost:3000/watch?u=INIsUKmUO2Pn&v=gzIBQRkGAoPd', time: '25/09/2023' },
+        { video: 8, title: 'Login', link: 'http://localhost:3000/watch?u=INIsUKmUO2Pn&v=gzIBQRkGAoPd', time: '28/09/2023' },
+        { video: 9, title: 'Login', link: 'http://localhost:3000/watch?u=INIsUKmUO2Pn&v=gzIBQRkGAoPd', time: '3/10/2023' },
+        { video: 10, title: 'Logout', link: 'http://localhost:3000/watch?u=INIsUKmUO2Pn&v=gzIBQRkGAoPd', time: '10/10/2023' },
+    ];
 
     useEffect(() => {
-        const result = report.filter((item) => {
-            return item.V_title.toLowerCase().match(search.toLocaleLowerCase());
-        });
-        setFilter(result);
-    }, [search]);
-
+        setAPI(initialStorage)
+    }, []);
     const columns = [
         {
-            name: "ID",
-            selector: row => row.id,
-            sortable: true
+            name: 'Video',
+            selector: row => row.video,
         },
         {
-            name: "Title",
+            name: 'Title',
             selector: row => row.title,
             sortable: true
         },
         {
-            name: "Reporter",
-            selector: row => row.name,
-            sortable: true
+            name: 'Date',
+            selector: row => row.time,
         },
         {
-            name: "Description",
-            selector: row => row.desc,
+            name: 'Link',
+            selector: row => row.link,
         },
         {
             name: 'Action',
@@ -53,13 +57,8 @@ const AdminReport = () => {
                     </button>
                     <ul className="dropdown-menu dropdown-menu-dark" aria-labelledby={`dropdown-${row.id}`}>
                         <li>
-                            <Link className="dropdown-item" to={`/profile?profile=${row.U_id}`}>
-                                <span><i className="bi bi-person"></i> View Profile</span>
-                            </Link>
-                        </li>
-                        <li>
                             <Link className="dropdown-item" to="#">
-                                <span><i className="bi bi-gear"></i> Setting</span>
+                                <span><i className="bi bi-clipboard"></i> Copy URL</span>
                             </Link>
                         </li>
                         <li>
@@ -69,8 +68,8 @@ const AdminReport = () => {
                         </li>
                     </ul>
                 </div>
-            )
-        }
+            ),
+        },
     ]
 
     const tableHeaderStyle = {
@@ -85,9 +84,6 @@ const AdminReport = () => {
                 fontSize: "16px",
             }
         },
-        background: {
-            default: "#222E3C"
-        }
     }
 
     createTheme('solarized', {
@@ -112,10 +108,11 @@ const AdminReport = () => {
     }, 'dark');
 
     return (
-        <AdminSidebar>
-            <div className="container-fluid content">
+        <Sidebar>
+            <div className="container-fluid">
+                <br />
                 <div className='PageTitle'>
-                    <h2><i className="bi bi-flag-fill"></i> Report</h2>
+                    <h2><i className="bi bi-link"></i> Videos API</h2>
                 </div>
 
                 <div className='user-table'>
@@ -124,28 +121,18 @@ const AdminReport = () => {
                             <DataTable
                                 customStyles={tableHeaderStyle}
                                 columns={columns}
-                                data={filter}
+                                data={api}
                                 pagination
                                 fixedHeader
                                 highlightOnHover
                                 theme="solarized"
-                                subHeader
-                                subHeaderComponent={
-                                    <input type="text"
-                                        className="w-25 form-control"
-                                        placeholder="Search..."
-                                        value={search}
-                                        onChange={(e) => setSearch(e.target.value)}
-                                    />
-                                }
                             ></DataTable>
                         </div>
                     </div>
                     <br />
                 </div>
             </div>
-        </AdminSidebar>
+        </Sidebar>
     )
 }
-
-export default AdminReport;
+export default UserAPI;

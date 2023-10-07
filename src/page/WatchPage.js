@@ -5,7 +5,6 @@ import { getAPI } from '../components/callAPI';
 import 'video.js/dist/video-js.css';
 import { useState, useEffect } from 'react';
 import { checkVidPermit, getUser, isAdmin, isSessionSet } from '../components/session';
-import ReactModal from 'react-modal';
 import VideoUpdateModal from '../components/videoUpdateModal';
 import { createHistory } from '../components/saveHistories';
 
@@ -60,7 +59,6 @@ const WatchPage = () => {
     const param = new URLSearchParams(window.location.search);
     const [videos, setVideos] = useState(null); //show video
     const [vidDetail, setVidDetail] = useState(null); // played video data
-    const [isOpen, setIsOpen] = useState(false);
     const [showDesc, setshowDesc] = useState(false);
 
     const user = param.get('u');
@@ -72,8 +70,6 @@ const WatchPage = () => {
 
     const url = ipw + '/hls/upload/' + user + '/' + video + '/' + video + '.m3u8';
     const api = ip + '/get/video/info?v=' + video + '&u=' + c_user;
-
-    ReactModal.setAppElement('#root');
 
     useEffect(() => {
         fetch(api)
@@ -111,10 +107,10 @@ const WatchPage = () => {
     }, [vidDetail]);
 
     const handleDownloadBtn = (e) => {
-
         const downloadAPI = ip + '/download?u=' + vidDetail.U_folder + '&v=' + vidDetail.V_encode
         fetch(downloadAPI)
             .then(response => {
+                console.log(response)
                 if (response.ok) {
                     return response.blob();
                 }
@@ -199,33 +195,10 @@ const WatchPage = () => {
             }
         });
     }
-    const openModal = () => {
-        setIsOpen(true);
-    }
-
-    const closeModal = () => {
-        setIsOpen(false);
-    }
 
     const update = () => {
         window.location.reload();
     }
-
-    const modalStyle = {
-        content: {
-            top: '50%',
-            left: '50%',
-            right: 'auto',
-            bottom: 'auto',
-            transform: 'translate(-50%, -50%)',
-            width: '50%',
-            height: 'max-content',
-            backgroundColor: 'rgb(44, 48, 56)',
-        },
-        overlay: {
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        },
-    };
 
     const handleDesc = () => {
         setshowDesc(!showDesc);
@@ -262,22 +235,25 @@ const WatchPage = () => {
                                             </li>
                                             {f1 &&
                                                 <li>
-                                                    <button className="dropdown-item" type="button" onClick={openModal}><i className="bi bi-gear"></i> Setting</button>
+                                                    <button className="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#UpdateVideoModal"><i className="bi bi-gear"></i> Setting</button>
                                                 </li>
                                             }
-                                            <ReactModal isOpen={isOpen} onRequestClose={closeModal} style={modalStyle}>
-                                                <VideoUpdateModal id={vidDetail.U_ID} V_id={vidDetail.V_ID} desc={vidDetail.V_desc} title={vidDetail.V_title} permit={vidDetail.V_permit} path={vidDetail.U_folder} encode={vidDetail.V_encode} update={update} closeModal={closeModal} tags={vidDetail.tags} />
-                                            </ReactModal>
+                                            {f1 &&
+                                                <li>
+                                                    <button className="dropdown-item" type="button"><i className="bi bi-trash"></i> Delete</button>
+                                                </li>
+                                            }
                                             <li>
                                                 <button className="dropdown-item" type="button" onClick={handleReport}><i className="bi bi-flag"></i> Report</button>
                                             </li>
                                         </ul>
+                                        <VideoUpdateModal id={vidDetail.U_ID} V_id={vidDetail.V_ID} desc={vidDetail.V_desc} title={vidDetail.V_title} permit={vidDetail.V_permit} path={vidDetail.U_folder} encode={vidDetail.V_encode} tags={vidDetail.tags} />
                                     </div>
 
                                     <div className='vid-info'>
                                         <div className="card">
                                             <div className="card-body">
-                                                <p className="card-title">{vidDetail.V_view} Views &bull; {moment(new Date(vidDetail.V_upload)).format("DD MMMM YYYY : h:mm:ss A")}&nbsp;
+                                                <p className="card-title">{vidDetail.V_view} Views &bull; {moment.utc(vidDetail.V_upload).format("DD MMMM YYYY : HH:mm:ss")}&nbsp;
                                                     {vidDetail.tags.map((tag) => (
                                                         <Link to={"/tag?tag=" + tag.T_name} className='none-link'>#{tag.T_name}&nbsp;</Link>
                                                     ))}</p>
@@ -323,9 +299,9 @@ const WatchPage = () => {
                             </>
                         ) : (
                             <div className='notfound-vid'>
-                                <i class="bi bi-camera-video-off"></i>
+                                <i className="bi bi-camera-video-off"></i>
                                 <p>This video is unavailable or private.</p>
-                                <Link to="/"><button type="button" class="btn btn-outline-primary">Back to Home</button></Link>
+                                <Link to="/"><button type="button" className="btn btn-outline-primary">Back to Home</button></Link>
                             </div>
                         )}
                     </div>

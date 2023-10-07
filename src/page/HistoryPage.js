@@ -1,30 +1,36 @@
 import { useEffect, useState } from "react"
 import Sidebar from "../components/sidebar"
 import { getToken, getUser } from "../components/session"
-import ReactModal from "react-modal";
 import Swal from "sweetalert2";
+import moment from "moment";
 import '../config'
+import "./../css/table.css"
+import { Link } from "react-router-dom";
 
 const HistoryPage = () => {
     const [histories, setHistories] = useState(null);
-    const [isOpen, setIsOpen] = useState(false);
     const ip = global.config.ip.ip;
 
-    const u = getUser();
-    const api = ip + '/get/histories?u=' + u;
+    const user = getUser();
+    const api = ip + '/get/histories?u=' + user;
+    const token = getToken();
 
     const clearApi = ip + '/delete/histories';
     document.title = "History";
 
-    useEffect(() => {
-        fetch(api)
-            .then(response => response.json())
-            .then(data => {
+    const fetchHistory = async () => {
+        try {
+            const response = await fetch(api);
+            if (response.ok) {
+                const data = await response.json();
                 setHistories(data);
-                console.log(data);
-            })
-            .catch(() => { });
-    }, [api])
+            } else {
+                throw new Error('Failed to fetch history data');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
 
     const handleBtn = () => {
         Swal.fire({
@@ -50,27 +56,34 @@ const HistoryPage = () => {
         });
     }
 
-    const handleClear = () => {
-        const token = getToken();
-        const user = getUser();
+    const handleClear = async () => {
         const tmp = {
             'user': user
         }
 
-        fetch(clearApi, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-            },
-            body: JSON.stringify(tmp)
-        }).then(response => {
+        try {
+            const response = await fetch(clearApi, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(tmp)
+            });
+
             if (!response.ok) {
                 throw new Error('Clearing failed');
             }
-        }).catch(() => { });
+
+        } catch (error) {
+            console.error('Error:', error);
+        }
     }
 
+    useEffect(() => {
+        fetchHistory();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     if (histories !== null) {
         return (
@@ -79,7 +92,7 @@ const HistoryPage = () => {
                     <br />
                     <div className="row d-flex justify-content-between align-items-center">
                         <div style={{ flex: 1, marginRight: '20px' }}>
-                            <h3 className="text-white">Watch History</h3>
+                            <h3 className="text-white fw-bold">Watch History</h3>
                         </div>
                         {histories.length > 0 && (
                             <div style={{ flex: 0 }}>
@@ -87,30 +100,59 @@ const HistoryPage = () => {
                             </div>
                         )}
                     </div>
-                    <table class="table table-dark table-hover">
-                        <thead>
-                            <tr>
-                                <th scope="col">Thumbnail</th>
-                                <th scope="col">Title</th>
-                                <th scope="col">Watch Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {histories.length > 0 ? (
-                                histories.map(history => (
-                                    <tr key={history.H_ID}>
-                                        <td> <img className="card-img-top" src={'data:image/jpeg;base64,' + history.V_pic} style={{ borderRadius: '20px', maxHeight: '200px', maxWidth: '200px' }} alt={history.V_title + ' thumbnail'} /></td>
-                                        <td><a className="href-noline-in" href={'/watch?u=' + history.U_folder + '&v=' + history.V_encode}>{history.V_title}</a></td>
-                                        <td>{history.H_watchDate}</td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colspan="3" className="text-center text-white">- No Watch History! -</td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+
+                    {console.log(histories)}
+
+                    {console.log(new Date() === histories[0].H_watchDate)}
+                    <div className="showHistoryData">
+                        {histories.map((history) => (
+                            <div className="showHistory">
+                                <Link to={'/watch?u=' + history.U_folder + '&v=' + history.V_encode}><img src={`data:image/jpeg;base64, ${history.V_pic}`} alt={history.V_title + ' thumbnail'} /></Link>
+                                <div class="history-text">
+                                    <Link to={'/watch?u=' + history.U_folder + '&v=' + history.V_encode} className="noLink"><h4>{history.V_title}</h4></Link>
+                                    <Link to={`/profile?profile=${history.U_ID}`} className="noLink"><p><span><i className="bi bi-person-fill"></i> </span>{history.U_name}</p></Link>
+                                    <Link to={'/watch?u=' + history.U_folder + '&v=' + history.V_encode} className="noLink"><p><span><i class="bi bi-clock"></i> </span>{moment.utc(history.H_watchDate).format("DD MMMM YYYY : HH:mm:ss")}</p></Link>
+                                </div>
+                            </div>
+                        ))}
+
+                    </div>
+
+
+                    {/* <div className="row">
+                        <div className="col-12 col-lg-8 col-xxl-12 d-flex">
+                            <div className="card flex-fill">
+                                <div className="card-header">
+                                    <h5 class="card-title mb-0">Latest Watch</h5>
+                                </div>
+                                <table class="table dark-bg table-borderless my-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Thumbnail</th>
+                                            <th>Title</th>
+                                            <th>Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {histories.length > 0 ? (
+                                            histories.map(history => (
+                                                <tr key={history.H_ID}>
+                                                    <td> <img className="card-img-top" src={'data:image/jpeg;base64,' + history.V_pic} style={{ borderRadius: '20px', maxHeight: '200px', maxWidth: '200px' }} alt={history.V_title + ' thumbnail'} /></td>
+                                                    <td><a className="text-decoration-none" href={'/watch?u=' + history.U_folder + '&v=' + history.V_encode}>{history.V_title}</a></td>
+                                                    <td>{history.H_watchDate}</td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colspan="3" className="text-center text-white">- No Watch History! -</td>
+                                            </tr>
+                                        )}
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div> */}
                 </div>
             </Sidebar>
         )

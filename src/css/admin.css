@@ -8,6 +8,11 @@
   margin-left: 20px;
 }
 
+.PageTitle p {
+  color: white;
+  margin-left: 20px;
+}
+
 .showStatus {
   margin-top: 20px;
 }
@@ -44,4 +49,20 @@
 
 .showServerStatus .card-title span {
   margin-left: 10px;
+}
+
+.user-table .card {
+  background-color: #2C3034;
+}
+
+.user-table .card-header {
+  border-bottom: none;
+}
+
+.user-table .card-header {
+  padding: 15px;
+}
+
+.tags-table .card {
+  background-color: #2C3034;
 }

@@ -1,5 +1,4 @@
 import '../css/video.css'
-import Swal from 'sweetalert2';
 import { Link } from 'react-router-dom';
 
 function formatTimeDifference(pastTime) {
@@ -42,15 +41,6 @@ function formatTime(seconds) {
     return formattedTime;
 }
 
-const handleClick = () => {
-    console.log('clicked');
-    Swal.fire({
-        icon: 'question',
-        title: 'Try Again!',
-        text: 'Please Enter Your Keyword to Search!',
-    })
-}
-
 function ShowVideos(props) {
     try {
         return (
@@ -59,86 +49,63 @@ function ShowVideos(props) {
                     {props.videos.map((video) => (
                         <div className="col-lg-3 col-md-4 col-sm-6 mb-3" key={video.V_ID}>
                             <div className="video-card">
-                                <Link to={'/watch?u=' + video.U_folder + '&v=' + video.V_encode} style={{ textDecoration: 'none', color: 'white' }}>
-                                    <div style={{ position: 'relative' }}>
-                                        <img className="card-img-top" src={'data:image/jpeg;base64,' + video.V_pic} style={{ borderRadius: '20px', aspectRatio: '16/9' }} alt={video.V_title + ' thumbnail'} />
+                                <Link to={'/watch?u=' + video.U_folder + '&v=' + video.V_encode} className='LinkStyle'>
+                                    <div className='imgcard'>
+                                        <img className="card-img-top" src={'data:image/jpeg;base64,' + video.V_pic} alt={video.V_title + ' thumbnail'} />
                                         <div style={{ position: 'absolute', bottom: '8px', right: '8px', backgroundColor: 'black', borderRadius: '4px', padding: '4px' }}>
-                                            <h6 style={{ margin: 0, color: 'white', textAlign: 'right' }}>{formatTime(video.V_length)}</h6>
-                                        </div>
-                                    </div>
-                                    <div style={{ marginLeft: '8px', marginRight: '8px', marginTop: '10px' }}>
-                                        <div>
-                                            <div className='row'>
-                                                <div className='col-10'>
-                                                    <h5>{video.V_title}</h5>
-                                                </div>
-                                                <div className='col-2'>
-                                                    <i class="bi bi-three-dots-vertical"></i>
-                                                </div>
-                                            </div>
-                                            <div className='row' style={{ opacity: '60%' }}>
-                                                <div className='col-12'>
-                                                    <a href={'/profile?profile=' + video.U_ID} className='href-noline-w'>
-                                                        <h6>{video.U_name}</h6>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                            <div className='row' style={{ opacity: '60%' }}>
-                                                <div className='col-12'>
-                                                    <h6>{video.V_view} views • {formatTimeDifference(new Date(video.V_upload))}</h6>
-                                                </div>
-                                            </div>
+                                            <h6>{formatTime(video.V_length)}</h6>
                                         </div>
                                     </div>
                                 </Link>
+                                <div className='vidInfo'>
+                                    <div className='row'>
+                                        <div className='col-10'>
+                                            <Link to={'/watch?u=' + video.U_folder + '&v=' + video.V_encode} className='LinkStyle'>
+                                                <h6>{video.V_title}</h6>
+                                            </Link>
+                                        </div>
+                                        <div className='col-1 justify-content-end'>
+                                            <i className="bi bi-three-dots-vertical" data-bs-toggle="dropdown"></i>
+                                            <ul className="dropdown-menu dropdown-menu-dark">
+                                                <li><button className="dropdown-item" type="button"><i className="bi bi-share"></i> Share</button></li>
+                                                <li><button className="dropdown-item" type="button"><i className="bi bi-download"></i> Download</button></li>
+                                                <li>
+                                                    <button className="dropdown-item" type="button"><i className="bi bi-link"></i> Get API</button>
+                                                </li>
+                                                <li>
+                                                    <button className="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#UpdateVideoModal"><i className="bi bi-gear"></i> Setting</button>
+                                                </li>
+                                                <li>
+                                                    <button className="dropdown-item" type="button"><i className="bi bi-trash"></i> Delete</button>
+                                                </li>
+                                                <li>
+                                                    <button className="dropdown-item" type="button"><i className="bi bi-flag"></i> Report</button>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div className='UserVid'>
+                                        <div className='row'>
+                                            <div className='col-12'>
+                                                <Link to={'/profile?profile=' + video.U_ID} className='LinkStyle'>
+                                                    <h6>{video.U_name}</h6>
+                                                </Link>
+                                            </div>
+                                        </div>
+                                        <div className='row'>
+                                            <div className='col-12'>
+                                                <Link to={'/watch?u=' + video.U_folder + '&v=' + video.V_encode} className='LinkStyle'>
+                                                    <h6>{video.V_view} views • {formatTimeDifference(new Date(video.V_upload))}</h6>
+                                                </Link>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     ))}
                 </div>
             </div>
-
-
-
-            // <div className="container-fluid">
-            //     <div className="row">
-            //         {props.videos.map((video) => (
-            //             <div className="col-lg-3 col-md-4 col-sm-6 mb-3" key={video.V_ID}>
-            //                 <div className="video-card">
-            //                     <a href={'/watch?u=' + video.U_folder + '&v=' + video.V_encode} style={{ textDecoration: 'none', color: 'white' }}>
-            //                         <img className="card-img-top" src={'data:image/jpeg;base64,' + video.V_pic} style={{ borderRadius: '20px', aspectRatio: '16/9' }} alt={video.V_title + ' thumbnail'} />
-            //                         <div style={{ marginLeft: '8px', marginRight: '8px', marginTop: '10px' }}>
-            //                             <div>
-            //                                 <div className='row'>
-            //                                     <div className='col-7'>
-            //                                         <h5 className='fs-5'>{video.V_title}</h5>
-            //                                     </div>
-            //                                     <div className='col-4' style={{ textAlign: 'right' }}>
-            //                                         <h6>{formatTime(video.V_length)}</h6>
-            //                                     </div>
-            //                                     <div className='col-1' style={{ textAlign: 'right' }}>
-            //                                         <i class="bi bi-three-dots-vertical"></i>
-            //                                     </div>
-            //                                 </div>
-            //                                 <div className='row' style={{ opacity: '60%' }}>
-            //                                     <div className='col-12'>
-            //                                         <a href={'/profile?profile=' + video.U_ID} className='href-noline-w'>
-            //                                             <h6>{video.U_name}</h6>
-            //                                         </a>
-            //                                     </div>
-            //                                 </div>
-            //                                 <div className='row' style={{ opacity: '60%' }}>
-            //                                     <div className='col-12'>
-            //                                         <h6>{video.V_view} views • {formatTimeDifference(new Date(video.V_upload))}</h6>
-            //                                     </div>
-            //                                 </div>
-            //                             </div>
-            //                         </div>
-            //                     </a>
-            //                 </div>
-            //             </div>
-            //         ))}
-            //     </div>
-            // </div>
         )
     } catch (error) {
         return (
@@ -147,10 +114,6 @@ function ShowVideos(props) {
             </div>
         )
     }
-
-
-
-
 }
 
 export default ShowVideos;

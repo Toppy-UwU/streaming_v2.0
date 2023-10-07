@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import ReactModal from 'react-modal';
 import { isSessionSet, getlocalData } from '../components/session';
 
 import Sidebar from '../components/sidebar';
-
-import './../css/profile.css';
-import GetVideo from '../components/getVideo';
 import UserUpdate from '../components/userUpdateModal';
+import './../css/profile.css';
+import './../css/modal.css';
+import GetVideo from '../components/getVideo';
 import '../config'
 
 const ProfilePage = () => {
@@ -17,30 +16,28 @@ const ProfilePage = () => {
   const getAPI = ip + '/getUser/id?u=' + U_id;
 
   const [user, setUser] = useState(null);
-  const [isOpen, setIsOpen] = useState(false);
-
-  ReactModal.setAppElement('#root');
 
   let [currentComp, setCurrentComp] = useState('public');
-  var session
 
-  if (isSessionSet('token')) {
-    session = getlocalData('session');
-  } else {
-    session = {
-      'U_id': null
-    }
-  }
+  const session = isSessionSet('token') ? getlocalData('session') : { U_id: null };
 
   useEffect(() => {
-    fetch(getAPI)
-      .then(response => response.json())
-      .then(data => {
-        setUser(data)
-      })
-      .catch(e => {
-        console.error('Error:', e);
-      })
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch(getAPI);
+
+        if (!response.ok) {
+          throw new Error(`Request failed with status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setUser(data);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    };
+
+    fetchUserData();
   }, [getAPI])
 
   useEffect(() => {
@@ -49,41 +46,24 @@ const ProfilePage = () => {
     }
   }, [user]);
 
+
+  if (user === null) {
+
+    return (
+      <Sidebar>
+        <div className="center">
+          <div className="loading" style={{ marginTop: '25%' }}></div>
+        </div>
+      </Sidebar>
+    )
+  }
+
+  console.log(user);
   if (user) {
-    const openModal = () => {
-      setIsOpen(true);
-    }
 
     const buttonHandler = (btnId) => {
       setCurrentComp(btnId);
-      console.log("work!");
     };
-
-    const closeModal = () => {
-      setIsOpen(!isOpen);
-    }
-
-    const update = () => {
-      window.location.reload();
-    }
-
-
-    const modalStyle = {
-      content: {
-        top: '50%',
-        left: '50%',
-        right: 'auto',
-        bottom: 'auto',
-        transform: 'translate(-50%, -50%)',
-        width: '50%',
-        height: 'max-content',
-        backgroundColor: 'rgb(44, 48, 56)',
-      },
-      overlay: {
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-      },
-    };
-
 
     return (
       <Sidebar>
@@ -95,18 +75,13 @@ const ProfilePage = () => {
             <p className="user-details">{user.U_mail} | {user.U_vid} Videos</p>
 
             {session.U_id === user.U_ID && (
-              <button className="setting-button" onClick={openModal}>
+              <button type="button" className="setting-button" data-bs-toggle="modal" data-bs-target="#UpdateUserModal">
                 <i className="bi bi-gear"></i> &nbsp;
                 SETTING
               </button>
             )}
 
-            <ReactModal isOpen={isOpen} onRequestClose={closeModal} style={modalStyle}>
-
-              <UserUpdate data={user} closeModal={closeModal} update={update} />
-
-            </ReactModal>
-
+            <UserUpdate data={user} />
 
           </div>
 
@@ -150,7 +125,6 @@ const ProfilePage = () => {
       <div>
         <Sidebar>
           <div className='container-fluid d-flex justify-content-center'>
-            <div className='loading' />
             <div>
               No User have ID = {U_id}
             </div>

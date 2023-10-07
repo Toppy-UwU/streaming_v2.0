@@ -110,7 +110,8 @@ const Sidebar = ({ children }) => {
                   </div>
                   <hr class="dropdown-divider"></hr>
                   <Link class="dropdown-item" to={`/profile?profile=${session.U_id}`}><span><i className="bi bi-person-circle"></i> Profile</span></Link>
-                  <Link class="dropdown-item" to={`/profile?profile=${session.U_id}`}><span><i className="bi bi-gear"></i> Setting</span></Link>
+                  <Link class="dropdown-item" to="/"><span><i className="bi bi-house"></i> Home</span></Link>
+                  <Link class="dropdown-item" to="/setting"><span><i className="bi bi-person-fill-gear"></i> Setting</span></Link>
                   {session.U_type === 'admin' && (
                     <Link class="dropdown-item" to="/admin"><span><i className="bi bi-nut"></i> Administation</span></Link>
                   )}
@@ -121,7 +122,7 @@ const Sidebar = ({ children }) => {
             ) : (
               <div>
                 <button type="button" className="bar-button hideBtn" onClick={toggleSearchBox}><span><i className="bi bi-search"></i></span></button>
-                <Link to="/register"><button type="button" className="bar-button add"><span><i className="bi bi-person-add"></i></span></button></Link>
+                <Link to="/"><button type="button" className="bar-button add"><span><i className="bi bi-house"></i></span></button></Link>
                 <Link to="/login"><button type="button" className="bar-button"><span><i className="bi bi-box-arrow-in-right"></i></span></button></Link>
               </div>
             )}
@@ -135,6 +136,15 @@ const Sidebar = ({ children }) => {
               {isLoggedIn ? (
                 <>
                   <ul className="navbar-nav">
+                    {session.U_type === 'admin' && (
+                      <>
+                        <li className="nav-item">
+                          <Link className="nav-link active" to="/admin"><i className="bi bi-nut"></i><span> Administation</span></Link>
+                        </li>
+                        <hr className='text-secondary d-md-block' />
+                      </>
+                    )}
+
                     <li className="nav-item">
                       <Link className="nav-link active" aria-current="page" to="/"><i className="bi bi-house"></i><span> Home</span></Link>
                     </li>
@@ -168,20 +178,25 @@ const Sidebar = ({ children }) => {
                     <hr className='text-secondary d-md-block' />
 
                     <li className="nav-item">
-                      <Link className="nav-link active" to="/"><i className="bi bi-info-circle"></i><span> Log</span></Link>
+                      <Link className="nav-link active" to="/log"><i className="bi bi-info-circle"></i><span> Log</span></Link>
                     </li>
 
                     <li className="nav-item">
-                      <Link className="nav-link active" to="/"><i className="bi bi-flag"></i><span> Report</span></Link>
+                      <Link className="nav-link active" to="/stats"><i className="bi bi-graph-up"></i><span> Statistics</span></Link>
                     </li>
 
                     <li className="nav-item">
-                      <Link className="nav-link active" to="/"><i className="bi bi-link"></i><span> Videos API</span></Link>
+                      <Link className="nav-link active" to="/report"><i className="bi bi-flag"></i><span> Report</span></Link>
                     </li>
 
                     <li className="nav-item">
-                      <Link className="nav-link active" to="/"><i className="bi bi-person-fill-gear"></i><span> Setting</span></Link>
+                      <Link className="nav-link active" to="/api"><i className="bi bi-link"></i><span> Videos API</span></Link>
                     </li>
+
+                    <li className="nav-item">
+                      <Link className="nav-link active" to="/setting"><i className="bi bi-person-fill-gear"></i><span> Setting</span></Link>
+                    </li>
+
                   </ul>
                 </>
               ) : (
@@ -197,7 +212,7 @@ const Sidebar = ({ children }) => {
                   </li>
 
                   <li className="nav-item">
-                    <Link className="nav-link active" to="/register"><i className="bi bi-person-add"></i><span> Register</span></Link>
+                    <Link className="nav-link active" to="/register"><i className="bi bi-house"></i><span> Register</span></Link>
                   </li>
 
                 </ul>

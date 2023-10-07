@@ -1,23 +1,30 @@
-.my-center {
-  margin-top: auto;
-  margin-bottom: auto;
+.centerDiv {
+  height: 100vh;
 }
 
-.div-center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.space {
-  padding-top: 10px;
-  padding-left: 10px;
-  padding-bottom: 10px;
-  padding-right: 10px;
-}
-
-.bgImg {
-  background-image: url(./../img/bg.jpg);
+.background-container {
+  background-image: url('./../img/bg.jpg');
   background-size: cover;
   background-position: center;
+  position: relative;
+  height: 100vh;
+}
+
+.title-Login {
+  color: white;
+  font-size: 35px;
+  text-transform: uppercase;
+  font-weight: 900;
+}
+
+.title-Login span {
+  color: yellow;
+}
+
+.card {
+  border-radius: 1rem;
+}
+
+.img-fluid {
+  border-radius: 1rem 0 0 1rem;
 }

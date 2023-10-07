@@ -1,115 +1,133 @@
 import { useEffect, useState } from "react"
+import DataTable, { createTheme, Media } from "react-data-table-component";
 import AdminSidebar from "../components/AdminSidebar";
 import { getToken, getUser } from "../components/session"
+import { getAPI } from '../components/callAPI';
 import Swal from "sweetalert2";
 import '../config'
+import "../css/admin.css"
 
 const AdminLog = () => {
-    const [histories, setHistories] = useState(null);
-    const [isOpen, setIsOpen] = useState(false);
-    const ip = global.config.ip.ip;
-
-    const u = getUser();
-    const api = ip + '/get/histories?u=' + u;
-
-    const clearApi = ip + '/delete/histories';
-    document.title = "Videos";
+    const [logs, setLogs] = useState([]);
+    const [search, setSearch] = useState('');
+    const [filter, setFilter] = useState([]);
+    document.title = "Logs | Administator";
 
     useEffect(() => {
-        fetch(api)
-            .then(response => response.json())
-            .then(data => {
-                setHistories(data);
-                console.log(data);
-            })
-            .catch(() => { });
-    }, [api])
-
-    const handleBtn = () => {
-        Swal.fire({
-            title: 'Are you sure?',
-            text: "All of your history will be deleted!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Clear'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire({
-                    title: 'Deleted!',
-                    text: 'Your history has been deleted.',
-                    icon: 'success',
-                    confirmButtonText: 'OK'
-                }).then(() => {
-                    handleClear();
-                    window.location.reload();
-                });
+        const fetchData = async () => {
+            try {
+                const response = await getAPI('uploadLog');
+                setLogs(response);
+                setFilter(response);
+            } catch (error) {
+                console.error('Error fetching data:', error);
             }
+        };
+
+        fetchData();
+    }, []);
+
+    useEffect(() => {
+        const result = logs.filter((item) => {
+            return item.V_title.toLowerCase().match(search.toLocaleLowerCase());
         });
-    }
+        setFilter(result);
+    }, [search]);
 
-    const handleClear = () => {
-        const token = getToken();
-        const user = getUser();
-        const tmp = {
-            'user': user
-        }
+    const columns = [
+        {
+            name: 'Videos',
+            selector: row => <img height={120} width={160} src={`data:image/jpeg;base64, ${row.V_pic}`} />,
+        },
+        {
+            name: 'Title',
+            selector: row => row.V_title,
+            sortable: true
+        },
+        {
+            name: 'Owner',
+            selector: row => row.U_name,
+            sortable: true
+        },
+        {
+            name: 'Date',
+            selector: row => row.V_upload,
+            sortable: true
+        },
 
-        fetch(clearApi, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-            },
-            body: JSON.stringify(tmp)
-        }).then(response => {
-            if (!response.ok) {
-                throw new Error('Clearing failed');
+    ]
+
+    const tableHeaderStyle = {
+        headCells: {
+            style: {
+                fontWeight: "bold",
+                fontSize: "16px"
             }
-        }).catch(() => { });
+        },
+        cells: {
+            style: {
+                fontSize: "16px",
+            }
+        },
+        background: {
+            default: "#222E3C"
+        }
     }
 
+    createTheme('solarized', {
+        text: {
+            primary: '#FFFFFF',
+            secondary: '#BDC0C5',
+        },
+        background: {
+            default: '#2C3034',
+        },
+        context: {
+            background: '#222E3C',
+            text: '#FFFFFF',
+        },
+        divider: {
+            default: '#073642',
+        },
+        action: {
+            button: 'rgba(0,0,0,.54)',
+            hover: 'rgba(0,0,0,.08)',
+        },
+    }, 'dark');
 
-    if (histories !== null) {
+    if (logs !== null) {
         return (
             <AdminSidebar>
                 <div className="container-fluid">
                     <br />
-                    <div className="row d-flex justify-content-between align-items-center">
-                        <div style={{ flex: 1, marginRight: '20px' }}>
-                            <h3 className="text-white">Watch History</h3>
-                        </div>
-                        {histories.length > 0 && (
-                            <div style={{ flex: 0 }}>
-                                <button type="button" class="btn btn-danger" onClick={handleBtn}><i class="bi bi-trash3"></i></button>
-                            </div>
-                        )}
+                    <div className='PageTitle'>
+                        <h2><i className="bi bi-info-circle-fill"></i> All Logs</h2>
                     </div>
-                    <table class="table table-dark table-hover">
-                        <thead>
-                            <tr>
-                                <th scope="col">Thumbnail</th>
-                                <th scope="col">Title</th>
-                                <th scope="col">Watch Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {histories.length > 0 ? (
-                                histories.map(history => (
-                                    <tr key={history.H_ID}>
-                                        <td> <img className="card-img-top" src={'data:image/jpeg;base64,' + history.V_pic} style={{ borderRadius: '20px', maxHeight: '200px', maxWidth: '200px' }} alt={history.V_title + ' thumbnail'} /></td>
-                                        <td><a className="href-noline-in" href={'/watch?u=' + history.U_folder + '&v=' + history.V_encode}>{history.V_title}</a></td>
-                                        <td>{history.H_watchDate}</td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colspan="3" className="text-center text-white">- No Watch History! -</td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+
+                    <div className='user-table'>
+                        <div className="card">
+                            <div className="card-body">
+                                <DataTable
+                                    customStyles={tableHeaderStyle}
+                                    columns={columns}
+                                    data={filter}
+                                    pagination
+                                    fixedHeader
+                                    highlightOnHover
+                                    theme="solarized"
+                                    subHeader
+                                    subHeaderComponent={
+                                        <input type="text"
+                                            className="w-25 form-control"
+                                            placeholder="Search..."
+                                            value={search}
+                                            onChange={(e) => setSearch(e.target.value)}
+                                        />
+                                    }
+                                ></DataTable>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </AdminSidebar>
         )
