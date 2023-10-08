@@ -1,6 +1,7 @@
 from functools import wraps
 import io
 import random
+import secrets
 import shutil
 import string
 from flask import Flask, json, request, jsonify, send_file, send_from_directory
@@ -1637,7 +1638,60 @@ def create_app(test_config=None):
             conn.close()
             return ({'message': 'content unavarible'}), 403
 
+    @app.route("/get/url_token", methods=['GET'])
+    @token_required
+    def get_url():
+        conn = create_conn()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT * FROM url_token"
+        )
+        data = cursor.fetchall()
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        urls = []
+        for row in data:
+            url = {
+                'url': row[1],
+                'create_at': row[2],
+                'url_expire': datetime.utcfromtimestamp(row[3])
+            }
+            urls.append(url)
+
+        return jsonify(urls), 200
     
+    @app.route("/delete/url_token", methods=['POST'])
+    @token_required
+    def delete_url():
+        conn = create_conn()
+        cursor = conn.cursor()
+        current_time = time.time()
+        cursor.execute(
+            "DELETE FROM url_token WHERE url_expire < %s",
+            (current_time,)
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return ({'message': 'delete success'}), 200
+    
+    @app.route("/get/user/permit", methods=['GET'])
+    @token_required
+    def get_user_permit():
+        conn = create_conn()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT COUNT(*) FROM users WHERE U_permit = 1"
+        )
+        data = cursor.fetchone()
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return jsonify(data), 200
 
     @app.route("/server_resource")
     def server():
