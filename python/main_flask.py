@@ -1446,6 +1446,24 @@ def create_app(test_config=None):
             tags.append(tag)
 
         return jsonify(tags), 200
+    
+    @app.route("/update/tag", methods=['POST'])
+    @token_required
+    def updateTag():
+        data = request.get_json()
+        print(data)
+        conn = create_conn()
+
+        cursor = conn.cursor()
+        cursor.execute(
+           "UPDATE tags SET T_name = %s WHERE T_ID = %s",
+           (data['update_name'], data['T_ID'])
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return ({'message': 'updated'}), 200
 
     @app.route("/insert/log", methods=["POST"])
     def insertLog():
