@@ -15,14 +15,14 @@ const VideoUpdateModal = (props) => {
     const updateApi = ip + '/update/video/user';
     const deleteApi = ip + '/delete/video/user';
 
-    // useEffect(() => {
-    //     getAPI('tags')
-    //         .then(response => {
-    //             const removeID = vidTags.map(tmp => tmp.T_ID);
-    //             const tmp_tag = response.filter(tag => !removeID.includes(tag.T_ID));
-    //             setTags(tmp_tag)
-    //         });
-    // }, [])
+    useEffect(() => {
+        getAPI('tags')
+            .then(response => {
+                const removeID = vidTags.map(tmp => tmp.T_ID);
+                const tmp_tag = response.filter(tag => !removeID.includes(tag.T_ID));
+                setTags(tmp_tag)
+            });
+    }, [])
 
     const handleSubmit = () => {
         const tmp = ({
@@ -139,18 +139,18 @@ const VideoUpdateModal = (props) => {
                     </div>
                     <div className="modal-body">
                         <div className="VideoDataInput">
-                            <div class="form-floating mb-4">
+                            <div className="form-floating mb-4">
                                 <input type="text" class="form-control" id="floatingInput" value={title} onChange={handleTitle} required />
                                 <label for="floatingInput">Title</label>
                             </div>
 
-                            <div class="form-floating mb-4">
-                                <textarea class="form-control" id="floatingTextarea" value={desc} onChange={handleDesc} rows="4"></textarea>
+                            <div className="form-floating mb-4">
+                                <textarea className="form-control" id="floatingTextarea" value={desc} onChange={handleDesc} rows="4"></textarea>
                                 <label for="floatingTextarea">Description</label>
                             </div>
 
-                            <div class="form-floating mb-4">
-                                <select class="form-select" id="floatingSelect" aria-label="select" value={permit} onChange={handlePermit}>
+                            <div className="form-floating mb-4">
+                                <select className="form-select" id="floatingSelect" aria-label="select" value={permit} onChange={handlePermit}>
                                     <option value="public">Public</option>
                                     <option value="unlisted">Unlisted</option>
                                     <option value="private">Private</option>
@@ -158,7 +158,7 @@ const VideoUpdateModal = (props) => {
                                 <label for="floatingSelect">Permission</label>
                             </div>
 
-                            {/* <div className="col">
+                            <div className="col">
                                 <label>Tag</label>
                                 <h6>
                                     <div className="row">
@@ -189,7 +189,7 @@ const VideoUpdateModal = (props) => {
                                         </div>
                                     </div>
                                 </h6>
-                            </div> */}
+                            </div>
                         </div>
                     </div>
                     <div className="modal-footer d-flex justify-content-center">

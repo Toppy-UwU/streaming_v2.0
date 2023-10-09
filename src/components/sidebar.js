@@ -5,11 +5,13 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 import './../css/sidebar.css';
 import './../css/swal2theme.css';
 import Swal from 'sweetalert2';
+import '../config';
 
 const Sidebar = ({ children }) => {
   const [search, setSearch] = useState('');
   const [searchBox, setSearchBox] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const ip = global.config.ip.ip;
 
   const toggleSearchBox = () => {
     setSearchBox(!searchBox);
@@ -56,6 +58,17 @@ const Sidebar = ({ children }) => {
       confirmButtonText: 'Yes'
     }).then((result) => {
       if (result.isConfirmed) {
+        const tmp = {
+          'U_id': session.U_id,
+          'action': 'logout',
+        }
+        fetch(ip + '/insert/log', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(tmp)
+        }).catch(error => { });
         Swal.fire({
           title: 'Logout Completed!',
           icon: 'success'
@@ -101,12 +114,12 @@ const Sidebar = ({ children }) => {
             {isLoggedIn ? (
               <div>
                 <button type="button" className="bar-button hideBtn" onClick={toggleSearchBox}><span><i className="bi bi-search"></i></span></button>
-                <Link to="/upload" className="no-text-decoration"><button type="button" className="bar-button"><span><i className="bi bi-plus-circle"></i></span></button></Link>
+                <Link to="/upload" className="no-text-decoration"><button type="button" className="bar-button"><i className="bi bi-cloud-upload"></i> <span className="spanSMHide fs-6">Upload</span></button></Link>
                 <Link to='#dropdown-menu' type="button" id="triggerId" data-bs-toggle="dropdown" aria-haspopup="true"
                   aria-expanded="false"><img src={`data:image/jpeg;base64, ${session.U_pro_pic}`} alt="profile" className='user-icon' /></Link>
                 <div class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="triggerId">
                   <div className='UserInfo'>
-                    <span><img src={`data:image/jpeg;base64, ${session.U_pro_pic}`} alt="profile" className='user-icon' /> {session.username}</span>
+                    <Link to={`/profile?profile=${session.U_id}`} className='text-decoration-none text-white'><span><img src={`data:image/jpeg;base64, ${session.U_pro_pic}`} alt="profile" className='user-icon' />{session.username}</span></Link>
                   </div>
                   <hr class="dropdown-divider"></hr>
                   <Link class="dropdown-item" to={`/profile?profile=${session.U_id}`}><span><i className="bi bi-person-circle"></i> Profile</span></Link>

@@ -66,3 +66,9 @@
 .tags-table .card {
   background-color: #2C3034;
 }
+
+@media (max-width: 768px){
+  .spanSMHide{
+    display: none;
+  }
+}

@@ -29,6 +29,7 @@ const Home = () => {
       } catch (error) {
         console.error('Error fetching data:', error);
       }
+      console.log(users)
     };
 
     const fetchDataTag = async () => { //fetch Tags from DB
@@ -94,34 +95,14 @@ const Home = () => {
     {
       name: 'Action',
       cell: (row) => (
-        <div className="dropdown">
+        <Link to={`/profile?profile=${row.U_id}`}>
           <button
-            className="btn btn-secondary dropdown-toggle"
+            className="btn btn-secondary"
             type="button"
-            id={`dropdown-${row.id}`}
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
           >
-            <i className="bi bi-gear"></i>
+            <i className="bi bi-person-fill"></i>
           </button>
-          <ul className="dropdown-menu dropdown-menu-dark" aria-labelledby={`dropdown-${row.id}`}>
-            <li>
-              <Link className="dropdown-item" to={`/profile?profile=${row.U_id}`}>
-                <span><i className="bi bi-person"></i> View Profile</span>
-              </Link>
-            </li>
-            <li>
-              <Link className="dropdown-item" to="#">
-                <span><i className="bi bi-gear"></i> Setting</span>
-              </Link>
-            </li>
-            <li>
-              <Link className="dropdown-item" to="#">
-                <span><i className="bi bi-trash3"></i> Delete</span>
-              </Link>
-            </li>
-          </ul>
-        </div>
+        </Link>
       ),
     }
   ]
@@ -135,35 +116,6 @@ const Home = () => {
         <Link className="text-decoration-none text-white" to={"/tag?tag=" + row.T_name}>{row.T_name}</Link>
       )
     },
-    {
-      name: 'Action',
-      cell: (row) => (
-        // <button className="btn btn-danger" onClick={() => handleDeleteTagDialog(row.T_ID)}>Delete</button>
-        <div className="dropdown">
-          <button
-            className="btn btn-secondary dropdown-toggle"
-            type="button"
-            id={`dropdown-${row.id}`}
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-          >
-            <i className="bi bi-gear"></i>
-          </button>
-          <ul className="dropdown-menu" aria-labelledby={`dropdown-${row.id}`}>
-            <li>
-              <Link className="dropdown-item" to={"/tag?tag=" + row.T_name}>
-                <span><i className="bi bi-file-earmark-play"></i> View Videos</span>
-              </Link>
-            </li>
-            <li>
-              <Link className="dropdown-item" to="#">
-                <span><i className="bi bi-trash3"></i> Delete</span>
-              </Link>
-            </li>
-          </ul>
-        </div>
-      )
-    }
   ]
 
   const tableHeaderStyle = {
@@ -214,17 +166,6 @@ const Home = () => {
     return sum;
   }
 
-  // if (users === null) {
-
-  //   return (
-  //     <AdminSidebar>
-  //       <div className="center">
-  //         <div className="loading" style={{ marginTop: '25%' }}></div>
-  //       </div>
-  //     </AdminSidebar>
-  //   )
-  // }
-
   if (isAdmin()) {
     return (
       <AdminSidebar>
@@ -268,7 +209,7 @@ const Home = () => {
 
           <div className='user-table'>
             <div className='row'>
-              <div className='col-md-9 mb-3'>
+              <div className='col-md-8 mb-3'>
                 <div className="card">
                   <div className='card-header'>
                     <h4 className='text-white fw-bold'><i className="bi bi-people-fill"></i> Users</h4>
@@ -295,7 +236,7 @@ const Home = () => {
                   </div>
                 </div>
               </div>
-              <div className='col-md-3'>
+              <div className='col-md-4'>
                 <div className="card">
                   <div className='card-header'>
                     <h4 className='text-white fw-bold'><i className="bi bi-tag-fill"></i> Tags</h4>

@@ -41,11 +41,23 @@ const LoginPage = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(loginData), 
+          body: JSON.stringify(loginData),
         });
 
         if (response.ok) {
           const data = await response.json();
+          //set log
+          const tmp = {
+            'U_id': data.data.U_id,
+            'action': 'login',
+          }
+          fetch(ip + '/insert/log', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(tmp)
+          }).catch(error => { });
           if (data.status === 'success') {
             if (checkbox.checked) {
               expDate.setDate(expDate.getDate() + 30);

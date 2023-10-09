@@ -4,10 +4,9 @@ import VideoPlayer from '../components/player';
 import { getAPI } from '../components/callAPI';
 import 'video.js/dist/video-js.css';
 import { useState, useEffect } from 'react';
-import { checkVidPermit, getUser, isAdmin, isSessionSet } from '../components/session';
+import { checkVidPermit, getUser, isAdmin, isSessionSet, getToken } from '../components/session';
 import VideoUpdateModal from '../components/videoUpdateModal';
 import { createHistory } from '../components/saveHistories';
-
 import '../config';
 import moment from 'moment';
 import { Link } from 'react-router-dom';
@@ -60,6 +59,7 @@ const WatchPage = () => {
     const [videos, setVideos] = useState(null); //show video
     const [vidDetail, setVidDetail] = useState(null); // played video data
     const [showDesc, setshowDesc] = useState(false);
+    const [ url, setUrl ] = useState('');
 
     const user = param.get('u');
     const video = param.get('v');
@@ -68,8 +68,31 @@ const WatchPage = () => {
     const ipw = global.config.ip.ipw;
     const ip = global.config.ip.ip;
 
-    const url = ipw + '/hls/upload/' + user + '/' + video + '/' + video + '.m3u8';
+    // const url = ipw + '/hls/upload/' + user + '/' + video + '/' + video + '.m3u8';
     const api = ip + '/get/video/info?v=' + video + '&u=' + c_user;
+    const dynamicAPI = ip + '/get/dynamicUrl/token'
+
+    useEffect(() => {
+
+        const tmp = {
+            'vid_url': '/watch?u=' + user + '&v=' + video
+        } 
+        console.log(getToken());
+        fetch(dynamicAPI, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + getToken()
+            },
+            body: JSON.stringify(tmp)
+
+        }).then(response => response.json())
+        .then(data => {
+            console.log('url:',data.url);
+            setUrl(data.url)
+        })
+        .catch(() => {})
+    }, [dynamicAPI])
 
     useEffect(() => {
         fetch(api)
@@ -88,9 +111,6 @@ const WatchPage = () => {
             .catch(e => {
                 console.error('Error:', e);
             })
-
-
-
     }, [api])
 
     useEffect(() => {
@@ -233,12 +253,12 @@ const WatchPage = () => {
                                             <li>
                                                 <button className="dropdown-item" type="button"><i className="bi bi-link"></i> Get API</button>
                                             </li>
-                                            {f1 &&
+                                            {f1 || f2 &&
                                                 <li>
                                                     <button className="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#UpdateVideoModal"><i className="bi bi-gear"></i> Setting</button>
                                                 </li>
                                             }
-                                            {f1 &&
+                                            {f1 || f2 &&
                                                 <li>
                                                     <button className="dropdown-item" type="button"><i className="bi bi-trash"></i> Delete</button>
                                                 </li>

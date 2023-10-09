@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import DataTable, { createTheme } from "react-data-table-component";
 import AdminSidebar from "../components/AdminSidebar";
 import { getAPI } from "../components/callAPI";
-import { getToken} from "../components/session"
+import { getToken } from "../components/session"
 import Swal from "sweetalert2";
 import '../config'
 import "../css/admin.css"
@@ -37,7 +37,7 @@ const AdminTag = () => {
         setFilter(result);
     }, [search]);
 
-    const handleDeleteTagDialog = (T_ID) => { 
+    const handleDeleteTagDialog = (T_ID) => {
         Swal.fire({
             title: 'Are you sure to delete?',
             icon: 'warning',
@@ -75,7 +75,7 @@ const AdminTag = () => {
             } else {
                 Swal.fire(
                     'Failed to delete tag!',
-                    response.status +":"+ response.statusText,
+                    response.status + ":" + response.statusText,
                     'error'
                 )
             }
@@ -128,7 +128,7 @@ const AdminTag = () => {
             } else {
                 Swal.fire(
                     'Failed to add new tag!',
-                    response.status +":"+ response.statusText,
+                    response.status + ":" + response.statusText,
                     'error'
                 )
             }
@@ -138,11 +138,6 @@ const AdminTag = () => {
     };
 
     const columns = [
-        {
-            name: 'ID',
-            selector: row => row.T_ID,
-            sortable: true
-        },
         {
             name: 'Name',
             selector: row => row.T_name,
@@ -154,30 +149,34 @@ const AdminTag = () => {
         {
             name: 'Action',
             cell: (row) => (
+                <>
+                    <button className="btn btn-primary" onClick={() => handleDeleteTagDialog(row.T_ID)}><i className="bi bi-pencil-square"></i> <span className="spanSMHide">Edit</span></button>
+                    <button className="btn btn-danger mx-2" onClick={() => handleDeleteTagDialog(row.T_ID)}><i className="bi bi-trash3"></i> <span className="spanSMHide">Delete</span></button>
+                </>
                 // <button className="btn btn-danger" onClick={() => handleDeleteTagDialog(row.T_ID)}>Delete</button>
-                <div className="dropdown">
-                    <button
-                        className="btn btn-secondary dropdown-toggle"
-                        type="button"
-                        id={`dropdown-${row.id}`}
-                        data-bs-toggle="dropdown"
-                        aria-expanded="false"
-                    >
-                        <i className="bi bi-gear"></i>
-                    </button>
-                    <ul className="dropdown-menu" aria-labelledby={`dropdown-${row.id}`}>
-                        <li>
-                            <Link className="dropdown-item" to={"/tag?tag=" + row.T_name}>
-                                <span><i className="bi bi-file-earmark-play"></i> View Videos</span>
-                            </Link>
-                        </li>
-                        <li>
-                            <Link className="dropdown-item" to="#" onClick={() => handleDeleteTagDialog(row.T_ID)}>
-                                <span><i className="bi bi-trash3"></i> Delete</span>
-                            </Link>
-                        </li>
-                    </ul>
-                </div>
+                // <div className="dropdown">
+                //     <button
+                //         className="btn btn-secondary dropdown-toggle"
+                //         type="button"
+                //         id={`dropdown-${row.id}`}
+                //         data-bs-toggle="dropdown"
+                //         aria-expanded="false"
+                //     >
+                //         <i className="bi bi-gear"></i>
+                //     </button>
+                //     <ul className="dropdown-menu" aria-labelledby={`dropdown-${row.id}`}>
+                //         <li>
+                //             <Link className="dropdown-item" to={"/tag?tag=" + row.T_name}>
+                //                 <span><i className="bi bi-file-earmark-play"></i> View Videos</span>
+                //             </Link>
+                //         </li>
+                //         <li>
+                //             <Link className="dropdown-item" to="#" onClick={() => handleDeleteTagDialog(row.T_ID)}>
+                //                 <span><i className="bi bi-trash3"></i> Delete</span>
+                //             </Link>
+                //         </li>
+                //     </ul>
+                // </div>
             )
         }
     ]
@@ -198,7 +197,7 @@ const AdminTag = () => {
             default: "#222E3C"
         }
     }
-    
+
     createTheme('solarized', {
         text: {
             primary: '#FFFFFF',

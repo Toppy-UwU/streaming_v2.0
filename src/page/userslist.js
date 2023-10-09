@@ -6,16 +6,15 @@ import '../config'
 import "../css/admin.css"
 import DataTable, { createTheme, Media } from "react-data-table-component";
 import { Link } from "react-router-dom";
-import Modal from 'react-modal';
+import AddUserModal from "../components/UserModal";
+import UpdateUserModal from "../components/UpdateUserModal";
 
 const UserListPage = () => {
     const [users, setUsers] = useState([]);
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState([]);
-    const [modalIsOpen, setIsOpen] = useState(false);
+    const [selectedRow, setSelectedRow] = useState([]);
     document.title = "Users | Administration";
-
-    Modal.setAppElement('#root');
 
     useEffect(() => {
         const fetchData = async () => {
@@ -37,13 +36,58 @@ const UserListPage = () => {
         });
         setFilter(result);
     }, [search]);
+    console.log(users)
+    const handleDelete = (U_id, U_folder) => {
+        const deleteApi = 'http://localhost:8900/delete/user';
 
-    function openModal() {
-        setIsOpen(true);
+        const tmp = ({
+            'U_ID': U_id,
+            'U_folder': U_folder
+        })
+
+        Swal.fire({
+            title: 'Confirm to delete?',
+            icon: 'question',
+            confirmButtonText: 'Delete',
+            showCancelButton: true,
+            showLoaderOnConfirm: true,
+            preConfirm: () => {
+                return fetch(deleteApi, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(tmp)
+                }).then(response => {
+                    if (!response.ok) {
+                        throw new Error(response.statusText)
+                    }
+                    return response.json()
+                })
+                    .catch(error => {
+                        Swal.showValidationMessage(
+                            `Request failed: ${error}`
+                        )
+                    });
+            },
+            allowOutsideClick: () => !Swal.isLoading()
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Deleted!',
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false,
+                    didClose: () => {
+                        window.location.reload();
+                    }
+                })
+            }
+        })
     }
 
-    function closeModal() {
-        setIsOpen(false);
+    const handleSettingClick = (row) => {
+        setSelectedRow(row);
     }
 
     const columns = [
@@ -103,12 +147,12 @@ const UserListPage = () => {
                             </Link>
                         </li>
                         <li>
-                            <Link className="dropdown-item" to="#">
+                            <Link className="dropdown-item" to="#" data-bs-toggle="modal" data-bs-target="#updateUserModal" onClick={() => handleSettingClick(row)}>
                                 <span><i className="bi bi-gear"></i> Setting</span>
                             </Link>
                         </li>
                         <li>
-                            <Link className="dropdown-item" to="#">
+                            <Link className="dropdown-item" to="#" onClick={() => handleDelete(row.U_id, row.U_folder)}>
                                 <span><i className="bi bi-trash3"></i> Delete</span>
                             </Link>
                         </li>
@@ -176,7 +220,7 @@ const UserListPage = () => {
                                     highlightOnHover
                                     theme="solarized"
                                     actions={
-                                        <button className="btn btn-secondary" onClick={() => openModal}><span><i class="bi bi-person-plus"></i> </span>Add User</button>
+                                        <button className="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#addUserModal"><span><i class="bi bi-person-plus"></i> </span>Add User</button>
                                     }
                                     subHeader
                                     subHeaderComponent={
@@ -192,6 +236,8 @@ const UserListPage = () => {
                         </div>
                         <br />
                     </div>
+                    <AddUserModal />
+                    <UpdateUserModal data={selectedRow} />
                 </div>
             </AdminSidebar>
         )

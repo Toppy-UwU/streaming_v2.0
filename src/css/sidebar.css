@@ -149,6 +149,11 @@
 .UserInfo {
   margin-left: 15px;
   font-weight: 550;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .close-btn {

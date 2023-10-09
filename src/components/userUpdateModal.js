@@ -9,6 +9,10 @@ const UserUpdate = (props) => {
     const [email, setEmail] = useState(session.U_mail);
     const [propic, setPropic] = useState(session.U_pro_pic);
     const [bannerpic, setBannerpic] = useState(session.U_banner);
+    const [flag1, setFlag1] = useState(false)
+    const [flag2, setFlag2] = useState(false)
+    const [bannerImg, setBannerImg] = useState([]);
+    const [propicImg, setPropicImg] = useState([]);
     const ip = global.config.ip.ip;
 
     const api = ip + '/update/user/user';
@@ -23,10 +27,31 @@ const UserUpdate = (props) => {
 
     const handlePropic = (e) => {
         setPropic(e.target.files[0]);
+        setFlag1(true)
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                // Set the data URL as the image source
+                setPropicImg(event.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
     }
 
     const handleBanner = (e) => {
         setBannerpic(e.target.files[0]);
+        setFlag2(true)
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                // Set the data URL as the image source
+                setBannerImg(event.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+
     }
 
     const proClick = () => {
@@ -92,7 +117,12 @@ const UserUpdate = (props) => {
                                     </div>
                                     <div className='UpdatePicImg d-flex justify-content-center align-items-center'>
                                         <div className='row'>
-                                            <img className="UserImg" src={`data:image/jpeg;base64, ${propic}`} alt='Profile' />
+                                            {!flag1 ?
+                                                <img className="UserImg" src={`data:image/jpeg;base64, ${propic}`} alt='Profile' />
+                                                :
+                                                <img className="UserImg" src={propicImg} alt='Profile' />
+                                            }
+
                                         </div>
                                     </div>
                                 </div>
@@ -114,8 +144,14 @@ const UserUpdate = (props) => {
                                     </div>
                                     <div className='UpdatePicImg d-flex justify-content-center align-items-center'>
                                         <div className='row'>
-                                            <img className="BanImg" src={`data:image/jpeg;base64, ${bannerpic}`} alt='Banner' />
+                                            {!flag2 ?
+                                                <img className="BanImg" src={`data:image/jpeg;base64, ${bannerpic}`} alt='Banner' />
+                                                :
+
+                                                <img className="BanImg" src={bannerImg} alt='Banner' />
+                                            }
                                         </div>
+                                        {console.log(bannerpic)}
                                     </div>
                                 </div>
                             </div>
