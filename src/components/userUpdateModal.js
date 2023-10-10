@@ -151,7 +151,6 @@ const UserUpdate = (props) => {
                                                 <img className="BanImg" src={bannerImg} alt='Banner' />
                                             }
                                         </div>
-                                        {console.log(bannerpic)}
                                     </div>
                                 </div>
                             </div>

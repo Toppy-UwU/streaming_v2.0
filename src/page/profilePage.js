@@ -7,6 +7,7 @@ import './../css/profile.css';
 import './../css/modal.css';
 import GetVideo from '../components/getVideo';
 import '../config'
+import { Link } from 'react-router-dom';
 
 const ProfilePage = () => {
   const param = new URLSearchParams(window.location.search);
@@ -19,6 +20,8 @@ const ProfilePage = () => {
 
   let [currentComp, setCurrentComp] = useState('public');
 
+  const [chk, setChk] = useState(false);
+
   const session = isSessionSet('token') ? getlocalData('session') : { U_id: null };
 
   useEffect(() => {
@@ -27,6 +30,7 @@ const ProfilePage = () => {
         const response = await fetch(getAPI);
 
         if (!response.ok) {
+          setChk(true);
           throw new Error(`Request failed with status: ${response.status}`);
         }
 
@@ -48,18 +52,30 @@ const ProfilePage = () => {
 
 
   if (user === null) {
-
-    return (
-      <Sidebar>
-        <div className="center">
-          <div className="loading" style={{ marginTop: '25%' }}></div>
-        </div>
-      </Sidebar>
-    )
+    console.log(chk);
+    if (chk) {
+      return (
+        <Sidebar>
+          <div className='notfound-vid'>
+            <i className="bi bi-person-fill-x"></i>
+            <p>User not found!</p>
+            <Link to="/"><button type="button" className="btn btn-outline-primary">Back to Home</button></Link>
+          </div>
+        </Sidebar>
+      )
+    } else {
+      return (
+        <Sidebar>
+          <div className="center">
+            <div className="loading" style={{ marginTop: '25%' }}></div>
+          </div>
+        </Sidebar>
+      )
+    }
   }
 
   console.log(user);
-  if (user) {
+  if (user || chk) {
 
     const buttonHandler = (btnId) => {
       setCurrentComp(btnId);
@@ -123,13 +139,15 @@ const ProfilePage = () => {
   } else {
     return (
       <div>
-        <Sidebar>
-          <div className='container-fluid d-flex justify-content-center'>
-            <div>
-              No User have ID = {U_id}
+        {chk && (
+          <Sidebar>
+            <div className='container-fluid d-flex justify-content-center'>
+              <div>
+                No User have ID = {U_id}
+              </div>
             </div>
-          </div>
-        </Sidebar>
+          </Sidebar>
+        )}
       </div>
     );
   }

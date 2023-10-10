@@ -59,7 +59,7 @@ const WatchPage = () => {
     const [videos, setVideos] = useState(null); //show video
     const [vidDetail, setVidDetail] = useState(null); // played video data
     const [showDesc, setshowDesc] = useState(false);
-    const [ url, setUrl ] = useState('');
+    const [url, setUrl] = useState('');
 
     const user = param.get('u');
     const video = param.get('v');
@@ -73,10 +73,9 @@ const WatchPage = () => {
     const dynamicAPI = ip + '/get/dynamicUrl/token'
 
     useEffect(() => {
-
         const tmp = {
             'vid_url': '/watch?u=' + user + '&v=' + video
-        } 
+        }
         console.log(getToken());
         fetch(dynamicAPI, {
             method: 'POST',
@@ -87,11 +86,11 @@ const WatchPage = () => {
             body: JSON.stringify(tmp)
 
         }).then(response => response.json())
-        .then(data => {
-            console.log('url:',data.url);
-            setUrl(data.url)
-        })
-        .catch(() => {})
+            .then(data => {
+                console.log('url:', data.url);
+                setUrl(data.url)
+            })
+            .catch(() => { })
     }, [dynamicAPI])
 
     useEffect(() => {
@@ -127,28 +126,88 @@ const WatchPage = () => {
     }, [vidDetail]);
 
     const handleDownloadBtn = (e) => {
-        const downloadAPI = ip + '/download?u=' + vidDetail.U_folder + '&v=' + vidDetail.V_encode
-        fetch(downloadAPI)
-            .then(response => {
-                console.log(response)
-                if (response.ok) {
-                    return response.blob();
-                }
-            })
-            .then(blob => {
-                const downloadUrl = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = downloadUrl;
-                a.download = vidDetail.V_title + '.mp4';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-            })
-            .catch(e => {
-                console.error('Error:', e);
-            });
+        const downloadAPI = ip + '/download?u=' + vidDetail.U_folder + '&v=' + vidDetail.V_encode;
+        Swal.fire({
+            title: 'Download',
+            text: 'Click Download to start convert',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Download',
+            cancelButtonText: 'Cancel',
+            showLoaderOnConfirm: true,
+            preConfirm: () => {
+                return fetch(downloadAPI)
+                    .then(response => {
+                        if (response.ok) {
+                            return response.blob();
+                        }
+                    })
+                    .then(blob => {
+                        const downloadUrl = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = downloadUrl;
+                        a.download = vidDetail.V_title + '.mp4';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        return true;
+                    })
+                    .catch(e => {
+                        console.error('Error:', e);
+                        Swal.showValidationMessage(`Download failed: ${e}`);
+                        return false;
+                    });
+            },
+            allowOutsideClick: () => !Swal.isLoading()
+        })
+            .then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Converted!',
+                        text: 'The video has been successfully converted.',
+                        showConfirmButton: false,
+                        timer: 2500,
+                        timerProgressBar: true
+                    });
 
+                    deleteDownload();
+                }
+            });
     }
+
+    // const handleDownloadBtn = (e) => {
+    //     const downloadAPI = ip + '/download?u=' + vidDetail.U_folder + '&v=' + vidDetail.V_encode
+    //     fetch(downloadAPI)
+    //         .then(response => {
+    //             console.log(response)
+    //             if (response.ok) {
+    //                 return response.blob();
+    //             }
+    //         })
+    //         .then(blob => {
+    //             const downloadUrl = URL.createObjectURL(blob);
+    //             const a = document.createElement('a');
+    //             a.href = downloadUrl;
+    //             a.download = vidDetail.V_title + '.mp4';
+    //             document.body.appendChild(a);
+    //             a.click();
+    //             document.body.removeChild(a);
+    //             return
+    //         }).then(result => {
+    //             deleteDownload();
+    //         })
+    //         .catch(e => {
+    //             console.error('Error:', e);
+    //         })
+    // }
+
+    const deleteDownload = () => {
+        fetch(('http://localhost:8900/delete/download?u=' + vidDetail.U_folder + '&v=' + vidDetail.V_encode), {
+            method: 'GET'
+        }).catch(e => { })
+    }
+
 
     const handleShare = () => {
         const value = "http://localhost:3000/watch?u=" + vidDetail.U_folder + "&v=" + vidDetail.V_encode;
@@ -253,12 +312,12 @@ const WatchPage = () => {
                                             <li>
                                                 <button className="dropdown-item" type="button"><i className="bi bi-link"></i> Get API</button>
                                             </li>
-                                            {f1 || f2 &&
+                                            {(f1 || f2) &&
                                                 <li>
                                                     <button className="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#UpdateVideoModal"><i className="bi bi-gear"></i> Setting</button>
                                                 </li>
                                             }
-                                            {f1 || f2 &&
+                                            {(f1 || f2) &&
                                                 <li>
                                                     <button className="dropdown-item" type="button"><i className="bi bi-trash"></i> Delete</button>
                                                 </li>

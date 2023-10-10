@@ -23,7 +23,9 @@ const HistoryPage = () => {
             const response = await fetch(api);
             if (response.ok) {
                 const data = await response.json();
-                setHistories(data);
+                if (data.length > 0) {
+                    setHistories(data);
+                }
             } else {
                 throw new Error('Failed to fetch history data');
             }

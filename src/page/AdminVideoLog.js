@@ -1,18 +1,17 @@
 import { useEffect, useState } from "react"
-import { Link } from "react-router-dom";
-import moment from "moment";
-import AdminSidebar from "../components/AdminSidebar";
-import { getAPI } from '../components/callAPI';
 import DataTable, { createTheme, Media } from "react-data-table-component";
+import AdminSidebar from "../components/AdminSidebar";
+import { getToken, getUser } from "../components/session"
+import { getAPI } from '../components/callAPI';
+import Swal from "sweetalert2";
 import '../config'
-import VideoUpdateModal from "../components/videoUpdateModal";
+import "../css/admin.css"
 
-const VideosListPage = () => {
+const AdminVideoLog = () => {
     const [logs, setLogs] = useState([]);
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState([]);
-    const [selectedRow, setSelectedRow] = useState([]);
-    document.title = "Users Videos | Administator";
+    document.title = "Logs | Administator";
 
     useEffect(() => {
         const fetchData = async () => {
@@ -35,15 +34,10 @@ const VideosListPage = () => {
         setFilter(result);
     }, [search]);
 
-    const handleSettingClick = (row) => {
-        setSelectedRow(row);
-    }
-    console.log(logs);
     const columns = [
         {
             name: 'Videos',
-            selector: row => <img height={120} width={160} src={`data:image/jpeg;base64, ${row.V_pic}`} alt={row.V_title+" Picture"}/>,
-            hide: Media.SM
+            selector: row => <img height={120} width={160} src={`data:image/jpeg;base64, ${row.V_pic}`} />,
         },
         {
             name: 'Title',
@@ -57,43 +51,9 @@ const VideosListPage = () => {
         },
         {
             name: 'Date',
-            selector: row => <span>{moment.utc(row.V_upload).format("DD MMMM YYYY")}</span>,
-            sortable: true,
-            hide: Media.SM
+            selector: row => row.V_upload,
+            sortable: true
         },
-        {
-            name: 'Action',
-            cell: (row) => (
-                <div className="dropdown">
-                    <button
-                        className="btn btn-secondary dropdown-toggle"
-                        type="button"
-                        id={`dropdown-${row.id}`}
-                        data-bs-toggle="dropdown"
-                        aria-expanded="false"
-                    >
-                        <i className="bi bi-gear"></i>
-                    </button>
-                    <ul className="dropdown-menu dropdown-menu-dark" aria-labelledby={`dropdown-${row.id}`}>
-                        <li>
-                            <Link className="dropdown-item" to={'/watch?u=' + row.U_folder + '&v=' + row.V_encode}>
-                                <span><i className="bi bi-play-btn"></i> View</span>
-                            </Link>
-                        </li>
-                        <li>
-                            <Link className="dropdown-item" to="#" data-bs-toggle="modal" data-bs-target="#updateVideoModal" onClick={() => handleSettingClick(row)}>
-                                <span><i className="bi bi-gear"></i> Setting</span>
-                            </Link>
-                        </li>
-                        <li>
-                            <Link className="dropdown-item" to="#">
-                                <span><i className="bi bi-trash3"></i> Delete</span>
-                            </Link>
-                        </li>
-                    </ul>
-                </div>
-            ),
-        }
 
     ]
 
@@ -109,6 +69,9 @@ const VideosListPage = () => {
                 fontSize: "16px",
             }
         },
+        background: {
+            default: "#222E3C"
+        }
     }
 
     createTheme('solarized', {
@@ -138,7 +101,7 @@ const VideosListPage = () => {
                 <div className="container-fluid">
                     <br />
                     <div className='PageTitle'>
-                        <h2><i className="bi bi-collection-play-fill"></i> Users Videos</h2>
+                        <h2><i className="bi bi-info-circle-fill"></i> Upload Logs</h2>
                     </div>
 
                     <div className='user-table'>
@@ -164,9 +127,7 @@ const VideosListPage = () => {
                                 ></DataTable>
                             </div>
                         </div>
-                        <br />
                     </div>
-                    {/* <VideoUpdateModal id={selectedRow.U_ID} V_id={selectedRow.V_ID} desc={selectedRow.V_desc} title={selectedRow.V_title} permit={selectedRow.V_permit} path={selectedRow.U_folder} encode={selectedRow.V_encode} tags={selectedRow.tags} /> */}
                 </div>
             </AdminSidebar>
         )
@@ -180,6 +141,7 @@ const VideosListPage = () => {
         )
     }
 
+
 }
 
-export default VideosListPage;
+export default AdminVideoLog;

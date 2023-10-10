@@ -1,49 +1,90 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "../components/sidebar";
 import DataTable, { createTheme, Media } from "react-data-table-component";
-import config from '../config'; // Make sure to import config properly
+import '../config';
+import { getlocalData } from './../components/session';
 
 const UserStats = () => {
-    const [stats, setStats] = useState([]);
+    const [mostwatch, setMostwatch] = useState([]);
+    const [mostView, setMostview] = useState([]);
     document.title = "Statistics";
-
-    const initialStorage = [
-        { lid: 1, action: 'Login', time: '13/09/2023', ip: '10.10.25.23' },
-        { lid: 2, action: 'Logout', time: '17/09/2023', ip: '192.10.25.23' },
-        { lid: 3, action: 'Login', time: '18/09/2023', ip: '192.10.25.23' },
-        { lid: 4, action: 'Login', time: '18/09/2023', ip: '10.10.25.23' },
-        { lid: 5, action: 'Logout', time: '21/09/2023', ip: '192.168.24.23' },
-        { lid: 6, action: 'Login', time: '22/09/2023', ip: '192.56.0.23' },
-        { lid: 7, action: 'Logout', time: '22/09/2023', ip: '10.10.25.23' },
-        { lid: 8, action: 'Login', time: '27/09/2023', ip: '192.10.25.23' },
-        { lid: 9, action: 'Login', time: '3/10/2023', ip: '10.10.25.23' },
-        { lid: 10, action: 'Logout', time: '7/10/2023', ip: '192.10.254.23' },
-    ];
-
+    const ip = global.config.ip.ip;
+    var session = getlocalData('session');
+    const api_watch = ip + '/get/mostWatch?u=' + session.U_id;
+    const api_view = ip + '/get/mostView?u=' + session.U_id;
     useEffect(() => {
-        setStats(initialStorage);
+        const fetchDataWatch = async () => {
+            try {
+                const response = await fetch(api_watch);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const data = await response.json();
+                setMostwatch(data);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        };
+
+        const fetchDataView = async () => {
+            try {
+                const response = await fetch(api_view);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const data = await response.json();
+                setMostview(data);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        };
+
+        fetchDataWatch();
+        fetchDataView();
     }, []);
 
+    console.log(mostView);
     const columns = [
         {
-            name: 'LID',
-            selector: row => row.lid,
-            sortable: true,
+            name: 'Video',
+            selector: row => <img height={120} width={160} src={`data:image/jpeg;base64, ${row.V_pic}`} />,
             hide: Media.SM
         },
         {
-            name: 'Action',
-            selector: row => row.action,
+            name: 'Title',
+            selector: row => row.V_title,
             sortable: true
         },
         {
-            name: 'Timestamp',
-            selector: row => row.time,
+            name: 'Owner',
+            selector: row => row.U_name,
             sortable: true
         },
         {
-            name: 'IP',
-            selector: row => row.ip,
+            name: 'View',
+            selector: row => row.V_view,
+        },
+    ]
+
+    const columnsView = [
+        {
+            name: 'Video',
+            selector: row => <img height={120} width={160} src={`data:image/jpeg;base64, ${row.V_pic}`} />,
+            hide: Media.SM
+        },
+        {
+            name: 'Title',
+            selector: row => row.V_title,
+            sortable: true
+        },
+        {
+            name: 'Upload',
+            selector: row => row.V_upload,
+            sortable: true
+        },
+        {
+            name: 'View',
+            selector: row => row.V_view,
         },
     ]
 
@@ -94,21 +135,16 @@ const UserStats = () => {
                     <div className="row">
                         <div className="col-md-6 mb-3">
                             <div className="card">
+                                <div className="card-header">
+                                    <h4 className='text-white fw-bold'><i className="bi bi-people-fill"></i> Most Watch</h4>
+                                </div>
                                 <div className="card-body">
                                     <DataTable
                                         customStyles={tableHeaderStyle}
                                         columns={columns}
-                                        data={stats}
+                                        data={mostwatch}
                                         pagination
                                         fixedHeader
-                                        subHeader
-                                        subHeaderComponent={
-                                            <div className="text-align-left">
-                                                <h5 className="text-white fw-bold">
-                                                    <i className="bi bi-person-fill"></i> Self Watch
-                                                </h5>
-                                            </div>
-                                        }
                                         highlightOnHover
                                         theme="solarized"
                                     ></DataTable>
@@ -117,21 +153,16 @@ const UserStats = () => {
                         </div>
                         <div className="col-md-6 mb-3">
                             <div className="card">
+                                <div className="card-header">
+                                    <h4 className='text-white fw-bold'><i className="bi bi-people-fill"></i> Most View</h4>
+                                </div>
                                 <div className="card-body">
                                     <DataTable
                                         customStyles={tableHeaderStyle}
-                                        columns={columns}
-                                        data={stats}
+                                        columns={columnsView}
+                                        data={mostView}
                                         pagination
                                         fixedHeader
-                                        subHeader
-                                        subHeaderComponent={
-                                            <div className="text-align-left">
-                                                <h5 className="text-white fw-bold">
-                                                    <i className="bi bi-person-fill"></i> Other Watch
-                                                </h5>
-                                            </div>
-                                        }
                                         highlightOnHover
                                         theme="solarized"
                                     ></DataTable>

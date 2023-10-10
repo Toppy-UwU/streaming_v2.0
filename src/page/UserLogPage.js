@@ -1,33 +1,47 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "../components/sidebar";
 import DataTable, { createTheme, Media } from "react-data-table-component";
-import config from '../config'; // Make sure to import config properly
+import './../config';
+import { getlocalData } from './../components/session';
 
 const UserLog = () => {
     const [log, setLog] = useState([]);
+    const [search, setSearch] = useState('');
+    const [filter, setFilter] = useState([]);
+    const ip = global.config.ip.ip;
+    var session = getlocalData('session');
+    const api = ip + '/get/userLog?u=' + session.U_id;
     document.title = "Log";
 
-    const initialStorage = [
-        { lid: 1, action: 'Login', time: '13/09/2023', ip: '10.10.25.23' },
-        { lid: 2, action: 'Logout', time: '17/09/2023', ip: '192.10.25.23' },
-        { lid: 3, action: 'Login', time: '18/09/2023', ip: '192.10.25.23' },
-        { lid: 4, action: 'Login', time: '18/09/2023', ip: '10.10.25.23' },
-        { lid: 5, action: 'Logout', time: '21/09/2023', ip: '192.168.24.23' },
-        { lid: 6, action: 'Login', time: '22/09/2023', ip: '192.56.0.23' },
-        { lid: 7, action: 'Logout', time: '22/09/2023', ip: '10.10.25.23' },
-        { lid: 8, action: 'Login', time: '27/09/2023', ip: '192.10.25.23' },
-        { lid: 9, action: 'Login', time: '3/10/2023', ip: '10.10.25.23' },
-        { lid: 10, action: 'Logout', time: '7/10/2023', ip: '192.10.254.23' },
-    ];
+    useEffect(() => {
+        const fetchDataUser = async () => {
+            try {
+                const response = await fetch(api);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const data = await response.json();
+                setLog(data);
+                setFilter(data);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        };
+
+        fetchDataUser();
+    }, []);
 
     useEffect(() => {
-        setLog(initialStorage);
-    }, []);
+        const result = log.filter((item) => {
+            return item.action.toLowerCase().match(search.toLocaleLowerCase());
+        });
+        setFilter(result);
+    }, [search]);
 
     const columns = [
         {
-            name: 'LID',
-            selector: row => row.lid,
+            name: 'UID',
+            selector: row => row.U_ID,
             sortable: true,
             hide: Media.SM
         },
@@ -38,12 +52,8 @@ const UserLog = () => {
         },
         {
             name: 'Timestamp',
-            selector: row => row.time,
+            selector: row => row.created_at,
             sortable: true
-        },
-        {
-            name: 'IP',
-            selector: row => row.ip,
         },
     ]
 
@@ -96,9 +106,18 @@ const UserLog = () => {
                             <DataTable
                                 customStyles={tableHeaderStyle}
                                 columns={columns}
-                                data={log}
+                                data={filter}
                                 pagination
                                 fixedHeader
+                                subHeader
+                                subHeaderComponent={
+                                    <input type="text"
+                                        className="w-25 form-control"
+                                        placeholder="Search..."
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                    />
+                                }
                                 highlightOnHover
                                 theme="solarized"
                             ></DataTable>

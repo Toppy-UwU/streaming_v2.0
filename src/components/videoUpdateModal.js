@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { getToken } from "./session";
 import { getAPI } from "./callAPI";
 import '../config';
+import Swal from "sweetalert2";
 
 
 const VideoUpdateModal = (props) => {
@@ -46,9 +47,21 @@ const VideoUpdateModal = (props) => {
         })
             .then(response => {
                 if (response.ok) {
-                    props.update();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Video Updated!',
+                        timer: 1500,
+                        showConfirmButton: false,
+                        didClose: () => {
+                            window.location.reload();
+                        }
+                    });
                 } else {
-                    console.log(response);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Update video fail',
+                        text: 'please try again!'
+                    })
                 }
             })
             .catch((e) => {

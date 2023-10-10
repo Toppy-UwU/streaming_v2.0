@@ -12,13 +12,19 @@ const AdminLog = () => {
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState([]);
     document.title = "Logs | Administator";
+    const ip = global.config.ip.ip;
+    const api = ip + '/get/userLog?u=all';
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await getAPI('uploadLog');
-                setLogs(response);
-                setFilter(response);
+                const response = await fetch(api);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const data = await response.json();
+                setLogs(data);
+                setFilter(data);
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
@@ -26,32 +32,30 @@ const AdminLog = () => {
 
         fetchData();
     }, []);
+    console.log(logs);
 
     useEffect(() => {
         const result = logs.filter((item) => {
-            return item.V_title.toLowerCase().match(search.toLocaleLowerCase());
+            const lowerCaseSearch = search.toLowerCase();
+            return item.U_ID.toString().includes(lowerCaseSearch) ||
+                item.action.toLowerCase().includes(lowerCaseSearch); //search many row
         });
         setFilter(result);
     }, [search]);
 
     const columns = [
         {
-            name: 'Videos',
-            selector: row => <img height={120} width={160} src={`data:image/jpeg;base64, ${row.V_pic}`} />,
+            name: 'UID',
+            selector: row => row.U_ID,
         },
         {
-            name: 'Title',
-            selector: row => row.V_title,
+            name: 'Action',
+            selector: row => row.action,
             sortable: true
         },
         {
-            name: 'Owner',
-            selector: row => row.U_name,
-            sortable: true
-        },
-        {
-            name: 'Date',
-            selector: row => row.V_upload,
+            name: 'Timestamp',
+            selector: row => row.created_at,
             sortable: true
         },
 
@@ -101,7 +105,7 @@ const AdminLog = () => {
                 <div className="container-fluid">
                     <br />
                     <div className='PageTitle'>
-                        <h2><i className="bi bi-info-circle-fill"></i> All Logs</h2>
+                        <h2><i className="bi bi-info-circle-fill"></i> User Logs</h2>
                     </div>
 
                     <div className='user-table'>

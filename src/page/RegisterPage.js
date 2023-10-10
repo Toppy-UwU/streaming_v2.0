@@ -70,7 +70,7 @@ const RegisterPage = () => {
 
   return (
     <div className="container-fluid background-container py-3 h-100">
-      <div className="row centerDiv d-flex justify-content-center align-items-center">
+      <div className="row d-flex justify-content-center align-items-center">
         <div className="col col-xl-8">
           <div className="card text-bg-dark">
             <div className="card-header">

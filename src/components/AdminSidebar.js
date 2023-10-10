@@ -155,11 +155,11 @@ const AdminSidebar = ({ children }) => {
                 <hr className='text-secondary d-md-block' />
 
                 <li className="nav-item">
-                  <Link className="nav-link active" to="/admin/allLog"><i className="bi bi-info-circle-fill"></i><span> Upload Log</span></Link>
+                  <Link className="nav-link active" to="/admin/uploadLog"><i className="bi bi-info-circle-fill"></i><span> Upload Log</span></Link>
                 </li>
 
                 <li className="nav-item">
-                  <Link className="nav-link active" to="/admin/allLog"><i className="bi bi-info-circle-fill"></i><span> All Log</span></Link>
+                  <Link className="nav-link active" to="/admin/userLog"><i className="bi bi-info-circle-fill"></i><span> User Log</span></Link>
                 </li>
 
                 <li className="nav-item">

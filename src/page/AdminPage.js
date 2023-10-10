@@ -6,8 +6,8 @@ import NotFoundPage from './notfoundPage';
 import { getAPI } from '../components/callAPI';
 import './../css/utilities.css';
 import { isAdmin } from '../components/session';
-import "../css/admin.css"
-import Swal from 'sweetalert2';
+import "../css/admin.css";
+import './../config';
 
 const Home = () => {
   const [users, setUsers] = useState([]);
@@ -18,6 +18,9 @@ const Home = () => {
   const [searchTag, setSearchTag] = useState('');
   const [filterTag, setFilterTag] = useState([]);
 
+  const [permit, setPermit] = useState([]);
+  const ip = global.config.ip.ip;
+  const api = ip + '/get/user/permit';
   document.title = "Dashboard";
 
   useEffect(() => {
@@ -29,7 +32,6 @@ const Home = () => {
       } catch (error) {
         console.error('Error fetching data:', error);
       }
-      console.log(users)
     };
 
     const fetchDataTag = async () => { //fetch Tags from DB
@@ -42,9 +44,22 @@ const Home = () => {
       }
     };
 
+    const fetchDataPermit = async () => { //fetch Tags from DB
+      try {
+        const response = await fetch(api);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
+        setPermit(data);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
     fetchDataUser();
     fetchDataTag();
-
+    fetchDataPermit();
   }, []);
 
   useEffect(() => {
@@ -156,16 +171,6 @@ const Home = () => {
     },
   }, 'dark');
 
-  function sumValue(users) {
-    let sum = 0;
-    for (const item of users) {
-      if (item.U_permit === 1) {
-        sum += 1;
-      }
-    }
-    return sum;
-  }
-
   if (isAdmin()) {
     return (
       <AdminSidebar>
@@ -197,7 +202,7 @@ const Home = () => {
                 <div class="card">
                   <div class="card-body">
                     <h5 class="card-title">
-                      {sumValue(users)}
+                      {permit}
                       <span class="bi bi-cloud-check-fill"></span>
                     </h5>
                     <p class="card-text">Upload Permit</p>
@@ -212,7 +217,7 @@ const Home = () => {
               <div className='col-md-8 mb-3'>
                 <div className="card">
                   <div className='card-header'>
-                    <h4 className='text-white fw-bold'><i className="bi bi-people-fill"></i> Users</h4>
+                    <Link className="text-decoration-none" to={'/admin/users'}><h4 className='text-white fw-bold'><i className="bi bi-people-fill"></i> Users</h4></Link>
                   </div>
                   <div className="card-body">
                     <DataTable
@@ -239,7 +244,7 @@ const Home = () => {
               <div className='col-md-4'>
                 <div className="card">
                   <div className='card-header'>
-                    <h4 className='text-white fw-bold'><i className="bi bi-tag-fill"></i> Tags</h4>
+                    <Link className="text-decoration-none" to={'/admin/tag'}><h4 className='text-white fw-bold'><i className="bi bi-tag-fill"></i> Tags</h4></Link>
                   </div>
                   <div className="card-body">
                     <DataTable

@@ -36,6 +36,7 @@ import UserLog from './page/UserLogPage';
 import UserReport from './page/UserReportPage';
 import UserAPI from './page/UserAPI';
 import UserStats from './page/StatisticsVid';
+import AdminVideoLog from './page/AdminVideoLog';
 
 function App() {
 	if(isSessionSet('session') && isSessionSet('isLoggedIn')) {
@@ -71,8 +72,8 @@ function App() {
 					<Route path='/admin/videos' element={<VideosListPage/>} />
 					<Route path='/admin/report' element={<AdminReport/>} />
 					<Route path='/admin/tag' element={<AdminTag/>} />
-					<Route path='/admin/allLog' element={<AdminLog/>} />
-					<Route path='/admin/allLog' element={<AdminLog/>} />
+					<Route path='/admin/uploadLog' element={<AdminVideoLog/>} />
+					<Route path='/admin/userLog' element={<AdminLog/>} />
 					<Route path='/admin/monitor' element={<Monitor/>} />
 					<Route path='/admin/storage' element={<UsersStorage/>} />
 					{/* not found page */}

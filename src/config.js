@@ -13,6 +13,6 @@ module.exports = global.config = {
         // ipw : "http://192.168.10.111:80" //USOC
 
         ip : "http://172.16.1.4:8900",
-        ipw : "http://172.16.1.4:80"
+        ipw : "http://172.16.1.4:80" //club wifi
     }
 };

@@ -32,11 +32,15 @@ const UserListPage = () => {
 
     useEffect(() => {
         const result = users.filter((item) => {
-            return item.U_name.toLowerCase().match(search.toLocaleLowerCase());
+            const lowerCaseSearch = search.toLowerCase();
+            return item.U_id.toString().includes(lowerCaseSearch) ||
+                item.U_name.toLowerCase().includes(lowerCaseSearch) ||
+                item.U_mail.toLowerCase().includes(lowerCaseSearch) ||
+                item.U_type.toLowerCase().includes(lowerCaseSearch);
         });
         setFilter(result);
     }, [search]);
-    console.log(users)
+    
     const handleDelete = (U_id, U_folder) => {
         const deleteApi = 'http://localhost:8900/delete/user';
 
@@ -100,7 +104,10 @@ const UserListPage = () => {
         {
             name: 'Name',
             selector: row => row.U_name,
-            sortable: true
+            sortable: true,
+            cell: (row) => (
+                <Link className="text-decoration-none text-white" to={`/profile?profile=${row.U_id}`}>{row.U_name}</Link>
+            )
         },
         {
             name: 'E-mail',

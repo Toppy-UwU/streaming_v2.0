@@ -2,13 +2,14 @@ import { useEffect, useState } from "react"
 import { getToken } from "./session";
 import "./../config"
 import Swal from "sweetalert2";
+import validator from "validator";
 
 const AddUserModal = () => {
     const ip = global.config.ip.ip;
     const api = ip + '/insert/user/admin';
 
-    const [username, setUsername] = useState('');
-    const [email, setEmail] = useState('');
+    const [username, setUsername] = useState(null);
+    const [email, setEmail] = useState(null);
     const [password, setPassword] = useState('');
     const [role, setRole] = useState('user');
     const [permit, setPermit] = useState('1');
@@ -31,6 +32,28 @@ const AddUserModal = () => {
 
     const handleAddUser = () => {
         const token = getToken();
+        if (!username || validator.isEmail(email) === false || validator.isStrongPassword(password) === false) {
+            if (!username) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Please fill out username fields',
+                });
+                return;
+            } else if (validator.isEmail(email) === false) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Please fill out email fields or Check email format!',
+                });
+                return;
+            } else if (validator.isStrongPassword(password) === false) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Please fill out password fields or Check password format!',
+                });
+                return;
+            }
+        }
+
         const u_data = [{
             'U_name': username,
             'U_mail': email,
@@ -51,6 +74,7 @@ const AddUserModal = () => {
                 Swal.fire({
                     icon: 'success',
                     title: 'User has been added!',
+                    showConfirmButton: false,
                     timer: 1500,
                     didClose: () => {
                         window.location.reload();
@@ -75,18 +99,20 @@ const AddUserModal = () => {
                     </div>
                     <div className="modal-body">
                         <div class="form-floating mb-4">
-                            <input type="text" class="form-control" id="username" placeholder="Username" onChange={handleUsername} required />
-                            <label htmlFor="username">Username</label>
+                            <input type="text" class="form-control" id="usernameAddModal" placeholder="Username" onChange={handleUsername} />
+                            <label htmlFor="usernameAddModal">Username</label>
                         </div>
                         <div class="form-floating mb-4">
-                            <input type="text" class="form-control" id="email" placeholder="E-mail" onChange={handleEmail} required />
-                            <label htmlFor="email">E-mail</label>
+                            <input type="email" class="form-control" id="emailAddModal" placeholder="E-mail" onChange={handleEmail} />
+                            <label htmlFor="emailAddModal">E-mail</label>
                         </div>
                         <div class="form-floating mb-4">
-                            <input type="text" class="form-control" id="password" placeholder="Password" onChange={handlePassword} required />
-                            <label htmlFor="password">Password</label>
+                            <input type="text" class="form-control" id="passwordAddModal" placeholder="Password" onChange={handlePassword} aria-describedby="passwordHelpBlock" />
+                            <label htmlFor="passwordAddModal">Password</label>
+                            <div id="passwordHelpBlock" class="form-text">
+                                Password must be 8-20 characters long, contain at least  1 upper and lower letters, numbers and special characters.
+                            </div>
                         </div>
-
                         <div className="row">
                             <div className="col-md-6 mb-3">
                                 <div class="form-floating">
@@ -109,7 +135,7 @@ const AddUserModal = () => {
                         </div>
                     </div>
                     <div className="modal-footer d-flex justify-content-center">
-                        <button type="button" className="btn btn-primary" onClick={handleAddUser}>Add</button>
+                        <button type="button" className="btn btn-primary" onClick={handleAddUser} data-bs-dismiss="modal">Add</button>
                         <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>

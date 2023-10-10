@@ -84,6 +84,62 @@ const AdminTag = () => {
         }
     };
 
+    const handleEditTag = async (T_ID, T_Name) => {
+        try {
+            const delete_api = `${ip}/update/tag}`;
+            const token = getToken();
+            const data = {
+                'T_ID': T_ID,
+                'update_name': T_Name
+            }
+            const response = await fetch(delete_api, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                Swal.fire({
+                    title: 'Update completed!',
+                    icon: 'success',
+                    showCancelButton: true,
+                    confirmButtonText: 'OK'
+                }).then((result) => {
+                    fetchData();
+                })
+            } else {
+                Swal.fire(
+                    'Failed to update tag!',
+                    response.status + ":" + response.statusText,
+                    'error'
+                )
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const handleEditTagDialog = (T_ID, T_Name) => {
+        console.log('Edit = '+T_Name);
+        Swal.fire({
+            title: 'Update Tag',
+            input: 'text',
+            inputAttributes: {
+                autocapitalize: 'off',
+                value: T_Name
+            },
+            showCancelButton: true,
+            confirmButtonText: 'Add',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                handleEditTag(T_ID,result.value);
+            }
+        })
+    }
+
     const handleAddNewTagDialog = () => {
         Swal.fire({
             title: 'Add new tag',
@@ -99,9 +155,19 @@ const AdminTag = () => {
                 handleAddNewTag(result.value);
             }
         })
-    }
+    };
 
     const handleAddNewTag = async (newTag) => {
+        if (!newTag) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Please fill Tag fields',
+                showConfirmButton: false,
+                timer: 1500
+            });
+            return;
+        }
+
         try {
             const tags = newTag.split(',').map(tag => tag.trim());
             const token = getToken();
@@ -150,33 +216,9 @@ const AdminTag = () => {
             name: 'Action',
             cell: (row) => (
                 <>
-                    <button className="btn btn-primary" onClick={() => handleDeleteTagDialog(row.T_ID)}><i className="bi bi-pencil-square"></i> <span className="spanSMHide">Edit</span></button>
+                    <button className="btn btn-primary" onClick={() => handleEditTagDialog(row.T_ID,row.T_Name)}><i className="bi bi-pencil-square"></i> <span className="spanSMHide">Edit</span></button>
                     <button className="btn btn-danger mx-2" onClick={() => handleDeleteTagDialog(row.T_ID)}><i className="bi bi-trash3"></i> <span className="spanSMHide">Delete</span></button>
                 </>
-                // <button className="btn btn-danger" onClick={() => handleDeleteTagDialog(row.T_ID)}>Delete</button>
-                // <div className="dropdown">
-                //     <button
-                //         className="btn btn-secondary dropdown-toggle"
-                //         type="button"
-                //         id={`dropdown-${row.id}`}
-                //         data-bs-toggle="dropdown"
-                //         aria-expanded="false"
-                //     >
-                //         <i className="bi bi-gear"></i>
-                //     </button>
-                //     <ul className="dropdown-menu" aria-labelledby={`dropdown-${row.id}`}>
-                //         <li>
-                //             <Link className="dropdown-item" to={"/tag?tag=" + row.T_name}>
-                //                 <span><i className="bi bi-file-earmark-play"></i> View Videos</span>
-                //             </Link>
-                //         </li>
-                //         <li>
-                //             <Link className="dropdown-item" to="#" onClick={() => handleDeleteTagDialog(row.T_ID)}>
-                //                 <span><i className="bi bi-trash3"></i> Delete</span>
-                //             </Link>
-                //         </li>
-                //     </ul>
-                // </div>
             )
         }
     ]
