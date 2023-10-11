@@ -9,7 +9,6 @@ import { Link } from "react-router-dom";
 
 const HistoryPage = () => {
     const [histories, setHistories] = useState(null);
-    const [flag, setFlag] = useState(false)
     const ip = global.config.ip.ip;
 
     const user = getUser();
@@ -26,7 +25,6 @@ const HistoryPage = () => {
                 const data = await response.json();
                 if (data.length > 0) {
                     setHistories(data);
-                    setFlag(true)
                 }
             } else {
                 throw new Error('Failed to fetch history data');
@@ -86,7 +84,6 @@ const HistoryPage = () => {
 
     useEffect(() => {
         fetchHistory();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     if (histories !== null) {
@@ -94,20 +91,14 @@ const HistoryPage = () => {
             <Sidebar>
                 <div className="container-fluid">
                     <br />
-                    <div className="row d-flex justify-content-between align-items-center">
-                        <div style={{ flex: 1, marginRight: '20px' }}>
-                            <h3 className="text-white fw-bold">Watch History</h3>
-                        </div>
+                    <div className='PageTitle d-flex justify-content-between align-items-center'>
+                        <h2><i className="bi bi-clock-history"></i> Watch History</h2>
                         {histories.length > 0 && (
-                            <div style={{ flex: 0 }}>
-                                <button type="button" class="btn btn-danger" onClick={handleBtn}><i class="bi bi-trash3"></i></button>
+                            <div style={{ justifyContent: 'end' }}>
+                                <button type="button" class="btn btn-danger" onClick={handleBtn}><i class="bi bi-trash3"></i> <span className="spanSMHide">Clear</span></button>
                             </div>
                         )}
                     </div>
-
-                    {console.log(histories)}
-
-                    {console.log(new Date() === histories[0].H_watchDate)}
                     <div className="showHistoryData">
                         {histories.map((history) => (
                             <div className="showHistory">
@@ -121,55 +112,27 @@ const HistoryPage = () => {
                         ))}
 
                     </div>
-
-
-                    {/* <div className="row">
-                        <div className="col-12 col-lg-8 col-xxl-12 d-flex">
-                            <div className="card flex-fill">
-                                <div className="card-header">
-                                    <h5 class="card-title mb-0">Latest Watch</h5>
-                                </div>
-                                <table class="table dark-bg table-borderless my-0">
-                                    <thead>
-                                        <tr>
-                                            <th>Thumbnail</th>
-                                            <th>Title</th>
-                                            <th>Date</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {histories.length > 0 ? (
-                                            histories.map(history => (
-                                                <tr key={history.H_ID}>
-                                                    <td> <img className="card-img-top" src={'data:image/jpeg;base64,' + history.V_pic} style={{ borderRadius: '20px', maxHeight: '200px', maxWidth: '200px' }} alt={history.V_title + ' thumbnail'} /></td>
-                                                    <td><a className="text-decoration-none" href={'/watch?u=' + history.U_folder + '&v=' + history.V_encode}>{history.V_title}</a></td>
-                                                    <td>{history.H_watchDate}</td>
-                                                </tr>
-                                            ))
-                                        ) : (
-                                            <tr>
-                                                <td colspan="3" className="text-center text-white">- No Watch History! -</td>
-                                            </tr>
-                                        )}
-
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div> */}
                 </div>
             </Sidebar>
         )
     } else {
         return (
             <Sidebar>
-                <div className="center">
-                    <div className="loading" />
+                <div className="container-fluid">
+                    <br />
+                    <div className='PageTitle'>
+                        <h2><i className="bi bi-clock-history"></i> Watch History</h2>
+                    </div>
+                    <div className="d-flex justify-content-center align-items-center">
+                        <div className='notfound-vid'>
+                            <i className="bi bi-x-circle"></i>
+                            <p>No watch history</p>
+                        </div>
+                    </div>
                 </div>
             </Sidebar>
         )
     }
-
 
 }
 
