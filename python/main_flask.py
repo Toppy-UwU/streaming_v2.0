@@ -177,7 +177,7 @@ def create_app(test_config=None):
             hls = video.hls(Formats.h264())
             hls.encryption(
                 "../key/" + vidData["encode"] + ".bin",
-                "http://172.16.1.4:80/hls/key/" + vidData["encode"] + ".bin",
+                "http://localhost:80/hls/key/" + vidData["encode"] + ".bin",
             )  # encrypt key maybe can change into api
             hls.auto_generate_representations()
             print("convert")
@@ -382,6 +382,7 @@ def create_app(test_config=None):
                             "U_pro_pic": tmp[2:-1],
                             "U_permit": data[8],
                             "U_folder": data[9],
+                            "U_storage": data[11]
                         },
                     }
                 ), 200
@@ -408,7 +409,7 @@ def create_app(test_config=None):
             WHERE h.U_ID = %s \
             GROUP BY h.V_ID \
             ORDER BY COUNT(h.V_ID) \
-            DESC LIMIT 10",
+            DESC LIMIT 1",
             (u,),
         )
         data = cursor.fetchone()
@@ -447,7 +448,7 @@ def create_app(test_config=None):
             FROM videos as v \
             JOIN users as u ON u.U_ID = v.U_ID \
             WHERE v.U_ID = %s \
-            ORDER BY v.V_view DESC LIMIT 10",
+            ORDER BY v.V_view DESC LIMIT 1",
             (u,),
         )
         data = cursor.fetchone()
@@ -1333,6 +1334,7 @@ def create_app(test_config=None):
         return jsonify(histories), 200
 
     @app.route("/delete/histories", methods=["POST"])
+    @token_required
     def deleteHistories():
         data = request.get_json()
 
@@ -1374,7 +1376,7 @@ def create_app(test_config=None):
 
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT v.V_pic, v.V_title, v.V_encode, v.U_ID, u.U_name, v.V_upload, u.U_folder\
+            "SELECT v.V_pic, v.V_title, v.V_encode, v.U_ID, u.U_name, v.V_upload, v.V_permit, u.U_folder\
                        FROM videos AS v \
                        JOIN users AS u \
                        WHERE u.U_ID = v.U_ID \
@@ -1395,7 +1397,8 @@ def create_app(test_config=None):
                 "U_ID": row[3],
                 "U_name": row[4],
                 "V_upload": row[5],
-                "U_folder": row[6],
+                "V_permit": row[6],
+                "U_folder": row[7],
             }
             logs.append(log)
 
@@ -1590,7 +1593,7 @@ def create_app(test_config=None):
                 u = path[0][2:]
                 v = path[1][2:]
 
-                dynamic_url = f"http://172.16.1.4:8900/get/hls/{url_token}/{u}/{v}"
+                dynamic_url = f"http://localhost:8900/get/hls/{url_token}/{u}/{v}"
 
                 cursor.execute(
                     "INSERT INTO url_token(url, url_expire) VALUES (%s, %s)",
@@ -1641,7 +1644,7 @@ def create_app(test_config=None):
             u = path[0][2:]
             v = path[1][2:]
 
-            dynamic_url = f"http://172.16.1.4:8900/get/hls/{url_token}/{u}/{v}"
+            dynamic_url = f"http://localhost:8900/get/hls/{url_token}/{u}/{v}"
 
             return jsonify({"url": dynamic_url}), 200
         else:
@@ -1736,7 +1739,6 @@ def create_app(test_config=None):
         return ({"message": "delete success"}), 200
 
     @app.route("/get/user/permit", methods=["GET"])
-    @token_required
     def get_user_permit():
         conn = create_conn()
         cursor = conn.cursor()
