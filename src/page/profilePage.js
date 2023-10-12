@@ -93,7 +93,7 @@ const ProfilePage = () => {
             {session.U_id === user.U_ID && (
               <button type="button" className="setting-button" data-bs-toggle="modal" data-bs-target="#UpdateUserModal">
                 <i className="bi bi-gear"></i> &nbsp;
-                SETTING
+                EDIT ACCOUNT
               </button>
             )}
 

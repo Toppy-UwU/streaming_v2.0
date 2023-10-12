@@ -135,6 +135,12 @@ const UserListPage = () => {
             hide: Media.SM
         },
         {
+            name: 'Storage',
+            selector: row => row.U_storage,
+            sortable: true,
+            hide: Media.SM
+        },
+        {
             name: 'Action',
             cell: (row) => (
                 <div className="dropdown">

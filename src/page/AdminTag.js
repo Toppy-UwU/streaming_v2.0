@@ -86,13 +86,13 @@ const AdminTag = () => {
 
     const handleEditTag = async (T_ID, T_Name) => {
         try {
-            const delete_api = `${ip}/update/tag}`;
+            const update_api = `${ip}/update/tag`;
             const token = getToken();
             const data = {
                 'T_ID': T_ID,
                 'update_name': T_Name
             }
-            const response = await fetch(delete_api, {
+            const response = await fetch(update_api, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -122,20 +122,20 @@ const AdminTag = () => {
         }
     };
 
-    const handleEditTagDialog = (T_ID, T_Name) => {
-        console.log('Edit = '+T_Name);
+    const handleEditTagDialog = (T_ID, T_name) => {
+        console.log('Edit = '+ T_name + ':id = ' + T_ID);
         Swal.fire({
             title: 'Update Tag',
             input: 'text',
             inputAttributes: {
                 autocapitalize: 'off',
-                value: T_Name
             },
+            inputValue: T_name,
             showCancelButton: true,
             confirmButtonText: 'Add',
         }).then((result) => {
             if (result.isConfirmed) {
-                handleEditTag(T_ID,result.value);
+                handleEditTag(T_ID, result.value);
             }
         })
     }
@@ -216,7 +216,7 @@ const AdminTag = () => {
             name: 'Action',
             cell: (row) => (
                 <>
-                    <button className="btn btn-primary" onClick={() => handleEditTagDialog(row.T_ID,row.T_Name)}><i className="bi bi-pencil-square"></i> <span className="spanSMHide">Edit</span></button>
+                    <button className="btn btn-primary" onClick={() => handleEditTagDialog(row.T_ID,row.T_name)}><i className="bi bi-pencil-square"></i> <span className="spanSMHide">Edit</span></button>
                     <button className="btn btn-danger mx-2" onClick={() => handleDeleteTagDialog(row.T_ID)}><i className="bi bi-trash3"></i> <span className="spanSMHide">Delete</span></button>
                 </>
             )
@@ -279,7 +279,7 @@ const AdminTag = () => {
                                 highlightOnHover
                                 theme="solarized"
                                 actions={
-                                    <button className="btn btn-secondary" onClick={() => handleAddNewTagDialog()}>Add Tag</button>
+                                    <button className="btn btn-secondary" onClick={() => handleAddNewTagDialog()}>+ Add Tag</button>
                                 }
                                 subHeader
                                 subHeaderComponent={

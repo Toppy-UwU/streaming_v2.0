@@ -100,7 +100,7 @@ const Sidebar = ({ children }) => {
               <i id="navbtn" className="bi bi-list" aria-hidden="true"></i>
             </Link>
           </div>
-          <Link to="/" className='link'><div className='title ml-auto' style={{ display: searchBox ? "none" : "" }}>CS <span>MSU</span></div></Link>
+          <Link to="/" className='link'><div className='title ml-auto' style={{ display: searchBox ? "none" : "" }}>CS <span>FLIX</span></div></Link>
           <form className='searchBox' style={{ display: searchBox ? "flex" : "", width: searchBox ? "calc(90% - 10%)" : "" }} onSubmit={Search}>
             <input type='text' placeholder='Search..' defaultValue={''} onChange={handleSearch} />
             <button onClick={Search} className='searchbtn'><i className="bi bi-search"></i></button>
@@ -114,7 +114,9 @@ const Sidebar = ({ children }) => {
             {isLoggedIn ? (
               <div>
                 <button type="button" className="bar-button hideBtn" onClick={toggleSearchBox}><span><i className="bi bi-search"></i></span></button>
+                {session.U_permit === 1 &&
                 <Link to="/upload" className="no-text-decoration"><button type="button" className="bar-button"><i className="bi bi-cloud-upload"></i> <span className="spanSMHide fs-6">Upload</span></button></Link>
+                }
                 <Link to='#dropdown-menu' type="button" id="triggerId" data-bs-toggle="dropdown" aria-haspopup="true"
                   aria-expanded="false"><img src={`data:image/jpeg;base64, ${session.U_pro_pic}`} alt="profile" className='user-icon' /></Link>
                 <div class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="triggerId">
@@ -142,7 +144,7 @@ const Sidebar = ({ children }) => {
           </div>
           <div class="offcanvas offcanvas-start text-bg-dark" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasDarkNavbarLabel">
             <div class="offcanvas-header">
-              <h5 className="offcanvas-title" id="offcanvasExampleLabel">CS <span>MSU</span></h5>
+              <h5 className="offcanvas-title" id="offcanvasExampleLabel">CS <span>FLIX</span></h5>
               <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
             </div>
             <div class="offcanvas-body">
@@ -198,13 +200,13 @@ const Sidebar = ({ children }) => {
                       <Link className="nav-link active" to="/stats"><i className="bi bi-graph-up"></i><span> Statistics</span></Link>
                     </li>
 
-                    <li className="nav-item">
+                    {/* <li className="nav-item">
                       <Link className="nav-link active" to="/report"><i className="bi bi-flag"></i><span> Report</span></Link>
                     </li>
 
                     <li className="nav-item">
                       <Link className="nav-link active" to="/api"><i className="bi bi-link"></i><span> Videos API</span></Link>
-                    </li>
+                    </li> */}
 
                     <li className="nav-item">
                       <Link className="nav-link active" to="/setting"><i className="bi bi-person-fill-gear"></i><span> Setting</span></Link>

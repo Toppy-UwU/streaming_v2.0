@@ -1,6 +1,6 @@
 import React from "react";
 import Sidebar from "./../components/sidebar"
-import { getlocalData, isSessionSet } from './../components/session';
+import { getlocalData, isSessionSet, removelocalData } from './../components/session';
 import './../css/setting.css';
 import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -21,22 +21,57 @@ const SettingPage = () => {
         }
     }
 
-    const handleDelete = () => {
+    const handleDelete = (U_id, U_folder) => {
+        const deleteApi = 'http://localhost:8900/delete/user';
+
+        const tmp = ({
+            'U_ID': U_id,
+            'U_folder': U_folder
+        })
+
         Swal.fire({
-            title: 'Are you sure to delete your account?',
-            icon: 'warning',
-            showCancelButton: true,
+            title: 'Confirm to delete this account',
+            icon: 'question',
             confirmButtonText: 'Delete',
+            showCancelButton: true,
+            showLoaderOnConfirm: true,
+            preConfirm: () => {
+                return fetch(deleteApi, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(tmp)
+                }).then(response => {
+                    if (!response.ok) {
+                        throw new Error(response.statusText)
+                    }
+                    return response.json()
+                })
+                    .catch(error => {
+                        Swal.showValidationMessage(
+                            `Request failed: ${error}`
+                        )
+                    });
+            },
+            allowOutsideClick: () => !Swal.isLoading()
         }).then((result) => {
             if (result.isConfirmed) {
-                Swal.fire('Your account was deleted!', '', 'success')
-            } else if (result.isDenied) {
-                Swal.fire('Delete fail!', '', 'error')
+                Swal.fire({
+                    title: 'Deleted!',
+                    icon: 'success',
+                    timer: 500,
+                    showConfirmButton: false,
+                    didClose: () => {
+                        localStorage.clear();
+                        window.location.href = '/login';
+                    }
+                })
             }
         })
     }
 
-    console.log(session)
+    // console.log(session)
 
     return (
         <Sidebar>
@@ -59,7 +94,7 @@ const SettingPage = () => {
                                     <h4 className="card-title">{session.username}</h4>
                                     <p>{session.email}</p>
                                     <p>Type : {session.U_type}</p>
-                                    <p>{session.vid} Videos</p>
+                                    <p>{session.vid} Videos | Storage {session.U_storage} MB</p>
                                 </div>
                                 <div className="col-3 d-flex justify-content-center align-items-center">
                                     <Link to={`/profile?profile=${session.U_id}`}><button type="button" class="btn btn-success"><i className="bi bi-person-fill"></i> <span class="sr-only">Profile</span></button></Link>
@@ -73,13 +108,13 @@ const SettingPage = () => {
                     <div className="card">
                         <div className="card-body">
                             <div className="row">
-                                <Link to="#" className="text-decoration-none" data-bs-toggle="modal" data-bs-target="#UpdateUserModal">
+                                {/* <Link to="#" className="text-decoration-none" data-bs-toggle="modal" data-bs-target="#UpdateUserModal">
                                     <div className="col-12">
                                         <h4><i className="bi bi-person-fill-gear"></i> Account</h4>
                                         <p>Manage your account information</p>
                                     </div>
                                 </Link>
-                                <hr className='text-white' />
+                                <hr className='text-white' /> */}
                                 <Link to="#" className="text-decoration-none" data-bs-toggle="modal" data-bs-target="#UpdatePasswordModal">
                                     <div className="col-12">
                                         <h4><i className="bi bi-lock-fill"></i> Password</h4>
@@ -87,10 +122,12 @@ const SettingPage = () => {
                                     </div>
                                 </Link>
                                 <hr className='text-white' />
-                                <div className="col-12" onClick={handleDelete}>
+                                <Link to="#" className="text-decoration-none">
+                                <div className="col-12" onClick={() => handleDelete(session.U_id, session.U_folder)}>
                                     <h4><i className="bi bi-trash3-fill"></i> Delete Account</h4>
                                     <p>Delete all of account and videos</p>
                                 </div>
+                                </Link>
                             </div>
                         </div>
                     </div>

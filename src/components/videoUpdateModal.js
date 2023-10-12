@@ -11,6 +11,7 @@ const VideoUpdateModal = (props) => {
     const [permit, setPermit] = useState(props.permit);
     const [tags, setTags] = useState(null);
     const [vidTags, setVidTags] = useState(props.tags);
+    const [flag, setFlag] = useState(false);
     const ip = global.config.ip.ip;
 
     const updateApi = ip + '/update/video/user';
@@ -36,7 +37,7 @@ const VideoUpdateModal = (props) => {
             'tag': vidTags
         })
         const token = getToken();
-
+        setFlag(true);
         fetch(updateApi, {
             method: 'POST',
             headers: {
@@ -206,7 +207,7 @@ const VideoUpdateModal = (props) => {
                         </div>
                     </div>
                     <div className="modal-footer d-flex justify-content-center">
-                        <button type="button" className="btn btn-primary" onClick={handleSubmit}>Save</button>
+                        <button type="button" className="btn btn-primary" onClick={handleSubmit} disabled={flag}>Save</button>
                         <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>

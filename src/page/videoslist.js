@@ -6,6 +6,9 @@ import { getAPI } from '../components/callAPI';
 import DataTable, { createTheme, Media } from "react-data-table-component";
 import '../config'
 import VideoUpdateModal from "../components/videoUpdateModal";
+import { getToken } from "../components/session";
+import Swal from "sweetalert2";
+
 
 const VideosListPage = () => {
     const [logs, setLogs] = useState([]);
@@ -13,11 +16,14 @@ const VideosListPage = () => {
     const [filter, setFilter] = useState([]);
     const [selectedRow, setSelectedRow] = useState([]);
     document.title = "Users Videos | Administator";
+    const ip = global.config.ip.ip;
+
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const response = await getAPI('uploadLog');
+                console.log(response);
                 setLogs(response);
                 setFilter(response);
             } catch (error) {
@@ -38,11 +44,49 @@ const VideosListPage = () => {
     const handleSettingClick = (row) => {
         setSelectedRow(row);
     }
-    console.log(logs);
+
+    const handleDeleteVideoDialog = (row) => {
+        Swal.fire({
+            title: 'Are you sure to delete?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Delete'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                handleDelete(row);
+            }
+        })
+    }
+
+    const handleDelete = (row) => {
+        
+        const tmp = {
+            'U_id': row.U_ID,
+            'U_folder': row.U_folder,
+            'V_encode': row.V_encode
+        }
+        const token = getToken();
+
+        fetch( ip + '/delete/video/user', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify(tmp)
+        })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = '/admin/videos'
+                }
+            })
+            .catch((e) => {})
+    }
+
     const columns = [
         {
             name: 'Videos',
-            selector: row => <img height={120} width={160} src={`data:image/jpeg;base64, ${row.V_pic}`} alt={row.V_title+" Picture"}/>,
+            selector: row =>  <Link className="dropdown-item" to={'/watch?u=' + row.U_folder + '&v=' + row.V_encode}> <img height={120} width={160} src={`data:image/jpeg;base64, ${row.V_pic}`} alt={row.V_title+" Picture"}/> </Link>,
             hide: Media.SM
         },
         {
@@ -53,6 +97,11 @@ const VideosListPage = () => {
         {
             name: 'Owner',
             selector: row => row.U_name,
+            sortable: true
+        },
+        {
+            name: 'Permit',
+            selector: row => row.V_permit,
             sortable: true
         },
         {
@@ -80,13 +129,13 @@ const VideosListPage = () => {
                                 <span><i className="bi bi-play-btn"></i> View</span>
                             </Link>
                         </li>
-                        <li>
+                        {/* <li>
                             <Link className="dropdown-item" to="#" data-bs-toggle="modal" data-bs-target="#updateVideoModal" onClick={() => handleSettingClick(row)}>
                                 <span><i className="bi bi-gear"></i> Setting</span>
                             </Link>
-                        </li>
+                        </li> */}
                         <li>
-                            <Link className="dropdown-item" to="#">
+                            <Link className="dropdown-item" to="#" onClick={() => handleDeleteVideoDialog(row)}>
                                 <span><i className="bi bi-trash3"></i> Delete</span>
                             </Link>
                         </li>

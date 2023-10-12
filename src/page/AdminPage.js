@@ -183,20 +183,24 @@ const Home = () => {
           <div className='showStatus'>
             <div class="row">
               <div class="col-sm-4 mb-3 mb-sm-0">
-                <div class="card">
-                  <div class="card-body">
-                    <h5 class="card-title">{users.length} <span class="bi bi-person-check-fill"></span> </h5>
-                    <p class="card-text">Total Users</p>
+                <Link className="text-decoration-none" to={'/admin/users'}>
+                  <div class="card">
+                    <div class="card-body">
+                      <h5 class="card-title">{users.length} <span class="bi bi-person-check-fill"></span> </h5>
+                      <p class="card-text">Total Users</p>
+                    </div>
                   </div>
-                </div>
+                </Link>
               </div>
               <div class="col-sm-4 mb-3 mb-sm-0">
+              <Link className="text-decoration-none" to={'/admin/videos'}>
                 <div class="card">
                   <div class="card-body">
                     <h5 class="card-title">{users.reduce((a, user) => a + parseFloat(user.U_vid), 0)} <span class="bi bi-file-earmark-play-fill"></span></h5>
                     <p class="card-text">Total Videos </p>
                   </div>
                 </div>
+                </Link>
               </div>
               <div class="col-sm-4 mb-3 mb-sm-0">
                 <div class="card">

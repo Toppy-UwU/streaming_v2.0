@@ -144,9 +144,9 @@ const AdminSidebar = ({ children }) => {
                   <Link className="nav-link active" to="/admin/videos"><i className="bi bi-collection-play-fill"></i><span> Users Videos</span></Link>
                 </li>
 
-                <li className="nav-item">
+                {/* <li className="nav-item">
                   <Link className="nav-link active" to="/admin/report"><i className="bi bi-flag-fill"></i><span> Report</span></Link>
-                </li>
+                </li> */}
 
                 <li className="nav-item">
                   <Link className="nav-link active" to="/admin/tag"><i className="bi bi-tags-fill"></i><span> Tags</span></Link>
