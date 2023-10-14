@@ -30,6 +30,10 @@ MB = float(KB**2)  # 1,048,576
 GB = float(KB**3)  # 1,073,741,824
 TB = float(KB**4)  # 1,099,511,627,776
 
+ipf = 'http://localhost:8900' #flask
+ipw = 'http://localhost:3000' #web
+ips = 'http://localhost:80' #server
+
 
 def size(B):
     B = float(B)
@@ -82,10 +86,10 @@ def update_network_stats():
 
 def create_app(test_config=None):
     app = Flask(__name__)
-    app.config["SECRET_KEY"] = "123"
+    app.config["SECRET_KEY"] = "123" #change on product for jwt
 
     CORS(app)
-    app.config["CORS_ORIGINS"] = ["http://localhost:3000"]
+    app.config["CORS_ORIGINS"] = [ipw]
     app.config["CORS_METHODS"] = ["GET", "POST", "OPTIONS"]
     app.config["CORS_HEADERS"] = ["Content-Type"]
 
@@ -177,7 +181,7 @@ def create_app(test_config=None):
             hls = video.hls(Formats.h264())
             hls.encryption(
                 "../key/" + vidData["encode"] + ".bin",
-                "http://localhost:80/hls/key/" + vidData["encode"] + ".bin",
+                ips + "/hls/key/" + vidData["encode"] + ".bin",
             )  # encrypt key maybe can change into api
             hls.auto_generate_representations()
             print("convert")
@@ -252,21 +256,21 @@ def create_app(test_config=None):
             token = tmp.split(" ")
 
             if not tmp:
-                print("Token is missing")
+                # print("Token is missing")
                 return jsonify({"message": "Token is missing"}), 401
 
             try:
                 # Verify and decode the token
-                print("working...")
+                # print("working...")
                 payload = jwt.decode(
                     token[-1], app.config["SECRET_KEY"], algorithms=["HS256"]
                 )
-                print("yes")
+                # print("yes")
             except ExpiredSignatureError:
-                print("Token has expired")
+                # print("Token has expired")
                 return jsonify({"message": "Token has expired"}), 401
             except DecodeError:
-                print("Token is invalid")
+                # print("Token is invalid")
                 return jsonify({"message": "Token is invalid"}), 401
 
             return f(*args, **kwargs)
@@ -274,6 +278,9 @@ def create_app(test_config=None):
         return jwt_decode
 
     # api section
+
+#--------------------- UTILITIES --------------------------#
+
     @app.route("/")
     def welcome():
         return "hello this is flask python"
@@ -494,42 +501,6 @@ def create_app(test_config=None):
         except jwt.InvalidTokenError:
             return jsonify({"message": "Invalid token"}), 401
 
-    @app.route("/insert/user/admin", methods=["POST"])
-    def insertUser_admin():
-        try:
-            data = request.get_json()
-            print(data)
-            conn = create_conn()
-            cursor = conn.cursor()
-            for user in data:
-                encode_password = str(user["U_pass"]).encode("utf-8")
-                hashed_password = bcrypt.hashpw(encode_password, bcrypt.gensalt())
-                file_name = genFileName(user["U_name"])
-
-                cursor.execute(
-                    "INSERT INTO users (U_name, U_mail, U_pass, U_type, U_vid, U_permit, U_folder) VALUES (%s, %s, %s, %s, %s, %s, %s)",
-                    (
-                        user["U_name"],
-                        user["U_mail"],
-                        hashed_password,
-                        user["U_type"],
-                        0,
-                        user["U_permit"],
-                        file_name,
-                    ),
-                )
-                folder_path = (
-                    "../upload/" + file_name
-                )  # create folder for uploaded videos
-                os.makedirs(folder_path)
-            conn.commit()
-            cursor.close()
-            conn.close()
-
-            return "", 200
-        except Exception as e:
-            return ({"message": e}), 500
-
     @app.route("/upload", methods=["POST"])
     def upload():
         token = request.headers.get("Authorization")
@@ -585,7 +556,7 @@ def create_app(test_config=None):
         user = request.args.get("u")
 
         video_url = (
-            "http://localhost:80/hls/upload/"
+            ips + "/hls/upload/"
             + user
             + "/"
             + video
@@ -612,6 +583,88 @@ def create_app(test_config=None):
         os.remove(output)
         return ""
 
+    @app.route("/getPermit", methods=["GET"])
+    def getPermit():
+        U_id = request.args.get("id")
+
+        conn = create_conn()
+
+        cursor = conn.cursor()
+        cursor.execute("SELECT U_type, U_permit FROM users WHERE U_id=%s", (U_id,))
+        data = cursor.fetchone()
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return (
+            {"status": "success", "data": {"U_type": data[0], "U_permit": data[1]}}
+        ), 200    
+
+    @app.route("/get/user/permit", methods=["GET"])
+    def get_user_permit():
+        conn = create_conn()
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM users WHERE U_permit = 1")
+        data = cursor.fetchone()
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return jsonify(data), 200
+
+    @app.route("/password/reset", methods=["POST"])
+    @token_required
+    def passwd_reset():
+        try:
+            data = request.get_json()
+
+            conn = create_conn()
+
+            email = data.get("email")
+            U_id = data.get("U_ID")
+            old_password = data.get("old_password")
+            new_password = data.get("new_password")
+
+            # get password
+            cursor = conn.cursor()
+            cursor.execute("SELECT U_pass FROM users WHERE U_mail = %s AND U_ID = %s", (email, U_id))
+            # print('select success')
+            data = cursor.fetchone()
+            # print('get hashed')
+
+            # print(hashed_password)
+            if data is not None:
+                hashed_password = data[0]
+                if bcrypt.checkpw(
+                    old_password.encode("utf-8"), hashed_password.encode("utf-8")
+                ):
+                    
+
+                    encode_password = str(new_password).encode("utf-8")
+                    hashed_password = bcrypt.hashpw(encode_password, bcrypt.gensalt())
+
+                    cursor.execute(
+                        "UPDATE users SET U_pass = %s WHERE U_mail = %s AND U_ID = %s",
+                        (hashed_password, email, U_id),
+                    )
+                    
+                    conn.commit()
+                    cursor.close()
+                    conn.close()
+
+                    return ({"message": "password reset"}), 200
+                else:
+                    # print('not correct')
+                    conn.commit()
+                    cursor.close()
+                    conn.close()
+                    return ({"message": "invalid password"}), 400
+        except Exception as e:
+            print(e)
+            return ({"message": "query fail"}), 500
+
+#--------------------- USER --------------------------#
+    
     @app.route("/getUsers")
     def getUsers():
         conn = create_conn()
@@ -717,6 +770,173 @@ def create_app(test_config=None):
 
         return jsonify(users), 200
 
+    @app.route("/insert/user/admin", methods=["POST"])
+    def insertUser_admin():
+        try:
+            data = request.get_json()
+            print(data)
+            conn = create_conn()
+            cursor = conn.cursor()
+            for user in data:
+                encode_password = str(user["U_pass"]).encode("utf-8")
+                hashed_password = bcrypt.hashpw(encode_password, bcrypt.gensalt())
+                file_name = genFileName(user["U_name"])
+
+                cursor.execute(
+                    "INSERT INTO users (U_name, U_mail, U_pass, U_type, U_vid, U_permit, U_folder) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                    (
+                        user["U_name"],
+                        user["U_mail"],
+                        hashed_password,
+                        user["U_type"],
+                        0,
+                        user["U_permit"],
+                        file_name,
+                    ),
+                )
+                folder_path = (
+                    "../upload/" + file_name
+                )  # create folder for uploaded videos
+                os.makedirs(folder_path)
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            return "", 200
+        except Exception as e:
+            return ({"message": e}), 500
+    
+    @app.route("/update/user/user", methods=["POST"])
+    def updateUser_User():
+        token = request.headers.get("Authorization")
+
+        if verify(token):
+            tmp = token.split(" ")[-1]
+            payload = jwt.decode(tmp, app.config["SECRET_KEY"], algorithms=["HS256"])
+            tmp = request.form.get("data")
+            data = json.loads(tmp)
+
+            if payload.get("U_id") == data["U_id"]:
+                pro = request.files.get("pro")
+                banner = request.files.get("banner")
+                f1, f2 = False, False
+
+                if pro is not None:
+                    pro64 = imgResize(pro, 400, 400)
+                    f1 = True
+
+                if banner is not None:
+                    banner64 = imgResize(banner, 820, 312)
+                    f2 = True
+
+                conn = create_conn()
+
+                cursor = conn.cursor()
+
+                if f1 and f2:
+                    cursor.execute(
+                        "UPDATE users SET U_name = %s, U_mail=%s, U_pro_pic=%s, U_banner=%s WHERE U_ID = %s",
+                        (
+                            data["username"],
+                            data["email"],
+                            pro64,
+                            banner64,
+                            data["U_id"],
+                        ),
+                    )
+
+                elif f1 and not f2:
+                    cursor.execute(
+                        "UPDATE users SET U_name = %s, U_mail=%s, U_pro_pic=%s WHERE U_ID = %s",
+                        (data["username"], data["email"], pro64, data["U_id"]),
+                    )
+
+                elif not f1 and f2:
+                    cursor.execute(
+                        "UPDATE users SET U_name = %s, U_mail=%s, U_banner=%s WHERE U_ID = %s",
+                        (data["username"], data["email"], banner64, data["U_id"]),
+                    )
+
+                elif not f1 and not f2:
+                    cursor.execute(
+                        "UPDATE users SET U_name = %s, U_mail=%s WHERE U_ID = %s",
+                        (data["username"], data["email"], data["U_id"]),
+                    )
+
+                conn.commit()
+                cursor.close()
+                conn.close()
+
+                return ({"message": "success"}), 200
+            else:
+                return {"message": "no permission"}
+        else:
+            return ({"message": "token invalid"}), 401
+
+    @app.route("/update/user/admin", methods=["POST"])
+    def updateUser_admin():
+        token = request.headers.get("Authorization")
+
+        if verify(token):
+            tmp = token.split(" ")[-1]
+            payload = jwt.decode(tmp, app.config["SECRET_KEY"], algorithms=["HS256"])
+
+            if payload.get("U_type") == "admin":
+                data = request.get_json()
+                print(data)
+                conn = create_conn()
+                cursor = conn.cursor()
+
+                cursor.execute(
+                    "UPDATE users SET U_name=%s, U_mail=%s, U_permit=%s, U_type=%s WHERE U_ID=%s",
+                    (
+                        data.get("U_name"),
+                        data.get("U_mail"),
+                        data.get("U_permit"),
+                        data.get("U_type"),
+                        data.get("U_id"),
+                    ),
+                )
+
+                conn.commit()
+                cursor.close()
+                conn.close()
+
+                return ({"message": "success"}), 200
+            else:
+                print("2")
+                return ({"message": "have no permission"}), 400
+        else:
+            print("3")
+            return ({"message": "token invalid"}), 400
+
+    @app.route("/delete/user", methods=["POST"])
+    def delete_user():
+        data = request.get_json()
+
+        path = "../upload/" + data["U_folder"]
+
+        try:
+            shutil.rmtree(path)
+
+            conn = create_conn()
+            cursor = conn.cursor()
+
+            cursor.execute(
+                "DELETE FROM users WHERE U_ID=%s AND U_folder=%s",
+                (data["U_ID"], data["U_folder"]),
+            )
+
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            return ({"message": "success"}), 200
+        except OSError as e:
+            return ({"message": "server error"}), 500
+
+#--------------------- VIDIO --------------------------#
+    
     @app.route("/getVideos/public")
     def getVideos():
         try:
@@ -1003,152 +1223,6 @@ def create_app(test_config=None):
             print(e)
             return ({"message": "Get Videos Fail"}), 500
 
-    @app.route("/getPermit", methods=["GET"])
-    def getPermit():
-        U_id = request.args.get("id")
-
-        conn = create_conn()
-
-        cursor = conn.cursor()
-        cursor.execute("SELECT U_type, U_permit FROM users WHERE U_id=%s", (U_id,))
-        data = cursor.fetchone()
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-        return (
-            {"status": "success", "data": {"U_type": data[0], "U_permit": data[1]}}
-        ), 200
-
-    @app.route("/update/user/user", methods=["POST"])
-    def updateUser_User():
-        token = request.headers.get("Authorization")
-
-        if verify(token):
-            tmp = token.split(" ")[-1]
-            payload = jwt.decode(tmp, app.config["SECRET_KEY"], algorithms=["HS256"])
-            tmp = request.form.get("data")
-            data = json.loads(tmp)
-
-            if payload.get("U_id") == data["U_id"]:
-                pro = request.files.get("pro")
-                banner = request.files.get("banner")
-                f1, f2 = False, False
-
-                if pro is not None:
-                    pro64 = imgResize(pro, 400, 400)
-                    f1 = True
-
-                if banner is not None:
-                    banner64 = imgResize(banner, 820, 312)
-                    f2 = True
-
-                conn = create_conn()
-
-                cursor = conn.cursor()
-
-                if f1 and f2:
-                    cursor.execute(
-                        "UPDATE users SET U_name = %s, U_mail=%s, U_pro_pic=%s, U_banner=%s WHERE U_ID = %s",
-                        (
-                            data["username"],
-                            data["email"],
-                            pro64,
-                            banner64,
-                            data["U_id"],
-                        ),
-                    )
-
-                elif f1 and not f2:
-                    cursor.execute(
-                        "UPDATE users SET U_name = %s, U_mail=%s, U_pro_pic=%s WHERE U_ID = %s",
-                        (data["username"], data["email"], pro64, data["U_id"]),
-                    )
-
-                elif not f1 and f2:
-                    cursor.execute(
-                        "UPDATE users SET U_name = %s, U_mail=%s, U_banner=%s WHERE U_ID = %s",
-                        (data["username"], data["email"], banner64, data["U_id"]),
-                    )
-
-                elif not f1 and not f2:
-                    cursor.execute(
-                        "UPDATE users SET U_name = %s, U_mail=%s WHERE U_ID = %s",
-                        (data["username"], data["email"], data["U_id"]),
-                    )
-
-                conn.commit()
-                cursor.close()
-                conn.close()
-
-                return ({"message": "success"}), 200
-            else:
-                return {"message": "no permission"}
-        else:
-            return ({"message": "token invalid"}), 401
-
-    @app.route("/update/user/admin", methods=["POST"])
-    def updateUser_admin():
-        token = request.headers.get("Authorization")
-
-        if verify(token):
-            tmp = token.split(" ")[-1]
-            payload = jwt.decode(tmp, app.config["SECRET_KEY"], algorithms=["HS256"])
-
-            if payload.get("U_type") == "admin":
-                data = request.get_json()
-                print(data)
-                conn = create_conn()
-                cursor = conn.cursor()
-
-                cursor.execute(
-                    "UPDATE users SET U_name=%s, U_mail=%s, U_permit=%s, U_type=%s WHERE U_ID=%s",
-                    (
-                        data.get("U_name"),
-                        data.get("U_mail"),
-                        data.get("U_permit"),
-                        data.get("U_type"),
-                        data.get("U_id"),
-                    ),
-                )
-
-                conn.commit()
-                cursor.close()
-                conn.close()
-
-                return ({"message": "success"}), 200
-            else:
-                print("2")
-                return ({"message": "have no permission"}), 400
-        else:
-            print("3")
-            return ({"message": "token invalid"}), 400
-
-    @app.route("/delete/user", methods=["POST"])
-    def delete_user():
-        data = request.get_json()
-
-        path = "../upload/" + data["U_folder"]
-
-        try:
-            shutil.rmtree(path)
-
-            conn = create_conn()
-            cursor = conn.cursor()
-
-            cursor.execute(
-                "DELETE FROM users WHERE U_ID=%s AND U_folder=%s",
-                (data["U_ID"], data["U_folder"]),
-            )
-
-            conn.commit()
-            cursor.close()
-            conn.close()
-
-            return ({"message": "success"}), 200
-        except OSError as e:
-            return ({"message": "server error"}), 500
-
     @app.route("/update/video/user", methods=["POST"])
     def updateVideo_user():
         token = request.headers.get("Authorization")
@@ -1241,6 +1315,8 @@ def create_app(test_config=None):
         else:
             return ({"message": "token invalid"}), 401
 
+#--------------------- HISTORIES --------------------------#
+
     @app.route("/insert/history", methods=["POST"])
     def insertHistory():
         data = request.get_json()
@@ -1273,7 +1349,6 @@ def create_app(test_config=None):
         return ({"message": "success"}), 200
 
     @app.route("/update/history/user", methods=["POST"])
-    @cross_origin()
     def updateHistory():
         data = request.get_json()
         conn = create_conn()
@@ -1370,6 +1445,8 @@ def create_app(test_config=None):
 
         return jsonify(watch), 200
 
+#--------------------- LOG --------------------------#
+
     @app.route("/get/uploadLog")
     def getUploadLog():
         conn = create_conn()
@@ -1403,6 +1480,61 @@ def create_app(test_config=None):
             logs.append(log)
 
         return jsonify(logs), 200
+
+    @app.route("/insert/log", methods=["POST"])
+    def insertLog():
+        data = request.get_json()
+
+        conn = create_conn()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "INSERT INTO system_logs(U_ID, action) VALUES (%s, %s)",
+            (data["U_id"], data["action"]),
+        )
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return ({"message": "success"}), 200
+
+    @app.route("/get/userLog", methods=["GET"])
+    def getLog():
+        conn = create_conn()
+        u = request.args.get("u")
+        cursor = conn.cursor()
+        if u == "all":
+            cursor.execute(
+                "SELECT L_ID , U_ID , action , created_at\
+                       FROM system_logs \
+                       ORDER BY created_at DESC",
+            )
+        else:
+            cursor.execute(
+                "SELECT L_ID , U_ID , action , created_at\
+                       FROM system_logs \
+                       WHERE U_ID = %s \
+                       ORDER BY created_at DESC",
+                (u,),
+            )
+        data = cursor.fetchall()
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        logs = []
+        for row in data:
+            log = {
+                "U_ID": row[1],
+                "action": row[2],
+                "created_at": row[3],
+            }
+            logs.append(log)
+
+        return jsonify(logs), 200
+
+#--------------------- TAG --------------------------#
 
     @app.route("/get/tags")
     def getTag():
@@ -1511,58 +1643,7 @@ def create_app(test_config=None):
 
         return ({"message": "updated"}), 200
 
-    @app.route("/insert/log", methods=["POST"])
-    def insertLog():
-        data = request.get_json()
-
-        conn = create_conn()
-        cursor = conn.cursor()
-
-        cursor.execute(
-            "INSERT INTO system_logs(U_ID, action) VALUES (%s, %s)",
-            (data["U_id"], data["action"]),
-        )
-
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-        return ({"message": "success"}), 200
-
-    @app.route("/get/userLog", methods=["GET"])
-    def getLog():
-        conn = create_conn()
-        u = request.args.get("u")
-        cursor = conn.cursor()
-        if u == "all":
-            cursor.execute(
-                "SELECT L_ID , U_ID , action , created_at\
-                       FROM system_logs \
-                       ORDER BY created_at DESC",
-            )
-        else:
-            cursor.execute(
-                "SELECT L_ID , U_ID , action , created_at\
-                       FROM system_logs \
-                       WHERE U_ID = %s \
-                       ORDER BY created_at DESC",
-                (u,),
-            )
-        data = cursor.fetchall()
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-        logs = []
-        for row in data:
-            log = {
-                "U_ID": row[1],
-                "action": row[2],
-                "created_at": row[3],
-            }
-            logs.append(log)
-
-        return jsonify(logs), 200
+#--------------------- DYNAMIC URL --------------------------#
 
     @app.route("/get/dynamicUrl", methods=["POST"])
     def getDynamic():
@@ -1573,6 +1654,7 @@ def create_app(test_config=None):
         email = data.get("email")
         plain_password = data.get("password")
         vid_url = data.get("vid_url")
+        U_id = data.get("U_id")
 
         # get password
         cursor = conn.cursor()
@@ -1593,11 +1675,11 @@ def create_app(test_config=None):
                 u = path[0][2:]
                 v = path[1][2:]
 
-                dynamic_url = f"http://localhost:8900/get/hls/{url_token}/{u}/{v}"
+                dynamic_url = f"{ipf}/get/hls/{url_token}/{u}/{v}"
 
                 cursor.execute(
-                    "INSERT INTO url_token(url, url_expire) VALUES (%s, %s)",
-                    (url_token, expiration_time),
+                    "INSERT INTO url_token(url, url_expire, U_ID, V_ID) VALUE (%s, %s, %s, (SELECT V_ID FROM videos WHERE V_encode = %s))",
+                    (url_token, expiration_time, U_id, v),
                 )
 
                 conn.commit()
@@ -1624,27 +1706,29 @@ def create_app(test_config=None):
         if verify(token):
             data = request.get_json()
             vid_url = data.get("vid_url")
+            U_id = data.get("U_id")
+
             url_token = secrets.token_hex(16)
             expiration_time = time.time() + 86400
-
-            conn = create_conn()
-            cursor = conn.cursor()
-
-            cursor.execute(
-                "INSERT INTO url_token(url, url_expire) VALUES (%s, %s)",
-                (url_token, expiration_time),
-            )
-
-            conn.commit()
-            cursor.close()
-            conn.close()
 
             vid_url = vid_url.split("watch?")
             path = vid_url[-1].split("&")
             u = path[0][2:]
             v = path[1][2:]
 
-            dynamic_url = f"http://localhost:8900/get/hls/{url_token}/{u}/{v}"
+            conn = create_conn()
+            cursor = conn.cursor()
+
+            cursor.execute(
+                "INSERT INTO url_token(url, url_expire, U_ID, V_ID) VALUE (%s, %s, %s, (SELECT V_ID FROM videos WHERE V_encode = %s))",
+                (url_token, expiration_time, U_id, v),
+            )
+
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            dynamic_url = f"{ipf}/get/hls/{url_token}/{u}/{v}"
 
             return jsonify({"url": dynamic_url}), 200
         else:
@@ -1703,12 +1787,45 @@ def create_app(test_config=None):
             conn.close()
             return ({"message": "content unavarible"}), 403
 
+    @app.route("/get/url/no_login", methods=['POST'])
+    def url_no_login():
+        try:
+            data = request.get_json()
+            vid_url = data.get("vid_url")
+            U_id = data.get("U_id")
+
+            url_token = secrets.token_hex(16)
+            expiration_time = time.time() + 86400
+
+            vid_url = vid_url.split("watch?")
+            path = vid_url[-1].split("&")
+            u = path[0][2:]
+            v = path[1][2:]
+
+            conn = create_conn()
+            cursor = conn.cursor()
+
+            cursor.execute(
+                "INSERT INTO url_token(url, url_expire, U_ID, V_ID) VALUE (%s, %s, %s, (SELECT V_ID FROM videos WHERE V_encode = %s))",
+                (url_token, expiration_time, U_id, v),
+            )
+
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            dynamic_url = f"{ipf}/get/hls/{url_token}/{u}/{v}"
+
+            return jsonify({"url": dynamic_url}), 200
+        except Exception as e:
+            return jsonify({"message": "query error"}), 500
+
     @app.route("/get/url_token", methods=["GET"])
     @token_required
     def get_url():
         conn = create_conn()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM url_token")
+        cursor.execute("SELECT token.*, u.U_folder, v.V_encode FROM url_token AS token, users AS u, videos AS v WHERE u.U_ID = token.U_ID AND v.V_ID = token.V_ID ")
         data = cursor.fetchall()
         conn.commit()
         cursor.close()
@@ -1720,6 +1837,10 @@ def create_app(test_config=None):
                 "url": row[1],
                 "create_at": row[2],
                 "url_expire": datetime.utcfromtimestamp(row[3]),
+                "U_ID": row[4],
+                "V_ID": row[5],
+                "U_folder": row[6],
+                "V_encode": row[7]
             }
             urls.append(url)
 
@@ -1738,17 +1859,7 @@ def create_app(test_config=None):
 
         return ({"message": "delete success"}), 200
 
-    @app.route("/get/user/permit", methods=["GET"])
-    def get_user_permit():
-        conn = create_conn()
-        cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM users WHERE U_permit = 1")
-        data = cursor.fetchone()
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-        return jsonify(data), 200
+#--------------------- SERVER --------------------------#
 
     @app.route("/server_resource")
     def server():
