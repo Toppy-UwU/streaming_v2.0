@@ -30,9 +30,9 @@ MB = float(KB**2)  # 1,048,576
 GB = float(KB**3)  # 1,073,741,824
 TB = float(KB**4)  # 1,099,511,627,776
 
-ipf = 'http://localhost:8900' #flask
-ipw = 'http://localhost:3000' #web
-ips = 'http://localhost:80' #server
+ipf = 'http://172.16.1.13:8900' #flask
+ipw = 'http://172.16.1.13:3000' #web
+ips = 'http://172.16.1.13:80' #server
 
 
 def size(B):
@@ -416,33 +416,35 @@ def create_app(test_config=None):
             WHERE h.U_ID = %s \
             GROUP BY h.V_ID \
             ORDER BY COUNT(h.V_ID) \
-            DESC LIMIT 1",
+            DESC LIMIT 10",
             (u,),
         )
-        data = cursor.fetchone()
+        datas = cursor.fetchall()
         conn.commit()
         cursor.close()
         conn.close()
 
-        tmp = str(data[6])
-        video = [
-            {
-                "V_ID": data[0],
-                "V_title": data[1],
-                "V_view": data[2],
-                "V_length": data[3],
-                "V_size": data[4],
-                "V_upload": data[5],
-                "V_pic": tmp[2:-1],
-                "U_ID": data[7],
-                "V_encode": data[9],
-                "V_quality": data[10],
-                "V_desc": data[11],
-                "U_name": data[12],
-                "U_folder": data[13],
-            }
-        ]
-        return jsonify(video), 200
+        videos = []
+        for data in datas:
+            tmp = str(data[6])
+            video = {
+                    "V_ID": data[0],
+                    "V_title": data[1],
+                    "V_view": data[2],
+                    "V_length": data[3],
+                    "V_size": data[4],
+                    "V_upload": data[5],
+                    "V_pic": tmp[2:-1],
+                    "U_ID": data[7],
+                    "V_encode": data[9],
+                    "V_quality": data[10],
+                    "V_desc": data[11],
+                    "U_name": data[12],
+                    "U_folder": data[13],
+                }
+            videos.append(video)
+
+        return jsonify(videos), 200
 
     @app.route("/get/mostView", methods=["GET"])
     def mostView():
@@ -455,33 +457,35 @@ def create_app(test_config=None):
             FROM videos as v \
             JOIN users as u ON u.U_ID = v.U_ID \
             WHERE v.U_ID = %s \
-            ORDER BY v.V_view DESC LIMIT 1",
+            ORDER BY v.V_view DESC LIMIT 10",
             (u,),
         )
-        data = cursor.fetchone()
+        datas = cursor.fetchall()
         conn.commit()
         cursor.close()
         conn.close()
 
-        tmp = str(data[6])
-        video = [
-            {
-                "V_ID": data[0],
-                "V_title": data[1],
-                "V_view": data[2],
-                "V_length": data[3],
-                "V_size": data[4],
-                "V_upload": data[5],
-                "V_pic": tmp[2:-1],
-                "U_ID": data[7],
-                "V_encode": data[9],
-                "V_quality": data[10],
-                "V_desc": data[11],
-                "U_name": data[12],
-                "U_folder": data[13],
-            }
-        ]
-        return jsonify(video), 200
+        videos = []
+        for data in datas:
+            tmp = str(data[6])
+            video = {
+                    "V_ID": data[0],
+                    "V_title": data[1],
+                    "V_view": data[2],
+                    "V_length": data[3],
+                    "V_size": data[4],
+                    "V_upload": data[5],
+                    "V_pic": tmp[2:-1],
+                    "U_ID": data[7],
+                    "V_encode": data[9],
+                    "V_quality": data[10],
+                    "V_desc": data[11],
+                    "U_name": data[12],
+                    "U_folder": data[13],
+                }
+            videos.append(video)
+
+        return jsonify(videos), 200
 
     @app.route("/verify", methods=["POST"])
     def verify_token():

@@ -109,7 +109,7 @@ const VideoPlayer = ({ source, V_id, watchTime }) => {
   return (
     <div className='container-fluid' >
       <div className='row'>
-        <video ref={videoRef} controls style={{ maxHeight: "560px" }}>
+        <video ref={videoRef} controls style={{ maxHeight: "344px" , backgroundColor: 'black'}}>
           Your browser does not support the video tag.
         </video>
       </div>

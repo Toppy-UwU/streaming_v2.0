@@ -43,6 +43,11 @@
     position: relative;
 }
 
+.side-list .smallThumnail img {
+    aspect-ratio: 16/9;
+}
+
+
 .side-list .smallThumnail p {
     position: absolute;
     color: white;

@@ -71,7 +71,11 @@ const TagPage = () => {
         )
     } else {
         return (
-            <div className="loading center" />
+            <Sidebar>
+                <div className="center">
+                <div className="loading center" />
+                </div>
+            </Sidebar>
         )
     }
 }

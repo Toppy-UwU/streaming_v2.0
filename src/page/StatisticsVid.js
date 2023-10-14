@@ -21,6 +21,7 @@ const UserStats = () => {
                 }
                 const data = await response.json();
                 setMostwatch(data);
+                console.log(mostwatch);
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
@@ -43,7 +44,6 @@ const UserStats = () => {
         fetchDataView();
     }, []);
 
-    console.log(mostView);
     const columns = [
         {
             name: 'Video',
@@ -80,7 +80,8 @@ const UserStats = () => {
         {
             name: 'Upload',
             selector: row => row.V_upload,
-            sortable: true
+            sortable: true,
+            hide: Media.SM
         },
         {
             name: 'View',

@@ -12,7 +12,7 @@ module.exports = global.config = {
         // ip : "http://192.168.10.111:8900",
         // ipw : "http://192.168.10.111:80" //USOC
 
-        ip : "http://localhost:8900",
-        ipw : "http://localhost:80" //club wifi
+        ip : "http://172.16.1.13:8900",
+        ipw : "http://172.16.1.13:80" //club wifi
     }
 };
