@@ -22,23 +22,6 @@ export const removelocalData = (key) => {
   localStorage.removeItem(key);
 };
 
-// export const setSessionData = (key, data) => {
-//   const jsonData = JSON.stringify(data);
-//   var encryptJson = encryptData(jsonData, encryptKey);
-//   sessionStorage.setItem(key, encryptJson );
-// };
-
-// export const getSessionData = (key) => {
-//   const jsonData = sessionStorage.getItem(key);
-//   var decryptJson = decryptData(jsonData, encryptKey);
-//   // return JSON.parse(jsonData);
-//   return decryptJson
-// };
-
-// export const removeSessionData = (key) => {
-//   sessionStorage.removeItem(key);
-// };
-
 export const isSessionSet = (key) => {
   const data2 = localStorage.getItem(key)
   if (data2 !== null) {
@@ -86,7 +69,6 @@ export const getToken = () => {
   }
   return tmp
 }
-
 
 export const getUser = () => {
   const f = isSessionSet('session')

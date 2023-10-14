@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import './../css/login.css';
-
-// const conn = require('../conn');
+import '../config';
 
 const RegisterPage = () => {
-  const api = 'http://localhost:8900/register' 
+  const ip = global.config.ip.ip;
+  const api = ip + '/register';
+  const navigate = useNavigate();
+  document.title = "Register";
 
   const [formData, setFormData] = useState({
     username: '',
@@ -17,94 +21,143 @@ const RegisterPage = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const jsonData = JSON.stringify(formData);
-    // console.log(jsonData);
-    //sending request to register API
-    if (formData.password === formData.con_password) {
-
-      // conn.query('INSERT INTO userdb SET (U_name, U_mail, U_pass) VALUES (?, ?, ?)',[formData.username, formData.email, formData.password], (err, results) => {
-      //   if (err) {
-      //     console.error('Error inserting data: ', err);
-      //     return;
-      //   }
-      //   console.log('Data inserted successfully');
-        
-      //   // Close the connection
-      //   conn.end();
-      // });
-
-      fetch(api, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonData,
-      })
-        .then((response) => {
-          if (response.ok) {
-            // success
-            // console.log('Registration successful');
-            return response.json()
-          } else {
-            // failed
-            // console.log('Registration failed');
-          }
-        })
-        .then((data) => {
-          if(data.status === 'success') {
-            alert('Registration successful')
-            window.location.href = '/login'
-          }else {
-            alert('Registration failed')
-          }
-        })
-        .catch((error) => {
-          console.error('Error:', error);
+    console.log(formData)
+    if (formData.username === '' || formData.email === '' || formData.password === '' || formData.con_password === '') {
+      Swal.fire({
+        title: 'Fill in all fields!',
+        icon: 'warning'
+      });
+    } else if (formData.password === formData.con_password) {
+      try {
+        const response = await fetch(api, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData),
         });
-    }else if(formData.username === '' || formData.email === '' || formData.password === ''){
-      alert('Please fill in all the fields')
-    }else {
-      alert('Password do not match!!!')
-    };
-  };
+
+        if (response.ok) {
+          Swal.fire({
+            title: 'Register Completed!',
+            icon: 'success',
+            text: 'You will be redirected to the login page.',
+            showCancelButton: false,
+            confirmButtonText: 'OK',
+          }).then((result) => {
+            if (result.isConfirmed) {
+              navigate('/login');
+            }
+          });
+        } else {
+          Swal.fire({
+            title: 'Register Fail!',
+            icon: 'error'
+          });
+        }
+      } catch (error) {
+        console.error("Error : ", error);
+      }
+    } else {
+      Swal.fire({
+        title: 'Password do not match!!!',
+        icon: 'error'
+      });
+    }
+  }
 
   return (
-    <div className='bgImg'>
-      <div style={{ backgroundColor: 'rgba(38, 38, 38, 0.85)', backgroundSize: 'cover', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <div className="container">
-          <div className="row vh-100">
-            <div className="col-12">
-              <div className="card mx-auto rounded" style={{ width: '300px', backgroundColor: 'rgb(55, 55, 55)' }}>
-                <div className="card-body">
-                  <h2 style={{ color: 'white', textAlign: 'center' }}>CS Streaming 888</h2>
-                  <h4 style={{ color: 'white', textAlign: 'center' }}>Registration</h4>
-                  <br />
+    <div className="container-fluid background-container py-3 h-100">
+      <div className="row d-flex justify-content-center align-items-center">
+        <div className="col col-xl-8">
+          <div className="card text-bg-dark">
+            <div className="card-header">
+              <Link to="/" className="text-decoration-none text-white fw-bold">
+                <i className="bi bi-arrow-left"></i> <i className="bi bi-house"></i> Back to Home
+              </Link>
+            </div>
+            <div className="row g-0">
+              <div className="col-md-6 col-lg-5 d-none d-md-block">
+                <img
+                  src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/img1.webp"
+                  alt="login form"
+                  className="img-fluid"
+                />
+              </div>
+              <div className="col-md-6 col-lg-7 d-flex align-items-center">
+                <div className="card-body p-3 p-lg-4 text-black">
                   <form onSubmit={handleSubmit}>
-                    <div className="form-group" style={{ marginTop: '10px', marginBottom: '20px' }}>
-                      <input type="text" className="form-control rounded-pill" name="username" id="username" placeholder="User name" onChange={handleChange} />
+                    <div className="d-flex align-items-center mb-1">
+                      <span className="title-Login">
+                        CS <span>MSU</span>
+                      </span>
                     </div>
-                    <div className="form-group" style={{ marginTop: '10px', marginBottom: '20px' }}>
-                      <input type="email" className="form-control rounded-pill" name="email" id="email" placeholder="Email" onChange={handleChange} />
+
+                    <h5 className="text-white fw-normal mb-3 pb-3">Register for an account</h5>
+
+                    <div className="form-floating mb-4">
+                      <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        className="form-control form-control-lg"
+                        placeholder="Username"
+                        onChange={handleChange}
+                      />
+                      <label htmlFor="username">Username</label>
                     </div>
-                    <div className="form-group" style={{ marginTop: '20px', marginBottom: '10px' }}>
-                      <input type="password" className="form-control rounded-pill" name="password" id="password" placeholder="Password" onChange={handleChange} />
+
+                    <div className="form-floating mb-4">
+                      <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        className="form-control form-control-lg"
+                        placeholder="E-Mail"
+                        onChange={handleChange}
+                      />
+                      <label htmlFor="email">E-Mail</label>
                     </div>
-                    <div className="form-group" style={{ marginTop: '20px', marginBottom: '10px' }}>
-                      <input type="password" className="form-control rounded-pill" name="con_password" id="con_password" placeholder="Confirm Password" onChange={handleChange} />
+
+                    <div className="form-floating mb-4">
+                      <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        className="form-control form-control-lg"
+                        placeholder="Password"
+                        onChange={handleChange}
+                      />
+                      <label htmlFor="password">Password</label>
                     </div>
-                    <br /><br />
-                    <div className="div-center">
-                      <button type="submit" className="btn btn-primary rounded-pill" style={{ width: '150px' }}>Register</button>
+
+                    <div className="form-floating mb-4">
+                      <input
+                        type="password"
+                        id="con_password"
+                        name='con_password'
+                        className="form-control form-control-lg"
+                        placeholder="Confirm Password"
+                        onChange={handleChange}
+                      />
+                      <label htmlFor="con_password">Confirm Password</label>
                     </div>
+
+                    <div className="pt-1 mb-4 px-0">
+                      <button className="btn btn-primary btn-lg btn-block w-100" type="submit">
+                        Register
+                      </button>
+                    </div>
+
+                    <p className="mb-5 pb-lg-2 text-white">
+                      Already have an account?{' '}
+                      <Link to="/login" className="text-blue text-decoration-none">
+                        &nbsp;Login
+                      </Link>
+                    </p>
                   </form>
-                  <div className="div-center">
-                    <a href="/login">
-                      <button className="btn btn-danger rounded-pill" style={{ marginTop: '10px', width: '100px' }}>Cancel</button>
-                    </a>
-                  </div>
                 </div>
               </div>
             </div>

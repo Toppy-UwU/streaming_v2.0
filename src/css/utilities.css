@@ -101,3 +101,34 @@
     background-image: url('./../img/download.png');
     background-size: cover;
   }
+
+  .scroll-bar {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: visible;
+  }
+
+  .tagBarHome .row{
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .tagBarHome .button-tag{
+    color: white;
+    border: none;
+    background-color: #4c4c4c;
+    font-weight: bold;
+    border-radius: 5px;
+    height: 35px;
+  }
+
+  .tagBarHome .button-tag:hover{
+    color: black;
+    background-color: white;
+  }
+
+  .showVid h3{
+    color: white;
+    font-weight: bold;
+  }

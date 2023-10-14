@@ -1,145 +1,139 @@
 import { useEffect, useState } from "react"
 import Sidebar from "../components/sidebar"
 import { getToken, getUser } from "../components/session"
-import ReactModal from "react-modal";
-
+import Swal from "sweetalert2";
+import moment from "moment";
+import '../config'
+import "./../css/table.css"
+import { Link } from "react-router-dom";
 
 const HistoryPage = () => {
-    const [ histories, setHistories ] = useState(null);
-    const [ isOpen, setIsOpen ] = useState(false);
-    
-    const u = getUser();
-    const api = 'http://localhost:8900/get/histories?u=' + u;
+    const [histories, setHistories] = useState(null);
+    const ip = global.config.ip.ip;
 
-    const clearApi = 'http://localhost:8900/delete/histories';
+    const user = getUser();
+    const api = ip + '/get/histories?u=' + user;
+    const token = getToken();
 
-    useEffect(() => {
-        fetch(api)
-        .then(response => response.json())
-        .then(data => {
-            setHistories(data);
-            console.log(data);
-        })
-        .catch(() => {});
-    }, [api])
+    const clearApi = ip + '/delete/histories';
+    document.title = "History";
 
-    const openModal = () => {
-        setIsOpen(true);
+    const fetchHistory = async () => {
+        try {
+            const response = await fetch(api);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.length > 0) {
+                    setHistories(data);
+                }
+            } else {
+                throw new Error('Failed to fetch history data');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
     }
 
-    const closeModal = () => {
-        setIsOpen(false);
+    const handleBtn = () => {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "All of your history will be deleted!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Clear'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                handleClear();
+                Swal.fire({
+                    title: 'Deleted!',
+                    text: 'Your history has been deleted.',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    window.location.reload();
+                });
+            }
+        });
     }
 
-    const handleClear = () => {
-        const token = getToken();
-        const user = getUser();
+    const handleClear = async () => {
         const tmp = {
             'user': user
         }
 
-        fetch(clearApi, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-            },
-            body: JSON.stringify(tmp)
-        }).then(response => {
-            if(response.ok) {
-                window.location.reload();
+        try {
+            const response = await fetch(clearApi, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(tmp)
+            });
+
+            if (!response.ok) {
+                throw new Error('Clearing failed');
             }
-        }).catch(() => {});
+
+        } catch (error) {
+            console.error('Error:', error);
+        }
     }
 
-    const modalStyle = {
-        content: {
-          top: '50%',
-          left: '50%',
-          right: 'auto',
-          bottom: 'auto',
-          transform: 'translate(-50%, -50%)',
-          width: 'max-content',
-          height: 'max-content',
-          backgroundColor: 'rgb(44, 48, 56)',
-        },
-        overlay: {
-          backgroundColor: 'rgba(0, 0, 0, 0.3)',
-        },
-      };
+    useEffect(() => {
+        fetchHistory();
+    }, []);
 
-    if(histories !== null ) {
+    if (histories !== null) {
         return (
             <Sidebar>
                 <div className="container-fluid">
-                    
-                    <div className="row">
-                        <div className="col" style={{margin: '15px', borderRadius: '25px', backgroundColor: 'black'}}>
-                            <div className="row">
-                                <div className="col right">
-                                    <button className="btn btn-danger rounded-pill" onClick={openModal} style={{margin: '10px'}}>Clear History</button>
+                    <br />
+                    <div className='PageTitle d-flex justify-content-between align-items-center'>
+                        <h2><i className="bi bi-clock-history"></i> Watch History</h2>
+                        {histories.length > 0 && (
+                            <div style={{ justifyContent: 'end' }}>
+                                <button type="button" class="btn btn-danger" onClick={handleBtn}><i class="bi bi-trash3"></i> <span className="spanSMHide">Clear</span></button>
+                            </div>
+                        )}
+                    </div>
+                    <div className="showHistoryData">
+                        {histories.map((history) => (
+                            <div className="showHistory">
+                                <Link to={'/watch?u=' + history.U_folder + '&v=' + history.V_encode}><img src={`data:image/jpeg;base64, ${history.V_pic}`} alt={history.V_title + ' thumbnail'} /></Link>
+                                <div class="history-text">
+                                    <Link to={'/watch?u=' + history.U_folder + '&v=' + history.V_encode} className="noLink"><h4>{history.V_title}</h4></Link>
+                                    <Link to={`/profile?profile=${history.U_ID}`} className="noLink"><p><span><i className="bi bi-person-fill"></i> </span>{history.U_name}</p></Link>
+                                    <Link to={'/watch?u=' + history.U_folder + '&v=' + history.V_encode} className="noLink"><p><span><i class="bi bi-clock"></i> </span>{moment.utc(history.H_watchDate).format("DD MMMM YYYY : HH:mm:ss")}</p></Link>
                                 </div>
-
-                                <ReactModal isOpen={isOpen} onRequestClose={closeModal} style={modalStyle}>
-                                    <div>
-                                        <div className="row">
-                                            <div className="col center">
-                                                <div style={{color: 'white'}}>
-                                                    <h4>⚠ Clear All histories ⚠</h4>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div className="row">
-                                            <div className="col center">
-                                                <button className="btn btn-primary rounded-pill" onClick={handleClear} style={{margin: '10px'}}>Confirm</button>
-                                                <button className="btn btn-danger rounded-pill" onClick={closeModal} style={{margin: '10px'}}>Cancle</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </ReactModal>
-
                             </div>
-                            <div>
-                                <table className="table table-striped table-dark" style={{borderRadius: '25px'}}>
-                                <tbody >
-                                    {histories.map(history => (
-                                        <tr key={history.H_ID}>
-                                            <th className="">
-                                            <a className="href-noline-in" href={'/watch?u='+ history.U_folder + '&v=' + history.V_encode}>
-                                                <div className="row">
-                                                    <div className="col-2">
-                                                        <img className="card-img-top " src={'data:image/jpeg;base64,' + history.V_pic} style={{marginBottom: '5px', borderRadius: '20px'}} alt={history.V_title+' thumbnail'} />
+                        ))}
 
-                                                    </div>
-                                                    <div className="col">
-                                                        <div><h3>{history.V_title}</h3>  </div>  
-                                                        <div><h3>{history.H_watchDate}</h3>  </div>  
-                                                    </div>                                                   
-                                                </div>
-                                            </a>
-                                            </th>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                                </table>
-                            </div>
+                    </div>
+                </div>
+            </Sidebar>
+        )
+    } else {
+        return (
+            <Sidebar>
+                <div className="container-fluid">
+                    <br />
+                    <div className='PageTitle'>
+                        <h2><i className="bi bi-clock-history"></i> Watch History</h2>
+                    </div>
+                    <div className="d-flex justify-content-center align-items-center">
+                        <div className='notfound-vid'>
+                            <i className="bi bi-x-circle"></i>
+                            <p>No watch history</p>
                         </div>
                     </div>
                 </div>
             </Sidebar>
         )
-    }else {
-        return (
-            <Sidebar>
-                <div className="center">
-                 <div className="loading" />
-                </div>
-            </Sidebar>
-        )
     }
 
-    
 }
 
 export default HistoryPage

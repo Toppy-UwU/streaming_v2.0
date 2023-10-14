@@ -2,14 +2,16 @@ import { useState } from "react";
 import ReactModal from "react-modal";
 import UserEditModal from "./userEditModal";
 import { getToken } from "./session";
+import '../config'
 
 
 const NameTable = (props) => {
     const [isOpen, setIsOpen ] = useState(false);
     const [ selectedUser, setSelectedUser ] = useState(null);
     const [ addedUser, setAddUser ] = useState([]);
+    const ip = global.config.ip.ip;
 
-    const api = 'http://localhost:8900/insert/user/admin';
+    const api = ip+'/insert/user/admin';
 
     ReactModal.setAppElement('#root');
 
@@ -60,6 +62,7 @@ const NameTable = (props) => {
             'U_permit': 1
         };
         users.push(tmp);
+        console.log(users);
         setAddUser(users);
       }
 
@@ -115,27 +118,6 @@ const NameTable = (props) => {
         setAddUser(users);
       }
 
-      const BtnDeleteHandler = (U_id, U_folder) => {
-        const deleteApi = 'http://localhost:8900/delete/user';
-
-        const tmp = ({
-            'U_ID': U_id,
-            'U_folder': U_folder})
-
-        fetch(deleteApi, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(tmp)
-        }).then(response => {
-            if(response.ok) {
-                window.location.reload();
-            }
-        }).catch(() => {});
-
-      }
-
     return (
         <div>
             {/* <ul className="list-group">
@@ -180,7 +162,6 @@ const NameTable = (props) => {
                             </td>
                             <td>{user.U_vid}</td>
                             <td><button className="btn btn-secondary" onClick={() => openModal(user)}>edit</button></td>
-                            <td><button className="btn btn-danger" onClick={() => BtnDeleteHandler(user.U_id, user.U_folder)}>delete</button></td>
                         </tr>
                     ))}
                     {addedUser && addedUser.map((user, index) => (

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { getAPI } from "./callAPI";
 import ReactModal from "react-modal";
 import { getToken } from "./session";
-
+import '../config';
 
 const TagList = () => {
     const [ tags, setTags ] = useState(null);
@@ -10,8 +10,9 @@ const TagList = () => {
     const [ isOpen, setIsOpen ] = useState(false);
     const [ newTag, setNewTag ] = useState('');
     const [ reload, setReload ] = useState(true);
+    const ip = global.config.ip.ip;
 
-    const insert_api = 'http://localhost:8900/insert/tag'
+    const insert_api = ip+'/insert/tag';
 
     useEffect(() => {
         getAPI('tags')
@@ -26,7 +27,7 @@ const TagList = () => {
     }
 
     const handleDeleteTag = (T_ID) => {
-        const delete_api = 'http://localhost:8900/delete/tag?t=' + T_ID 
+        const delete_api = ip+'/delete/tag?t=' + T_ID 
         const token = getToken();
         fetch(delete_api, {
             method: 'GET',

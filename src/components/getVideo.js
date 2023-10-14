@@ -1,11 +1,13 @@
 
 import { useState, useEffect } from "react";
 import ShowVideos from "./showVideo";
+import '../config';
 
 const GetVideo = (props) => {
     const [ videos, setVideos ] = useState(null);
+    const ip = global.config.ip.ip;
 
-    const api = 'http://localhost:8900/getVideos/profile?u='+ props.user +'&p='+props.permit
+    const api = ip+'/getVideos/profile?u='+ props.user +'&p='+props.permit
 
     useEffect(() => {
         fetch(api)

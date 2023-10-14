@@ -1,64 +1,122 @@
 
 import Sidebar from '../components/sidebar';
-
 import VideoPlayer from '../components/player';
 import { getAPI } from '../components/callAPI';
-
 import 'video.js/dist/video-js.css';
 import { useState, useEffect } from 'react';
-import ShowVideos from '../components/showVideo';
-import { checkVidPermit, getToken, getUser, isAdmin, isSessionSet } from '../components/session';
-import ReactModal from 'react-modal';
+import { checkVidPermit, getUser, isAdmin, isSessionSet, getToken, getlocalData } from '../components/session';
 import VideoUpdateModal from '../components/videoUpdateModal';
 import { createHistory } from '../components/saveHistories';
+import '../config';
+import moment from 'moment';
+import { Link } from 'react-router-dom';
+import '../css/watch.css'
+import '../css/swal2theme.css'
+import Swal from 'sweetalert2';
+import config from '../config';
+
+function formatTime(seconds) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+
+    let formattedTime = '';
+    if (hours > 0) {
+        formattedTime += `${hours}:`;
+    }
+    formattedTime += `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+    return formattedTime;
+}
+
+function formatTimeDifference(pastTime) {
+    const currentTime = new Date();
+    const timeDifferenceInSeconds = Math.floor((currentTime - pastTime) / 1000);
+
+    if (timeDifferenceInSeconds < 60) {
+        return 'just now';
+    } else if (timeDifferenceInSeconds < 3600) {
+        const minutes = Math.floor(timeDifferenceInSeconds / 60);
+        return `${minutes} min ago`;
+    } else if (timeDifferenceInSeconds < 86400) {
+        const hours = Math.floor(timeDifferenceInSeconds / 3600);
+        return `${hours} hour ago`;
+    } else if (timeDifferenceInSeconds < 604800) {
+        const days = Math.floor(timeDifferenceInSeconds / 86400);
+        return `${days} day ago`;
+    } else if (timeDifferenceInSeconds < 2419200) {
+        const weeks = Math.floor(timeDifferenceInSeconds / 604800);
+        return `${weeks} week ago`;
+    } else if (timeDifferenceInSeconds < 29030400) {
+        const months = Math.floor(timeDifferenceInSeconds / 2419200);
+        return `${months} month ago`;
+    } else {
+        const years = Math.floor(timeDifferenceInSeconds / 29030400);
+        return `${years} year ago`;
+    }
+}
 
 const WatchPage = () => {
-    const param = new URLSearchParams(window.location.search); 
+    const param = new URLSearchParams(window.location.search);
     const [videos, setVideos] = useState(null); //show video
     const [vidDetail, setVidDetail] = useState(null); // played video data
-    const [ isOpen, setIsOpen ] = useState(false);
-    const [ url, setUrl ] = useState('')
+    const [showDesc, setshowDesc] = useState(false);
+    const [url, setUrl] = useState('');
 
     const user = param.get('u');
     const video = param.get('v');
     var flag = true
     const c_user = getUser();
+    const ipw = global.config.ip.ipw;
+    const ip = global.config.ip.ip;
 
-    // const url = 'http://localhost:80/hls/upload/' + user + '/' + video + '/' + video + '.m3u8';
-    // const url = 'http://localhost:8900/get/hls/262b8d113dddc5494a5026e96dadf267/I7J5dDzb2hSL/i8eYEAxNVZIO'
-    const api = 'http://localhost:8900/get/video/info?v=' + video + '&u=' + c_user;
-    const dynamicAPI = 'http://localhost:8900/get/dynamicUrl/token'
-
-    ReactModal.setAppElement('#root');
+    // const url = ipw + '/hls/upload/' + user + '/' + video + '/' + video + '.m3u8';
+    const api = ip + '/get/video/info?v=' + video + '&u=' + c_user;
+    let dynamicAPI = ''
 
     useEffect(() => {
+        let tmp_U_id = '';
+        let header = {};
 
-        const tmp = {
-            'vid_url': '/watch?u=' + user + '&v=' + video
-        } 
-        console.log(getToken());
-        fetch(dynamicAPI, {
-            method: 'POST',
-            headers: {
+        if (isSessionSet('isLoggedIn')) {
+            const session = getlocalData('session');
+            tmp_U_id = session.U_id;
+            dynamicAPI = ip + '/get/dynamicUrl/token'
+            header = {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + getToken()
-            },
+            }
+
+        } else {
+            tmp_U_id = 0;
+            dynamicAPI = ip + '/get/url/no_login'
+            header = {
+                'Content-Type': 'application/json',
+            }
+        }
+
+        const tmp = {
+            'vid_url': '/watch?u=' + user + '&v=' + video,
+            'U_id': tmp_U_id
+        }
+        fetch(dynamicAPI, {
+            method: 'POST',
+            headers: header,
             body: JSON.stringify(tmp)
 
         }).then(response => response.json())
-        .then(data => {
-            setUrl(data.url)
-        })
-        .catch(() => {})
-    }, [dynamicAPI])
+            .then(data => {
+                // console.log('url:', data.url);
+                setUrl(data.url)
+            })
+            .catch(() => { })
+    }, [])
 
     useEffect(() => {
         fetch(api)
             .then(response => response.json())
             .then(data => {
-                // console.log(data);
                 setVidDetail(data);
-                if(isSessionSet('session') && flag) {
+                if (isSessionSet('session') && flag) {
                     const history = {
                         'U_id': c_user,
                         'V_id': data.V_ID
@@ -70,9 +128,6 @@ const WatchPage = () => {
             .catch(e => {
                 console.error('Error:', e);
             })
-
-        
-
     }, [api])
 
     useEffect(() => {
@@ -82,192 +137,293 @@ const WatchPage = () => {
             });
     }, [])
 
+    useEffect(() => {
+        if (vidDetail) {
+            document.title = vidDetail.V_title;
+        }
+    }, [vidDetail]);
+
     const handleDownloadBtn = (e) => {
-
-        const downloadAPI = 'http://localhost:8900/download?u='+ vidDetail.U_folder +'&v='+ vidDetail.V_encode
-        // console.log('converting');
-        fetch(downloadAPI, {
-            method: 'GET',
-            headers: {
-                'Authorization': 'Bearer ' + getToken()
-            }
+        const downloadAPI = ip + '/download?u=' + vidDetail.U_folder + '&v=' + vidDetail.V_encode;
+        Swal.fire({
+            title: 'Download',
+            text: 'Click Download to start convert',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Download',
+            cancelButtonText: 'Cancel',
+            showLoaderOnConfirm: true,
+            preConfirm: () => {
+                return fetch(downloadAPI)
+                    .then(response => {
+                        if (response.ok) {
+                            return response.blob();
+                        }
+                    })
+                    .then(blob => {
+                        const downloadUrl = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = downloadUrl;
+                        a.download = vidDetail.V_title + '.mp4';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        return true;
+                    })
+                    .catch(e => {
+                        console.error('Error:', e);
+                        Swal.showValidationMessage(`Download failed: ${e}`);
+                        return false;
+                    });
+            },
+            allowOutsideClick: () => !Swal.isLoading()
         })
-            .then(response => {
-                if (response.ok) {
-                    return response.blob();
-                }
-            })
-            .then(blob => {
-                // console.log('finish');
-                const downloadUrl = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = downloadUrl;
-                a.download = vidDetail.V_title+'.mp4';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                return ''
-            }).then(result => {
-                // console.log('delete');
-                deleteDownload();
-            })
-            .catch(e => {
-                console.error('Error:', e);
-            });
+            .then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Converted!',
+                        text: 'The video has been successfully converted.',
+                        showConfirmButton: false,
+                        timer: 2500,
+                        timerProgressBar: true
+                    });
 
+                    deleteDownload();
+                }
+            });
     }
+
+    // const handleDownloadBtn = (e) => {
+    //     const downloadAPI = ip + '/download?u=' + vidDetail.U_folder + '&v=' + vidDetail.V_encode
+    //     fetch(downloadAPI)
+    //         .then(response => {
+    //             console.log(response)
+    //             if (response.ok) {
+    //                 return response.blob();
+    //             }
+    //         })
+    //         .then(blob => {
+    //             const downloadUrl = URL.createObjectURL(blob);
+    //             const a = document.createElement('a');
+    //             a.href = downloadUrl;
+    //             a.download = vidDetail.V_title + '.mp4';
+    //             document.body.appendChild(a);
+    //             a.click();
+    //             document.body.removeChild(a);
+    //             return
+    //         }).then(result => {
+    //             deleteDownload();
+    //         })
+    //         .catch(e => {
+    //             console.error('Error:', e);
+    //         })
+    // }
 
     const deleteDownload = () => {
-        fetch(('http://localhost:8900/delete/download?u='+ vidDetail.U_folder +'&v='+ vidDetail.V_encode), {
+        fetch((ip + '/delete/download?u=' + vidDetail.U_folder + '&v=' + vidDetail.V_encode), {
             method: 'GET'
-        }).catch(e => {})
+        }).catch(e => { })
     }
 
-    const openModal = () => {
-        setIsOpen(true);
+
+    const handleShare = () => {
+        const value = ipw + "/watch?u=" + vidDetail.U_folder + "&v=" + vidDetail.V_encode;
+        Swal.fire({
+            title: 'Share URL',
+            text: value,
+            confirmButtonText: 'Copy',
+            showCancelButton: true,
+        }).then((result) => {
+            if (result.isConfirmed) {
+                navigator.clipboard.writeText(value)
+                    .then(() => {
+                        Swal.fire('Copied!', 'URL has been copied to the clipboard.', 'success');
+                    })
+                    .catch((error) => {
+                        console.error('Unable to copy: ', error);
+                    });
+            }
+        });
     }
 
-    const closeModal = () => {
-        setIsOpen(false);
+    const handleReport = () => {
+        Swal.fire({
+            title: 'Report Video',
+            input: 'select',
+            inputOptions: {
+                Legal: 'Legal issue',
+                Violent_replulsive: 'Violent or replulsive content',
+                Hateful: 'Hateful content',
+                Harmful: 'Harmful or dangerous acts',
+                Wrong_information: 'Wrong information',
+                Spam: 'Spam content',
+                Harassment_bullying: 'Harassment or bullying',
+                Other: 'Ohter..',
+            },
+            inputPlaceholder: 'Select the reason for reporting.',
+            showCancelButton: true,
+            confirmButtonText: 'Next',
+            preConfirm: (selectedOption) => {
+                if (!selectedOption) {
+                    Swal.showValidationMessage('Please select an option');
+                }
+                return selectedOption;
+            },
+        }).then((result) => {
+            if (result.isConfirmed && result.value) {
+                const selectedOption = result.value;
+                Swal.fire({
+                    title: 'Report Video',
+                    input: 'textarea',
+                    inputPlaceholder: 'Enter additional details...',
+                    inputAttributes: {
+                        'aria-label': 'Textarea',
+                    },
+                    showCancelButton: true,
+                    confirmButtonText: 'Submit',
+                }).then((result) => {
+                    const additionalDetails = result.value;
+                    if (result.isConfirmed) {
+                        Swal.fire('Reported!', 'Your report is completed!', 'success');
+                    }
+                    console.log(vidDetail.U_name + " has report " + vidDetail.V_title + " " + selectedOption + " with " + additionalDetails)
+                })
+            }
+        });
+    }
+
+    const handleAPI = () => {
+        Swal.fire({
+            title: 'API for other app',
+            text: url,
+            confirmButtonText: 'Copy',
+            showCancelButton: true,
+        }).then((result) => {
+            if (result.isConfirmed) {
+                navigator.clipboard.writeText(url)
+                    .then(() => {
+                        Swal.fire('Copied!', 'API has been copied to the clipboard.', 'success');
+                    })
+                    .catch((error) => {
+                        console.error('Unable to copy: ', error);
+                    });
+            }
+        });
     }
 
     const update = () => {
         window.location.reload();
     }
 
-    const modalStyle = {
-        content: {
-          top: '50%',
-          left: '50%',
-          right: 'auto',
-          bottom: 'auto',
-          transform: 'translate(-50%, -50%)',
-          width: '50%',
-          height: 'max-content',
-          backgroundColor: 'rgb(44, 48, 56)',
-        },
-        overlay: {
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        },
-      };
-
+    const handleDesc = () => {
+        setshowDesc(!showDesc);
+    };
+    // console.log(vidDetail)
     if (videos && vidDetail) {
         const f1 = checkVidPermit(vidDetail.U_ID)
         const f2 = isAdmin()
-        
+
         return (
-            <div style={{ backgroundColor: 'rgb(56, 56, 56)' }}>
-                <Sidebar >
-                    <div className='container-fluid' >
-                        <div className='row'>
-                            {f1 || vidDetail.V_permit === 'public' || vidDetail.V_permit === 'unlisted' ? 
-                            <div className='col-9'>
-                                <div className='row' style={{paddingBottom: '10px'}}>
-                                    <VideoPlayer source={url} V_id={vidDetail.V_ID} watchTime={vidDetail.watchTime}/>
-                                </div>
-                                <div className='row' style={{ color: 'white' }}>
-                                    <div className='col'>
-                                        <div className='row' style={{paddingBottom: '20px'}}>
-                                            <div className='col-7'>
-                                                <h3>{vidDetail.V_title}</h3>
-                                            </div>
-                                            <div className='col-3'>
-                                                <h6>
-                                                <div className='row'>
-                                                    Tag:
-                                                    {vidDetail.tags.map((tag, index) => (
-                                                        <div className="col-auto" key={index} style={{marginTop: '5px'}}>
-                                                            <a href={'/tag?tag=' + tag.T_name}>
-                                                                <div className="" style={{ width: 'fit-content', backgroundColor: 'white', borderRadius: '10px' }}>
-                                                                    <div style={{ marginRight: '8px',marginLeft: '8px', color: 'black' }}>
-                                                                        {tag.T_name}
-                                                                    </div>
-                                                                </div>
-                                                            </a>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                                    </h6>
-                                            </div>
-                                            <div className='col-2 right' >
-                                                {/* <button className='btn btn-secondary rounded-pill' style={{width: '42.5px'}} onClick={handleDownloadBtn}>
-                                                    <span className='download-icon'></span>
-                                                </button> */}
-                                                <div className='dropleft'>
-                                                    <button className='btn btn-secondary' type="button" id="dropdownMenuButton" aria-haspopup="true" data-bs-toggle="dropdown" aria-expanded="false">
-                                                        <h6>. . .</h6>
-                                                    </button>
-                                                    <div className='dropdown-menu dropdown-menu-dark ' aria-labelledby='dropdownMenuButton'>
-                                                        <button className='dropdown-item' onClick={handleDownloadBtn}>download</button>
-                                                        <button className='dropdown-item'>get api</button>
-                                                        {(f1 || f2) &&
-                                                        <button className='dropdown-item' onClick={openModal}>setting</button>
+            <Sidebar>
+                <div className='container-fluid play-container'>
+                    <div className='row'>
+                        {f1 || vidDetail.V_permit === 'public' || vidDetail.V_permit === "unlisted" ? (
+                            <>
+                                <div className='play-video'>
+                                    <VideoPlayer source={url} V_id={vidDetail.V_ID} watchTime={vidDetail.watchTime} />
+                                    <div className='tags'>
+                                        {vidDetail.tags.map((tag, index) => (
+                                            <Link to={"/tag?tag=" + tag.T_name}>#{tag.T_name}</Link>
+                                        ))}
+                                    </div>
+                                    <h6>{vidDetail.V_title}</h6>
+                                    <div className='owner-info'>
+                                        <Link to={`/profile?profile=${vidDetail.U_ID}`}><img src={`data:image/jpeg;base64, ${vidDetail.U_pro_pic}`} alt='profile' /></Link>
+                                        <Link to={`/profile?profile=${vidDetail.U_ID}`} className='none-link'><p>{vidDetail.U_name}</p></Link>
+                                        <div></div>
+                                        <i className="bi bi-three-dots-vertical" data-bs-toggle="dropdown"></i>
+                                        <ul className="dropdown-menu dropdown-menu-dark">
+                                            <li><button className="dropdown-item" type="button" onClick={handleShare}><i className="bi bi-share"></i> Share</button></li>
+                                            <li><button className="dropdown-item" type="button" onClick={handleDownloadBtn}><i className="bi bi-download"></i> Download</button></li>
+                                            <li>
+                                                <button className="dropdown-item" type="button" onClick={handleAPI}><i className="bi bi-link"></i> Get API</button>
+                                            </li>
+                                            {(f1 || f2) &&
+                                                <li>
+                                                    <button className="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#UpdateVideoModal"><i className="bi bi-gear"></i> Setting</button>
+                                                </li>
+                                            }
+                                            {(f1 || f2) &&
+                                                <li>
+                                                    <button className="dropdown-item" type="button"><i className="bi bi-trash"></i> Delete</button>
+                                                </li>
+                                            }
+                                            <li>
+                                                <button className="dropdown-item" type="button" onClick={handleReport}><i className="bi bi-flag"></i> Report</button>
+                                            </li>
+                                        </ul>
+                                        <VideoUpdateModal id={vidDetail.U_ID} V_id={vidDetail.V_ID} desc={vidDetail.V_desc} title={vidDetail.V_title} permit={vidDetail.V_permit} path={vidDetail.U_folder} encode={vidDetail.V_encode} tags={vidDetail.tags} />
+                                    </div>
+
+                                    <div className='vid-info'>
+                                        <div className="card">
+                                            <div className="card-body">
+                                                <p className="card-title">{vidDetail.V_view} Views &bull; {moment.utc(vidDetail.V_upload).format("DD MMMM YYYY : HH:mm:ss")}&nbsp;
+                                                    {vidDetail.tags.map((tag) => (
+                                                        <Link to={"/tag?tag=" + tag.T_name} className='none-link'>#{tag.T_name}&nbsp;</Link>
+                                                    ))}</p>
+                                                {vidDetail.V_desc.length !== 0 ? (
+                                                    <>
+                                                        {console.log(vidDetail.V_desc.length)}
+                                                        <p className={showDesc ? 'card-textopen' : 'card-text'}>{vidDetail.V_desc}</p>
+                                                        {vidDetail.V_desc.length >= 80 &&
+                                                            <>
+                                                                <hr className='text-secondary d-md-block' />
+                                                                <button type='button' onClick={handleDesc}> {showDesc ? "Show Less" : "Show More"}</button>
+                                                            </>
                                                         }
-
-                                                        <ReactModal isOpen={isOpen} onRequestClose={closeModal} style={modalStyle}>
-                                                            <VideoUpdateModal id={vidDetail.U_ID} V_id={vidDetail.V_ID} desc={vidDetail.V_desc} title={vidDetail.V_title} permit={vidDetail.V_permit} path={vidDetail.U_folder} encode={vidDetail.V_encode} update={update} closeModal={closeModal} tags={vidDetail.tags} />
-                                                        </ReactModal>
-
-                                                    </div>
+                                                    </>
+                                                ) : (
+                                                    <p className='card-text'>- No Video Description -</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr className='text-secondary d-md-block' />
+                                </div>
+                                <div className='right-bar'>
+                                    <div className='suggest-bar'>
+                                        <p><i className="bi bi-play-btn"></i> Other Videos</p>
+                                        <hr className='text-secondary d-md-block' />
+                                    </div>
+                                    {videos.map((video) => (
+                                        <a href={'/watch?u=' + video.U_folder + '&v=' + video.V_encode} style={{ textDecoration: 'none' }}>
+                                            <div className='side-list' key={video.V_ID}>
+                                                <div className='smallThumnail'>
+                                                    <img src={`data:image/jpeg;base64, ${video.V_pic}`} alt='video-cover' />
+                                                    <p>{formatTime(video.V_length)}</p>
+                                                </div>
+                                                <div className='suggest-info'>
+                                                    <h4>{video.V_title}</h4>
+                                                    <p>{video.U_name} <br /> {vidDetail.V_view} Views &bull; {formatTimeDifference(new Date(vidDetail.V_upload))}</p>
                                                 </div>
                                             </div>
-                                        </div>
-                                        
-                                        <div className='row'>
-                                            <div className='col-1'>
-                                            <a href={'/profile?profile='+vidDetail.U_ID}  style={{textDecoration: 'none', color: 'white'}}>
-                                                <img src={'data:image/jpeg;base64, ' + vidDetail.U_pro_pic} style={{ width: '50px', borderRadius: '25px' }} alt='profile img' />
-                                            </a>
-                                            </div>
-                                            <div className='col-2'>
-                                            <a href={'/profile?profile='+vidDetail.U_ID}  style={{textDecoration: 'none', color: 'white'}}>
-                                                <h4>{vidDetail.U_name}</h4>
-                                                </a>
-                                            </div>
-                                        </div>
-                                    <br/>
-                                    <div className='row'>
-                                        <div className='col'>
-                                            <div className='card' style={{backgroundColor: 'rgb(108, 108, 108)'}}>
-                                                <div className='card-body'>
-                                                    <div className='row'>
-                                                        <h6>view: {vidDetail.V_view}     upload: {vidDetail.V_upload}</h6>
-                                                    </div>
-                                                    <br/>
-                                                    <div className='row'>
-                                                        <h6>video description</h6>
-                                                        <p>{vidDetail.V_desc}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-    
-                                    </div>
+                                        </a>
+                                    ))}
                                 </div>
+                            </>
+                        ) : (
+                            <div className='notfound-vid'>
+                                <i className="bi bi-camera-video-off"></i>
+                                <p>This video is unavailable or private.</p>
+                                <Link to="/"><button type="button" className="btn btn-outline-primary">Back to Home</button></Link>
                             </div>
-                        :
-                        <div className='col-9'>
-                                <div className='card center' style={{height: '50%', backgroundColor: 'gray', color: 'white'}}>
-                                    <h1>Private Video</h1>
-                                    <h3>you have no permission on this video</h3>
-                                </div>
-                            </div>    
-                        }
-                            <div className='col-3'>
-                                <div className='row' style={{ height: '100vh'}}>
-                                    <div className='' style={{marginTop: '10px'}}>
-                                        <ShowVideos videos={videos} />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        )}
                     </div>
-                </Sidebar>
-            </div>
-        )
-
-
+                </div>
+            </Sidebar>
+        );
     } else {
         return (
             <div>
@@ -279,9 +435,5 @@ const WatchPage = () => {
             </div>
         )
     }
-    
-
-    
 }
-
-export default WatchPage
+export default WatchPage;

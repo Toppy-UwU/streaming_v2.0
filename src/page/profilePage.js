@@ -1,181 +1,155 @@
 import React, { useEffect, useState } from 'react';
-import ReactModal from 'react-modal';
 import { isSessionSet, getlocalData } from '../components/session';
 
 import Sidebar from '../components/sidebar';
-
-import './../css/profile.css';
-import GetVideo from '../components/getVideo';
 import UserUpdate from '../components/userUpdateModal';
-
+import './../css/profile.css';
+import './../css/modal.css';
+import GetVideo from '../components/getVideo';
+import '../config'
+import { Link } from 'react-router-dom';
 
 const ProfilePage = () => {
   const param = new URLSearchParams(window.location.search);
   const U_id = param.get('profile');
-  const getAPI = 'http://localhost:8900/getUser/id?u=' + U_id;
+  const ip = global.config.ip.ip;
+
+  const getAPI = ip + '/getUser/id?u=' + U_id;
 
   const [user, setUser] = useState(null);
-  const [isOpen, setIsOpen] = useState(false);
-
-  ReactModal.setAppElement('#root');
 
   let [currentComp, setCurrentComp] = useState('public');
-  var session
 
-  if (isSessionSet('token')) {
-    session = getlocalData('session');
-  }else {
-    session = {
-      'U_id': null
+  const [chk, setChk] = useState(false);
+
+  const session = isSessionSet('token') ? getlocalData('session') : { U_id: null };
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch(getAPI);
+
+        if (!response.ok) {
+          setChk(true);
+          throw new Error(`Request failed with status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setUser(data);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    };
+
+    fetchUserData();
+  }, [getAPI])
+
+  useEffect(() => {
+    if (user) {
+      document.title = user.U_name + ' | Profile';
+    }
+  }, [user]);
+
+
+  if (user === null) {
+    console.log(chk);
+    if (chk) {
+      return (
+        <Sidebar>
+          <div className='notfound-vid'>
+            <i className="bi bi-person-fill-x"></i>
+            <p>User not found!</p>
+            <Link to="/"><button type="button" className="btn btn-outline-primary">Back to Home</button></Link>
+          </div>
+        </Sidebar>
+      )
+    } else {
+      return (
+        <Sidebar>
+          <div className="center">
+            <div className="loading" style={{ marginTop: '25%' }}></div>
+          </div>
+        </Sidebar>
+      )
     }
   }
 
-  useEffect(() => {
-    fetch(getAPI)
-      .then(response => response.json())
-      .then(data => {
-        setUser(data)
-      })
-      .catch(e => {
-        console.error('Error:', e);
-      })
-  }, [getAPI])
-
-
-
-  if (user) {
-
-    const bgStyle = {
-      backgroundImage: `url('data:image/jpeg;base64, ${user.U_banner}')`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      height: '300px',
-      position: 'relative'
-    };
-
-    const openModal = () => {
-      setIsOpen(true);
-    }
+  console.log(user);
+  if (user || chk) {
 
     const buttonHandler = (btnId) => {
-      setCurrentComp(btnId)
+      setCurrentComp(btnId);
     };
-
-    const closeModal = () => {
-      setIsOpen(!isOpen);
-    }
-
-    const update = () => {
-      window.location.reload();
-    }
-
-
-    const modalStyle = {
-      content: {
-        top: '50%',
-        left: '50%',
-        right: 'auto',
-        bottom: 'auto',
-        transform: 'translate(-50%, -50%)',
-        width: '50%',
-        height: 'max-content',
-        backgroundColor: 'rgb(44, 48, 56)',
-      },
-      overlay: {
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-      },
-    };
-
 
     return (
+      <Sidebar>
+        <div className='container-fluid'>
+          <div className="profile-header">
+            <img src={`data:image/jpeg;base64, ${user.U_banner}`} alt="cover" className="cover-photo" />
+            <img src={`data:image/jpeg;base64, ${user.U_pro_pic}`} alt="profile" className="profile-photo" />
+            <h2 className="user-details">{user.U_name}</h2>
+            <p className="user-details">{user.U_mail} | {user.U_vid} Videos</p>
 
-      <div>
-        <Sidebar>
-          <div className='container'>
-            <div className='row' style={bgStyle}>
-              <div className='col-11' style={{ position: 'absolute', left: '0', bottom: '0', marginBottom: '10px' }}>
-                <div className='row'>
-                  <div className='col-1 info-bg-profile' style={{ width: 'fit-content' }}>
-                    <img src={'data:image/jpeg;base64, ' + user.U_pro_pic} style={{ width: '110px', borderRadius: '50%', border: '5px solid white' }} alt='user banner' />
-                  </div>
-                  <div className='col-5 info-bg-name ' style={{ width: 'fit-content', color: 'white' }}>
-                    <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingRight: '20px' }}>
-                      <div>
-                        <h3>{user.U_name}</h3>
-                        <h5>{user.U_mail}</h5>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className='col-1 '>
-                {session.U_id === user.U_ID && 
-                  <button id='settingBtn' onClick={openModal} className='btn btn-secondary' style={{ position: 'absolute', right: '0', margin: '20px', borderRadius: '40%', opacity: '0.8' }}>
-                    <h5>. . .</h5>
-                  </button>
-                }
+            {session.U_id === user.U_ID && (
+              <button type="button" className="setting-button" data-bs-toggle="modal" data-bs-target="#UpdateUserModal">
+                <i className="bi bi-gear"></i> &nbsp;
+                EDIT ACCOUNT
+              </button>
+            )}
 
-                <ReactModal isOpen={isOpen} onRequestClose={closeModal} style={modalStyle}>
-              
-                  <UserUpdate data={user} closeModal={closeModal} update={update} />
-                      
-                </ReactModal>
+            <UserUpdate data={user} />
 
-              </div>
-            </div>
-            {/* profile content */}
-            <div className='row' style={{ marginTop: '20px' }}>
-              <div className='col'>
-                <div className='card' style={{ backgroundColor: 'rgb(44,48,52)' }}>
-
-                  <div className='card-header'>
-                    <div className='btn-margin'>
-
-                      {session.U_id === user.U_ID ?
-                        <div>
-                          <button className='btn btn-secondary' onClick={() => buttonHandler('public')} >Public Video</button>
-                          <button className='btn btn-secondary' onClick={() => buttonHandler('private')} >Private Video</button>
-                          <button className='btn btn-secondary' onClick={() => buttonHandler('unlisted')} >Unlisted Video</button>
-                          <button className='btn btn-secondary' onClick={() => buttonHandler('management')} >Management</button>
-                        </div>
-                        :
-                        <div>
-                          <button className='btn btn-secondary' onClick={() => buttonHandler(1)} >public video</button>
-                        </div>
-                      }
-                    </div>
-                  </div>
-                  <div className='card-body'>
-                    {/* card content */}
-                    {currentComp === 'management' ? 
-                    <div style={{color: 'white'}}>
-                      <div>
-                        <h5>User Storage Usege: {user.U_storage + ' MB'}</h5>
-                        <br/>
-                        <h5>Development Token: </h5>
-                      </div>
-                    </div> 
-                    : 
-                    <div>
-                      <GetVideo permit={currentComp} user={user.U_ID} />
-                    </div>}
-                  </div>
-
-                </div>
-              </div>
-            </div>
           </div>
 
-        </Sidebar>
-      </div>
+          <hr className='text-secondary d-md-block' />
 
+          {session.U_id === user.U_ID ?
+            <ul className="nav d-flex">
+              <li className="nav-item">
+                <button className="setting-button" onClick={() => buttonHandler('public')}>
+                  Public Video
+                </button>
+              </li>
+              <li className="nav-item">
+                <button className="setting-button" onClick={() => buttonHandler('unlisted')}>
+                  Unlisted Video
+                </button>
+              </li>
+              <li className="nav-item">
+                <button className="setting-button" onClick={() => buttonHandler('private')}>
+                  Private Video
+                </button>
+              </li>
+            </ul>
+            :
+            <ul className="nav nav-underline d-flex justify-content-center">
+              <li className="nav-item">
+                <button className="setting-button" onClick={() => buttonHandler('public')}>
+                  Public Video
+                </button>
+              </li>
+            </ul>
+          }
+          <div style={{ marginTop: '20px' }}>
+            <GetVideo permit={currentComp} user={user.U_ID} />
+          </div>
+        </div>
+      </Sidebar >
     );
   } else {
-    <div>
-      <Sidebar>
-        <div className='loading center'></div>
-      </Sidebar>
-    </div>
+    return (
+      <div>
+        {chk && (
+          <Sidebar>
+            <div className='container-fluid d-flex justify-content-center'>
+              <div>
+                No User have ID = {U_id}
+              </div>
+            </div>
+          </Sidebar>
+        )}
+      </div>
+    );
   }
 
 };

@@ -40,8 +40,8 @@ const VideoPlayer = ({ source, V_id, watchTime }) => {
 
     const handleTime = async (e) => {
       const dif_time = video.currentTime - c_time;
-      
-      if(dif_time >= 20) {
+
+      if (dif_time >= 20) {
         c_time = video.currentTime;
         const tmp = {
           'watchTime': video.currentTime,
@@ -52,32 +52,32 @@ const VideoPlayer = ({ source, V_id, watchTime }) => {
       }
     }
 
-    const handleEnd= async (e) => {
-        const tmp = {
-          'watchTime': 0,
-          'V_id': V_id,
-          'U_id': getUser()
-        }
-        await insertHistories(tmp);
+    const handleEnd = async (e) => {
+      const tmp = {
+        'watchTime': 0,
+        'V_id': V_id,
+        'U_id': getUser()
+      }
+      await insertHistories(tmp);
     }
 
-    const handlePause= async (e) => {
+    const handlePause = async (e) => {
       const tmp = {
         'watchTime': video.currentTime,
         'V_id': V_id,
         'U_id': getUser()
       }
       await insertHistories(tmp);
-  }
+    }
 
-    if(isSessionSet('session')) {
+    if (isSessionSet('session')) {
       video.addEventListener('timeupdate', handleTime)
       video.addEventListener('ended', handleEnd);
       video.addEventListener('pause', handlePause);
     }
 
     return () => {
-      if(isSessionSet('session')) {
+      if (isSessionSet('session')) {
         video.removeEventListener('timeupdate', handleTime);
         video.removeEventListener('ended', handleEnd);
         video.removeEventListener('pause', handlePause);
@@ -109,15 +109,15 @@ const VideoPlayer = ({ source, V_id, watchTime }) => {
   return (
     <div className='container-fluid' >
       <div className='row'>
-        <video ref={videoRef} controls>
+        <video ref={videoRef} controls style={{ maxHeight: "344px" , backgroundColor: 'black'}}>
           Your browser does not support the video tag.
         </video>
       </div>
-      <div>
-        <select onChange={resChange}>
+      <div className='d-flex justify-content-end'>
+        <select className="w-25 form-select" aria-label="Res-select" onChange={resChange}>
           <option value={'auto'}>Auto</option>
           {resolutions && resolutions.map((res, index) => (
-            <option key={index} value={index} >{res.height}</option>
+            <option key={index} value={index} >{res.height}p</option>
           ))}
         </select>
       </div>

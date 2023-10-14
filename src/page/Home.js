@@ -1,27 +1,26 @@
-
-
 import Sidebar from '../components/sidebar';
 import ShowVideos from '../components/showVideo';
 import { useEffect, useState } from 'react';
 import { getAPI } from '../components/callAPI';
 
 const Home = () => {
-  const [ videos, setVideos ] = useState(null);
-  const [ tags, setTags ] = useState(null);
+  const [videos, setVideos] = useState(null);
+  const [tags, setTags] = useState(null);
+  document.title = "CS MSU";
 
   useEffect(() => {
     getAPI('videosPublic')
-    .then(response => {
-      setVideos(response);
-    });
+      .then(response => {
+        setVideos(response);
+      });
     getAPI('tags')
-    .then(response => {
-      setTags(response);
-    })
+      .then(response => {
+        setTags(response);
+      })
   }, [])
 
   const changeTag = (tag) => {
-    window.location.href = '/tag?tag='+tag
+    window.location.href = '/tag?tag=' + tag
   }
 
   if (videos === null) {
@@ -40,17 +39,19 @@ const Home = () => {
 
     <div>
       <Sidebar>
-        <div style={{ marginTop: '15px' }}>
-          <div className='row'>
-          {tags && tags.slice(0, 8).map((tag, index) => (
-            <div className='col-auto' key={index} style={{marginTop: '5px'}}>
-              <button className='btn rounded-pill' style={{backgroundColor: 'white'}} onClick={() => changeTag(tag.T_name)}>
-                {tag.T_name} : {tag.count}
-              </button>
+        <div className='container-fluid'>
+          <div className='tagBarHome mb-4 mt-3 mx-4'>
+            <div className='row'>
+              {tags && tags.map((tag, index) => (
+                <div className='col-auto mt-2' key={index}>
+                  <button className='button-tag' onClick={() => changeTag(tag.T_name)}>
+                    {tag.T_name}
+                  </button>
+                </div>
+              ))}
             </div>
-          ))}
           </div>
-          <div style={{ marginTop: '15px' }}>
+          <div className='showVid'>
             <ShowVideos videos={videos} />
           </div>
         </div>
