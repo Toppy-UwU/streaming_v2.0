@@ -89,7 +89,7 @@ def create_app(test_config=None):
     app.config["SECRET_KEY"] = "123" #change on product for jwt
 
     CORS(app)
-    app.config["CORS_ORIGINS"] = [ipw]
+    app.config["CORS_ORIGINS"] = ['*']
     app.config["CORS_METHODS"] = ["GET", "POST", "OPTIONS"]
     app.config["CORS_HEADERS"] = ["Content-Type"]
 
@@ -181,7 +181,7 @@ def create_app(test_config=None):
             hls = video.hls(Formats.h264())
             hls.encryption(
                 "../key/" + vidData["encode"] + ".bin",
-                ips + "/hls/key/" + vidData["encode"] + ".bin",
+                ipf + "/hls/key/" + vidData["encode"],
             )  # encrypt key maybe can change into api
             hls.auto_generate_representations()
             print("convert")
@@ -1734,6 +1734,39 @@ def create_app(test_config=None):
         else:
             return ({"message": "token invalid"}), 401
 
+    @app.route("/get/url/no_login", methods=['POST'])
+    def url_no_login():
+        try:
+            data = request.get_json()
+            vid_url = data.get("vid_url")
+            U_id = data.get("U_id")
+
+            url_token = secrets.token_hex(16)
+            expiration_time = time.time() + 86400
+
+            vid_url = vid_url.split("watch?")
+            path = vid_url[-1].split("&")
+            u = path[0][2:]
+            v = path[1][2:]
+
+            conn = create_conn()
+            cursor = conn.cursor()
+
+            cursor.execute(
+                "INSERT INTO url_token(url, url_expire, U_ID, V_ID) VALUE (%s, %s, %s, (SELECT V_ID FROM videos WHERE V_encode = %s))",
+                (url_token, expiration_time, U_id, v),
+            )
+
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            dynamic_url = f"{ipf}/get/hls/{url_token}/{u}/{v}"
+
+            return jsonify({"url": dynamic_url}), 200
+        except Exception as e:
+            return jsonify({"message": "query error"}), 500
+
     @app.route("/get/hls/<path:url_token>/<path:u>/<path:v>")
     def getHls(url_token, u, v):
         conn = create_conn()
@@ -1787,38 +1820,13 @@ def create_app(test_config=None):
             conn.close()
             return ({"message": "content unavarible"}), 403
 
-    @app.route("/get/url/no_login", methods=['POST'])
-    def url_no_login():
+    @app.route("/hls/key/<path:v>")
+    def getKey(v):
         try:
-            data = request.get_json()
-            vid_url = data.get("vid_url")
-            U_id = data.get("U_id")
-
-            url_token = secrets.token_hex(16)
-            expiration_time = time.time() + 86400
-
-            vid_url = vid_url.split("watch?")
-            path = vid_url[-1].split("&")
-            u = path[0][2:]
-            v = path[1][2:]
-
-            conn = create_conn()
-            cursor = conn.cursor()
-
-            cursor.execute(
-                "INSERT INTO url_token(url, url_expire, U_ID, V_ID) VALUE (%s, %s, %s, (SELECT V_ID FROM videos WHERE V_encode = %s))",
-                (url_token, expiration_time, U_id, v),
-            )
-
-            conn.commit()
-            cursor.close()
-            conn.close()
-
-            dynamic_url = f"{ipf}/get/hls/{url_token}/{u}/{v}"
-
-            return jsonify({"url": dynamic_url}), 200
-        except Exception as e:
-            return jsonify({"message": "query error"}), 500
+            path = "../key/"+v+".bin"
+            return send_file(path)
+        except:
+            return({"message": "no key"}), 500
 
     @app.route("/get/url_token", methods=["GET"])
     @token_required
