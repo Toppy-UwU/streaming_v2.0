@@ -1828,6 +1828,33 @@ def create_app(test_config=None):
         except:
             return({"message": "no key"}), 500
 
+    @app.route("/get/url_token/user", methods=["GET"])
+    @token_required
+    def get_url_user():
+        u = request.args.get('u')
+        conn = create_conn()
+        cursor = conn.cursor()
+        cursor.execute("SELECT token.*, u.U_folder, v.V_encode FROM url_token AS token, users AS u, videos AS v WHERE u.U_ID = token.U_ID AND v.V_ID = token.V_ID AND token.U_ID = %s", (u,))
+        data = cursor.fetchall()
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        urls = []
+        for row in data:
+            url = {
+                "url": row[1],
+                "create_at": row[2],
+                "url_expire": datetime.utcfromtimestamp(row[3]),
+                "U_ID": row[4],
+                "V_ID": row[5],
+                "U_folder": row[6],
+                "V_encode": row[7]
+            }
+            urls.append(url)
+
+        return jsonify(urls), 200
+
     @app.route("/get/url_token", methods=["GET"])
     @token_required
     def get_url():
