@@ -8,6 +8,7 @@ import DataTable, { createTheme, Media } from "react-data-table-component";
 import { Link } from "react-router-dom";
 import AddUserModal from "../components/UserModal";
 import UpdateUserModal from "../components/UpdateUserModal";
+import { ip } from "../config";
 
 const UserListPage = () => {
     const [users, setUsers] = useState([]);
@@ -42,7 +43,7 @@ const UserListPage = () => {
     }, [search]);
     
     const handleDelete = (U_id, U_folder) => {
-        const deleteApi = 'http://localhost:8900/delete/user';
+        const deleteApi = ip + '/delete/user';
 
         const tmp = ({
             'U_ID': U_id,
@@ -136,7 +137,7 @@ const UserListPage = () => {
         },
         {
             name: 'Storage',
-            selector: row => row.U_storage,
+            selector: row => row.U_storage + ' MB',
             sortable: true,
             hide: Media.SM
         },

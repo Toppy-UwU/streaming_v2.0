@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
 import UserUpdate from '../components/userUpdateModal';
 import UpdatePasswordModal from "../components/userPasswordModal";
+import { ip } from "../config";
 
 const SettingPage = () => {
     document.title = "Setting";
@@ -22,7 +23,7 @@ const SettingPage = () => {
     }
 
     const handleDelete = (U_id, U_folder) => {
-        const deleteApi = 'http://localhost:8900/delete/user';
+        const deleteApi = ip + '/delete/user';
 
         const tmp = ({
             'U_ID': U_id,

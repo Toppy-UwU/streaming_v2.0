@@ -44,7 +44,7 @@ const Monitor = () => {
                                     <div class="card-body d-flex flex-column align-items-center justify-content-center">
                                         <h5 class="card-title"><strong><span class="bi bi-cpu"> CPU Used</span></strong></h5>
                                         <div className="ProgressCircle">
-                                            <CircularProgressbarWithChildren value={serverRes.CPU_Used} styles={buildStyles({pathTransitionDuration: 0.5, pathColor: 'rgb(74, 192, 255)',})}>
+                                            <CircularProgressbarWithChildren value={serverRes.CPU_Used} styles={buildStyles({pathTransitionDuration: 0.5, pathColor: 'rgb(74, 192, 255)', strokeLinecap: 'round'})}>
                                                 <h4><strong>{serverRes.CPU_Used}%</strong></h4>
                                             </CircularProgressbarWithChildren>;
                                         </div>
@@ -57,7 +57,7 @@ const Monitor = () => {
                                     <div class="card-body d-flex flex-column align-items-center justify-content-center">
                                         <h5 class="card-title"><strong><span class="bi bi-hdd"> Disk Used</span></strong></h5>
                                         <div className="ProgressCircle">
-                                            <CircularProgressbarWithChildren value={serverRes.Disk_Used_Percent} styles={buildStyles({pathTransitionDuration: 0.5, pathColor: 'rgb(74, 192, 255)',})}>
+                                            <CircularProgressbarWithChildren value={serverRes.Disk_Used_Percent} styles={buildStyles({pathTransitionDuration: 0.5, pathColor: 'rgb(74, 192, 255)', strokeLinecap: 'round'})}>
                                                 <h4><strong>{serverRes.Disk_Used_Percent}%</strong></h4>
                                                 <div style={{ fontSize: 12, marginTop: -5 }}>
                                                     <strong>{serverRes.Disk_Used} GB of {serverRes.Disk_Total} GB</strong>
@@ -73,7 +73,7 @@ const Monitor = () => {
                                     <div class="card-body d-flex flex-column align-items-center justify-content-center">
                                         <h5 class="card-title"><strong><span class="bi bi-hdd"> Disk Free</span></strong></h5>
                                         <div className="ProgressCircle">
-                                            <CircularProgressbarWithChildren value={(serverRes.Disk_Free / serverRes.Disk_Total) * 100} styles={buildStyles({pathTransitionDuration: 0.5, pathColor: 'rgb(74, 192, 255)',})}>
+                                            <CircularProgressbarWithChildren value={(serverRes.Disk_Free / serverRes.Disk_Total) * 100} styles={buildStyles({pathTransitionDuration: 0.5, pathColor: 'rgb(74, 192, 255)', strokeLinecap: 'round'})}>
                                                 <h4><strong>{((serverRes.Disk_Free / serverRes.Disk_Total) * 100).toFixed(1)}%</strong></h4>
                                                 <div style={{ fontSize: 12, marginTop: -5 }}>
                                                     <strong>{serverRes.Disk_Free} GB of {serverRes.Disk_Total} GB</strong>
@@ -93,7 +93,7 @@ const Monitor = () => {
                                     <div class="card-body d-flex flex-column align-items-center justify-content-center">
                                         <h5 class="card-title"><strong><span class="bi bi-memory"> Memory Used</span></strong></h5>
                                         <div className="ProgressCircle">
-                                            <CircularProgressbarWithChildren value={serverRes.Memory_Used} styles={buildStyles({pathTransitionDuration: 0.5, pathColor: 'rgb(74, 192, 255)',})}>
+                                            <CircularProgressbarWithChildren value={serverRes.Memory_Used} styles={buildStyles({pathTransitionDuration: 0.5, pathColor: 'rgb(74, 192, 255)', strokeLinecap: 'round'})}>
                                                 <h4><strong>{serverRes.Memory_Used}%</strong></h4>
                                             </CircularProgressbarWithChildren>;
                                         </div>
@@ -106,7 +106,7 @@ const Monitor = () => {
                                     <div class="card-body d-flex flex-column align-items-center justify-content-center">
                                         <h5 class="card-title"><strong><span class="bi bi-arrow-down-circle"> Download Speed</span></strong></h5>
                                         <div className="ProgressCircle">
-                                            <CircularProgressbarWithChildren value={serverRes.Network_Download_Speed} styles={buildStyles({pathTransitionDuration: 0.5, pathColor: 'rgb(74, 192, 255)',})}>
+                                            <CircularProgressbarWithChildren value={serverRes.Network_Download_Speed} styles={buildStyles({pathTransitionDuration: 0.5, pathColor: 'rgb(74, 192, 255)', strokeLinecap: 'round'})}>
                                                 <h5><strong>{serverRes.Network_Download_Speed}/s</strong></h5>
                                                 <div style={{ fontSize: 12, marginTop: -5 }}>
                                                     <strong>Total : {serverRes.Network_Download}</strong>
@@ -122,7 +122,7 @@ const Monitor = () => {
                                     <div class="card-body d-flex flex-column align-items-center justify-content-center">
                                         <h5 class="card-title"><strong><span class="bi bi-arrow-up-circle"> Network Upload</span></strong></h5>
                                         <div className="ProgressCircle">
-                                            <CircularProgressbarWithChildren value={serverRes.Network_Upload_Speed} styles={buildStyles({pathTransitionDuration: 0.5, pathColor: 'rgb(74, 192, 255)',})}>
+                                            <CircularProgressbarWithChildren value={serverRes.Network_Upload_Speed} styles={buildStyles({pathTransitionDuration: 0.5, pathColor: 'rgb(74, 192, 255)', strokeLinecap: 'round'})}>
                                                 <h5><strong>{serverRes.Network_Upload_Speed}/s</strong></h5>
                                                 <div style={{ fontSize: 12, marginTop: -5 }}>
                                                     <strong>Total : {serverRes.Network_Upload}</strong>

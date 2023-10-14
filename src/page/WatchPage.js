@@ -4,7 +4,7 @@ import VideoPlayer from '../components/player';
 import { getAPI } from '../components/callAPI';
 import 'video.js/dist/video-js.css';
 import { useState, useEffect } from 'react';
-import { checkVidPermit, getUser, isAdmin, isSessionSet, getToken } from '../components/session';
+import { checkVidPermit, getUser, isAdmin, isSessionSet, getToken, getlocalData } from '../components/session';
 import VideoUpdateModal from '../components/videoUpdateModal';
 import { createHistory } from '../components/saveHistories';
 import '../config';
@@ -71,19 +71,36 @@ const WatchPage = () => {
 
     // const url = ipw + '/hls/upload/' + user + '/' + video + '/' + video + '.m3u8';
     const api = ip + '/get/video/info?v=' + video + '&u=' + c_user;
-    const dynamicAPI = ip + '/get/dynamicUrl/token'
+    let dynamicAPI = ''
 
     useEffect(() => {
-        const tmp = {
-            'vid_url': '/watch?u=' + user + '&v=' + video
-        }
-        console.log(getToken());
-        fetch(dynamicAPI, {
-            method: 'POST',
-            headers: {
+        let tmp_U_id = '';
+        let header = {};
+
+        if (isSessionSet('isLoggedIn')) {
+            const session = getlocalData('session');
+            tmp_U_id = session.U_id;
+            dynamicAPI = ip + '/get/dynamicUrl/token'
+            header = {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + getToken()
-            },
+            }
+
+        } else {
+            tmp_U_id = 0;
+            dynamicAPI = ip + '/get/url/no_login'
+            header = {
+                'Content-Type': 'application/json',
+            }
+        }
+
+        const tmp = {
+            'vid_url': '/watch?u=' + user + '&v=' + video,
+            'U_id': tmp_U_id
+        }
+        fetch(dynamicAPI, {
+            method: 'POST',
+            headers: header,
             body: JSON.stringify(tmp)
 
         }).then(response => response.json())
@@ -92,7 +109,7 @@ const WatchPage = () => {
                 setUrl(data.url)
             })
             .catch(() => { })
-    }, [dynamicAPI])
+    }, [])
 
     useEffect(() => {
         fetch(api)
@@ -204,14 +221,14 @@ const WatchPage = () => {
     // }
 
     const deleteDownload = () => {
-        fetch(('http://localhost:8900/delete/download?u=' + vidDetail.U_folder + '&v=' + vidDetail.V_encode), {
+        fetch((ip + '/delete/download?u=' + vidDetail.U_folder + '&v=' + vidDetail.V_encode), {
             method: 'GET'
         }).catch(e => { })
     }
 
 
     const handleShare = () => {
-        const value = "http://localhost:3000/watch?u=" + vidDetail.U_folder + "&v=" + vidDetail.V_encode;
+        const value = ipw + "/watch?u=" + vidDetail.U_folder + "&v=" + vidDetail.V_encode;
         Swal.fire({
             title: 'Share URL',
             text: value,
@@ -276,7 +293,7 @@ const WatchPage = () => {
         });
     }
 
-    const handleAPI = () => {        
+    const handleAPI = () => {
         Swal.fire({
             title: 'API for other app',
             text: url,
