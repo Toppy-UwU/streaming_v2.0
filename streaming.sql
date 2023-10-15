@@ -120,6 +120,9 @@ CREATE TABLE `users` (
   `U_storage` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+INSERT INTO `users` (`U_ID`, `U_name`, `U_mail`, `U_pass`, `U_type`, `U_vid`, `U_pro_pic`, `created_at`, `U_permit`, `U_folder`, `U_banner`, `U_storage`) VALUES
+(0, '', '', '', 'user', 0, '', '2023-10-15 02:16:12', 0, '', '', 0);
+
 -- --------------------------------------------------------
 
 --
@@ -193,7 +196,8 @@ ALTER TABLE `tag_video`
 --
 ALTER TABLE `url_token`
   ADD PRIMARY KEY (`url_id`),
-  ADD KEY `url_token_U_ID` (`V_ID`);
+  ADD KEY `url_token_U_ID` (`V_ID`),
+  ADD KEY `url_token_U_ID` (`U_ID`);
 
 --
 -- Indexes for table `users`
@@ -277,7 +281,8 @@ ALTER TABLE `tag_video`
 -- Constraints for table `url_token`
 --
 ALTER TABLE `url_token`
-  ADD CONSTRAINT `url_token_U_ID` FOREIGN KEY (`V_ID`) REFERENCES `videos` (`V_ID`) ON DELETE CASCADE ON UPDATE NO ACTION;
+  ADD CONSTRAINT `url_token_U_ID` FOREIGN KEY (`U_ID`) REFERENCES `users` (`U_ID`) ON DELETE CASCADE,
+  ADD CONSTRAINT `url_token_V_ID` FOREIGN KEY (`V_ID`) REFERENCES `videos` (`V_ID`) ON DELETE CASCADE ON UPDATE NO ACTION;
 
 --
 -- Constraints for table `videos`
