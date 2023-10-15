@@ -1,7 +1,7 @@
 module.exports = global.config = {
-    ip:{
-        // ip : "http://192.168.72.216:8900",
-        // ipw : "http://192.168.72.216:80"  //wifi hotsport
+    ip: {
+        // ip : "http://192.168.94.216:8900",
+        // ipw : "http://192.168.94.216:80"  //wifi hotsport
 
         // ip : "http://10.254.2.71:8900",
         // ipw : "http://10.254.2.71:80" //Dorm WiFi
@@ -12,7 +12,8 @@ module.exports = global.config = {
         // ip : "http://192.168.10.111:8900",
         // ipw : "http://192.168.10.111:80" //USOC
 
-        ip : "http://172.16.1.13:8900",
-        ipw : "http://172.16.1.13:80" //club wifi
+        ip: "http://172.16.1.4:8900",
+        ipw: "http://172.16.1.4:80",
+        ipws: "http://172.16.1.4:3000" //club wifi
     }
 };

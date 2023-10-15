@@ -64,7 +64,11 @@ const Home = () => {
 
   useEffect(() => {
     const result = users.filter((item) => {
-      return item.U_name.toLowerCase().match(search.toLocaleLowerCase());
+      const lowerCaseSearch = search.toLowerCase();
+      return item.U_id.toString().includes(lowerCaseSearch) ||
+        item.U_name.toLowerCase().includes(lowerCaseSearch) ||
+        item.U_mail.toLowerCase().includes(lowerCaseSearch) ||
+        item.U_type.toLowerCase().includes(lowerCaseSearch);
     });
     setFilter(result);
   }, [search]);
@@ -193,13 +197,13 @@ const Home = () => {
                 </Link>
               </div>
               <div class="col-sm-4 mb-3 mb-sm-0">
-              <Link className="text-decoration-none" to={'/admin/videos'}>
-                <div class="card">
-                  <div class="card-body">
-                    <h5 class="card-title">{users.reduce((a, user) => a + parseFloat(user.U_vid), 0)} <span class="bi bi-file-earmark-play-fill"></span></h5>
-                    <p class="card-text">Total Videos </p>
+                <Link className="text-decoration-none" to={'/admin/videos'}>
+                  <div class="card">
+                    <div class="card-body">
+                      <h5 class="card-title">{users.reduce((a, user) => a + parseFloat(user.U_vid), 0)} <span class="bi bi-file-earmark-play-fill"></span></h5>
+                      <p class="card-text">Total Videos </p>
+                    </div>
                   </div>
-                </div>
                 </Link>
               </div>
               <div class="col-sm-4 mb-3 mb-sm-0">

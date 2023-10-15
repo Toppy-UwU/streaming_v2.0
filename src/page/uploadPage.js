@@ -1,21 +1,21 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-
+import Swal from "sweetalert2";
 import './../css/utilities.css';
 import './../css/upload.css';
-
 import Sidebar from "../components/sidebar";
 import ProgressBar from "../components/progressBar";
 import { getAPI } from "../components/callAPI";
 import '../config'
 
-import { getUser, getlocalData, isSessionSet } from "../components/session";
+import { getlocalData, isSessionSet } from "../components/session";
+import { useNavigate } from "react-router-dom";
 
 const UploadPage = () => {
 
     var session
     var token
-    const user = getUser();
+    const navigate = useNavigate();
     const ip = global.config.ip.ip;
     document.title = "Upload Video";
 
@@ -24,10 +24,7 @@ const UploadPage = () => {
         token = getlocalData('token')
     }
 
-
     const uploadAPI = ip + '/upload';
-    const gatUploadApi = ip + '/get/videos/upload?u=' + user;
-
     const [file, setFile] = useState();
     const [vidDesc, setVidDesc] = useState('');
     const [upProgress, setUpProgress] = useState('0');
@@ -39,8 +36,6 @@ const UploadPage = () => {
     const [tags, setTags] = useState(null);
     const [showTags, setShowTags] = useState(null);
     const [thumbnail, setThumbnail] = useState(null);
-    const [windows, setWindows] = useState('upload');
-    const [uploading, setUploading] = useState(null)
 
     useEffect(() => {
         getAPI('tags')
@@ -168,8 +163,15 @@ const UploadPage = () => {
     }
 
     const handleClickUpload = async () => {
-
         checkDate();
+        if (tmp.trim() === '') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Title is empty!',
+                text: 'Please enter a video title before uploading!',
+            });
+            return;
+        }
 
         setUpProgress('0');
         if (file) {
@@ -201,12 +203,9 @@ const UploadPage = () => {
                     'tags': vidTags
                     // encode included
                 }
-                // setVidData(tmpData)
-
                 const formData = new FormData();
                 formData.append('video', file, file.name);
                 formData.append('data', JSON.stringify(tmpData));
-                // console.log(tmpData);
                 axios.post(uploadAPI, formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
@@ -222,7 +221,16 @@ const UploadPage = () => {
                     },
                 })
                     .then((response) => {
-                        window.location.reload();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Upload Complete',
+                            text: 'Your video is going to be converted, redirecting to convert status!',
+                            showConfirmButton: false,
+                            timer: 2000, 
+                            didClose: () => {
+                                navigate('/videosStatus');
+                            },
+                        });
                     })
 
                     .catch((error) => {
@@ -243,19 +251,14 @@ const UploadPage = () => {
         document.getElementById('imgBtn').click();
     }
 
-    const logTest = () => {
-        console.log('work!!!');
-        console.log(vidPermit);
-        window.location.href = "/";
-    }
-
     return (
         <div>
             <Sidebar>
                 <div className="container-fluid">
                     <br />
-                    <div className="Title">
-                        <h2>Upload</h2>
+                    <div className="PageTitle">
+                        <h2><i className="bi bi-cloud-upload-fill"></i> Upload</h2>
+                        <p>Select your video to upload</p>
                     </div>
 
                     <div className="uploadCard">
@@ -328,8 +331,8 @@ const UploadPage = () => {
                                                             <div className="row">
                                                                 {vidTags && vidTags.map((tag, index) => (
                                                                     <div className="col-auto" key={index}>
-                                                                        <div className="" style={{ width: 'fit-content', backgroundColor: 'white', borderRadius: '10px', marginTop:"1rem" }}>
-                                                                            <div style={{color: 'black' }}>
+                                                                        <div className="" style={{ width: 'fit-content', backgroundColor: 'white', borderRadius: '10px', marginTop: "1rem" }}>
+                                                                            <div style={{ color: 'black' }}>
                                                                                 &nbsp;{tag.T_name}
                                                                                 <button onClick={() => removeTag(tag)} className="btn">x</button>
                                                                             </div>
@@ -364,7 +367,7 @@ const UploadPage = () => {
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="d-flex justify-content-center align-items-center" style={{height: "100%"}} onClick={cardClick}>
+                                            <div className="d-flex justify-content-center align-items-center" style={{ height: "100%" }} onClick={cardClick}>
                                                 <h5 className="fw-bold text-white">Select file to upload</h5>
                                             </div>
                                         )}

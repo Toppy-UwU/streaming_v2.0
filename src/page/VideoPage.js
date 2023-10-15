@@ -16,27 +16,31 @@ const UserVideos = () => {
   const session = getlocalData('session');
   const getUserVideo = `${ip}/getVideos/profile?u=${session.U_id}&p=all`;
   const clearApi = ip + '/delete/video/user';
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(getUserVideo);
-        if (response.ok) {
-          const data = await response.json();
-          setVideos(data);
-          setFilter(data);
-        } else {
-          console.error('Failed to fetch data');
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error);
+
+  const fetchData = async () => {
+    try {
+      const response = await fetch(getUserVideo);
+      if (response.ok) {
+        const data = await response.json();
+        setVideos(data);
+        setFilter(data);
+      } else {
+        console.error('Failed to fetch data');
       }
-    };
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, []);
 
   useEffect(() => {
     const result = videos.filter((item) => {
-      return item.V_title.toLowerCase().includes(search.toLowerCase());
+      const lowerCaseSearch = search.toLowerCase();
+      return item.V_title.toLowerCase().includes(lowerCaseSearch) ||
+      item.V_permit.toLowerCase().includes(lowerCaseSearch);
     });
     setFilter(result);
   }, [search]);
@@ -60,6 +64,16 @@ const UserVideos = () => {
 
       if (!response.ok) {
         throw new Error('Clearing failed');
+      } else {
+        Swal.fire({
+          icon: 'success',
+          title: "Deleted!",
+          showConfirmButton: false,
+          timer: 2000,
+          didClose: (
+            fetchData()
+          )
+        })
       }
 
     } catch (error) {
@@ -79,14 +93,6 @@ const UserVideos = () => {
     }).then((result) => {
       if (result.isConfirmed) {
         handleClear(U_id, U_folder, V_encode);
-        Swal.fire({
-          title: 'Deleted!',
-          text: 'Your video has been deleted.',
-          icon: 'success',
-          confirmButtonText: 'OK'
-        }).then(() => {
-          window.location.reload();
-        });
       }
     });
   }
@@ -96,20 +102,19 @@ const UserVideos = () => {
       name: 'Video',
       selector: row => row.V_pic,
       cell: (row) => (
-        <img height={120} width={160} style={{ borderRadius: "10px" }} src={`data:image/jpeg;base64, ${row.V_pic}`} alt={`${row.V_title} Picture`} />
+        <img height={120} width={160} style={{ borderRadius: "10px" }} src={`data:image/jpeg;base64, ${row.V_pic}`} alt={`${row.V_title}`} />
       ),
-      hide: Media.SM,
       hide: Media.MD
     },
     {
       name: 'Title',
       selector: row => row.V_title,
-      sortable: true,
       cell: (row) => <Link className="text-decoration-none text-white" to={`/watch?u=${row.U_folder}&v=${row.V_encode}`}>{row.V_title}</Link>
     },
     {
       name: 'Permit',
       selector: row => row.V_permit,
+      cell: (row) => (row.V_permit.toUpperCase()),
       sortable: true,
     },
     {

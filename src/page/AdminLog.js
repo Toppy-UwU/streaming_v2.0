@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react"
-import DataTable, { createTheme, Media } from "react-data-table-component";
+import DataTable, { createTheme } from "react-data-table-component";
 import AdminSidebar from "../components/AdminSidebar";
-import { getToken, getUser } from "../components/session"
-import { getAPI } from '../components/callAPI';
-import Swal from "sweetalert2";
 import '../config'
 import "../css/admin.css"
 
@@ -47,6 +44,7 @@ const AdminLog = () => {
         {
             name: 'UID',
             selector: row => row.U_ID,
+            sortable: true
         },
         {
             name: 'Action',

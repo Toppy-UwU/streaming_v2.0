@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { getToken } from "./session";
 import "./../config"
 import Swal from "sweetalert2";
@@ -32,11 +32,11 @@ const AddUserModal = () => {
 
     const handleAddUser = () => {
         const token = getToken();
-        if (!username || validator.isEmail(email) === false || validator.isStrongPassword(password) === false) {
-            if (!username) {
+        if (!username || !password || validator.isEmail(email) === false || validator.isStrongPassword(password) === false) {
+            if (!username || !password) {
                 Swal.fire({
                     icon: 'error',
-                    title: 'Please fill out username fields',
+                    title: 'Please fill out all fields',
                 });
                 return;
             } else if (validator.isEmail(email) === false) {
@@ -80,14 +80,19 @@ const AddUserModal = () => {
                         window.location.reload();
                     }
                 });
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Add User fail',
-                    text: 'check user data and try again!'
-                })
             }
-        }).catch(() => { });
+        }).catch((error) => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Add User failed',
+                text: 'An internal server error or Email is already on the server! Please try again!',
+                showConfirmButton: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.reload();
+                }
+            });
+        });
     }
     return (
         <div className="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModal" aria-hidden="true">

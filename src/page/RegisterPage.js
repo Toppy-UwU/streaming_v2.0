@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import './../css/login.css';
 import '../config';
+import validator from 'validator';
 
 const RegisterPage = () => {
   const ip = global.config.ip.ip;
@@ -24,11 +25,26 @@ const RegisterPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log(formData)
-    if (formData.username === '' || formData.email === '' || formData.password === '' || formData.con_password === '') {
-      Swal.fire({
-        title: 'Fill in all fields!',
-        icon: 'warning'
-      });
+    if ((formData.password !== formData.con_password) ||
+      (validator.isStrongPassword(formData.password) === false && validator.isStrongPassword(formData.con_password) === false) || validator.isEmail(formData.email) === false) {
+      if (formData.password !== formData.con_password) {
+        Swal.fire({
+          title: 'Password do not match!',
+          icon: 'warning'
+        });
+      } else if (validator.isStrongPassword(formData.password) === false && validator.isStrongPassword(formData.con_password) === false) {
+        Swal.fire({
+          title: 'Password is not strong password!',
+          icon: 'warning'
+        });
+      }
+      else if (validator.isEmail(formData.email) === false) {
+        Swal.fire({
+          title: 'Please use correctly email!',
+          icon: 'warning'
+        });
+      }
+
     } else if (formData.password === formData.con_password) {
       try {
         const response = await fetch(api, {
@@ -54,22 +70,18 @@ const RegisterPage = () => {
         } else {
           Swal.fire({
             title: 'Register Fail!',
+            html: 'Server error or <br>Email : ' + formData.email + '<br>is already on the server!',
             icon: 'error'
           });
         }
       } catch (error) {
         console.error("Error : ", error);
       }
-    } else {
-      Swal.fire({
-        title: 'Password do not match!!!',
-        icon: 'error'
-      });
     }
   }
 
   return (
-    <div className="container-fluid background-container py-3 h-100">
+    <div className="container-fluid background-container py-3">
       <div className="row d-flex justify-content-center align-items-center">
         <div className="col col-xl-8">
           <div className="card text-bg-dark">
@@ -105,6 +117,7 @@ const RegisterPage = () => {
                         className="form-control form-control-lg"
                         placeholder="Username"
                         onChange={handleChange}
+                        required
                       />
                       <label htmlFor="username">Username</label>
                     </div>
@@ -117,6 +130,7 @@ const RegisterPage = () => {
                         className="form-control form-control-lg"
                         placeholder="E-Mail"
                         onChange={handleChange}
+                        required
                       />
                       <label htmlFor="email">E-Mail</label>
                     </div>
@@ -129,20 +143,26 @@ const RegisterPage = () => {
                         className="form-control form-control-lg"
                         placeholder="Password"
                         onChange={handleChange}
+                        required
                       />
                       <label htmlFor="password">Password</label>
                     </div>
 
-                    <div className="form-floating mb-4">
+                    <div className="form-floating mb-3">
                       <input
                         type="password"
                         id="con_password"
                         name='con_password'
                         className="form-control form-control-lg"
                         placeholder="Confirm Password"
+                        aria-describedby='passwordHelpBlockRegis'
                         onChange={handleChange}
+                        required
                       />
                       <label htmlFor="con_password">Confirm Password</label>
+                      <div id="passwordHelpBlockRegis" className="form-text text-white py-1">
+                        <i className="bi bi-info-circle-fill"></i> Password must be more than 8 characters long, contain at least  1 upper and lower letters, numbers and special characters.
+                      </div>
                     </div>
 
                     <div className="pt-1 mb-4 px-0">
@@ -151,7 +171,7 @@ const RegisterPage = () => {
                       </button>
                     </div>
 
-                    <p className="mb-5 pb-lg-2 text-white">
+                    <p className="pb-lg-2 text-white">
                       Already have an account?{' '}
                       <Link to="/login" className="text-blue text-decoration-none">
                         &nbsp;Login

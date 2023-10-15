@@ -17,17 +17,17 @@ const UserListPage = () => {
     const [selectedRow, setSelectedRow] = useState([]);
     document.title = "Users | Administration";
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await getAPI('users');
-                setUsers(response);
-                setFilter(response);
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            }
-        };
+    const fetchData = async () => {
+        try {
+            const response = await getAPI('users');
+            setUsers(response);
+            setFilter(response);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    };
 
+    useEffect(() => {
         fetchData();
     }, []);
 
@@ -41,9 +41,9 @@ const UserListPage = () => {
         });
         setFilter(result);
     }, [search]);
-    
+
     const handleDelete = (U_id, U_folder) => {
-        const deleteApi = ip + '/delete/user';
+        const deleteApi = ip.ip + '/delete/user';
 
         const tmp = ({
             'U_ID': U_id,
@@ -84,7 +84,7 @@ const UserListPage = () => {
                     timer: 1500,
                     showConfirmButton: false,
                     didClose: () => {
-                        window.location.reload();
+                        fetchData();
                     }
                 })
             }

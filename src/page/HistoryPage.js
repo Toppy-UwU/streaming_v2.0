@@ -50,10 +50,12 @@ const HistoryPage = () => {
                     title: 'Deleted!',
                     text: 'Your history has been deleted.',
                     icon: 'success',
-                    confirmButtonText: 'OK'
-                }).then(() => {
-                    window.location.reload();
-                });
+                    showConfirmButton: false,
+                    timer: 2000,
+                    didClose: () => {
+                        window.location.reload();
+                    }
+                })
             }
         });
     }
@@ -95,7 +97,7 @@ const HistoryPage = () => {
                         <h2><i className="bi bi-clock-history"></i> Watch History</h2>
                         {histories.length > 0 && (
                             <div style={{ justifyContent: 'end' }}>
-                                <button type="button" class="btn btn-danger" onClick={handleBtn}><i class="bi bi-trash3"></i> <span className="spanSMHide">Clear</span></button>
+                                <button type="button" class="btn btn-danger" onClick={handleBtn}><i class="bi bi-trash3"></i> <span className="spanSMHide">Delete</span></button>
                             </div>
                         )}
                     </div>

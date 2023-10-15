@@ -4,6 +4,7 @@ import Sidebar from "../components/sidebar";
 import { getUser } from "../components/session";
 import DataTable, { createTheme, Media } from "react-data-table-component";
 import config from '../config'; // Make sure to import config properly
+import Swal from "sweetalert2";
 
 const VideoStatusPage = () => {
     document.title = "Uploading Status";
@@ -33,6 +34,33 @@ const VideoStatusPage = () => {
         return () => clearInterval(interval);
     }, [gatUploadApi]); // Add dependency to useEffect
 
+    const handleDeleteVideoDialog = (row) => {
+        Swal.fire({
+            title: 'Are you sure to delete?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Delete'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                handleDelete(row);
+            }
+        })
+    }
+
+    const handleDelete = (row) => {
+        Swal.fire({
+            title: "It work!",
+            icon: "success",
+            text: "Data = "+row,
+            showConfirmButton: false,
+            timer:2000,
+            didClose: () => {
+
+            }
+        })
+        // fetch({})
+    }
+
     const columns = [
         {
             name: 'Video',
@@ -55,11 +83,9 @@ const VideoStatusPage = () => {
             sortable: true,
         },
         {
-            name: 'Delete',
-            cell: (row) => (
-                <button type="button" className="btn btn-danger"><i className="bi bi-trash3-fill"></i></button>
-            )
-        },
+            name: 'Action',
+            cell: row => <button type="button" class="btn btn-danger" onClick={() => handleDeleteVideoDialog(row.V_title)}><i className="bi bi-trash3-fill"></i> <span className="spanSMHide">Delete</span></button>
+        }
     ]
 
     const tableHeaderStyle = {
@@ -124,46 +150,6 @@ const VideoStatusPage = () => {
                     </div>
 
                 </div>
-                {/* <div className="row d-flex justify-content-between align-items-center">
-                    <div style={{ flex: 1, marginRight: '20px' }}>
-                        <h3 className="text-white">Uploading Status</h3>
-                        {console.log(uploading)}
-                    </div>
-                </div>
-                <div className="table-responsive">
-                    <table class="table table-dark table-hover">
-                        <thead>
-                            <tr>
-                                <th scope="col">Video</th>
-                                <th scope="col">Title</th>
-                                <th scope="col">Encode</th>
-                                <th scope="col">Upload Status</th>
-                                <th scope="col">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {uploading.length > 0 ? (
-                                uploading.map((upload, index) => (
-                                    <tr key={index}>
-                                        <td> <img className="card-img-top" src={'data:image/jpeg;base64,' + upload.V_pic} style={{ borderRadius: '20px', maxHeight: '200px', maxWidth: '200px' }} alt={upload.V_title + ' thumbnail'} /></td>
-                                        <td>{upload.V_title}</td>
-                                        <td>{upload.V_encode}</td>
-                                        <td>
-                                            <div className="progress">
-                                                <ProgressBar value={upload.V_permit} />
-                                            </div>
-                                        </td>
-                                        <td><button type="button" class="btn btn-danger"><i class="bi bi-trash3"></i></button></td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colspan="5" className="text-center text-white">- No Video Upload Status! -</td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div> */}
             </Sidebar>
         </div>
     );

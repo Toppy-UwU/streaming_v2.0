@@ -36,6 +36,15 @@ const UpdateUserModal = (props) => {
 
     const handleUpdateUser = () => {
         const token = getToken();
+        if ((username === '' || email === '') || (username === '' && email === '')) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Please fill all fields!',
+                showConfirmButton: false,
+                timer: 1500
+            });
+            return;
+        }
         const data = {
             'U_id': u_data.U_id,
             'U_name': username,
@@ -104,7 +113,7 @@ const UpdateUserModal = (props) => {
                         </div>
                     </div>
                     <div className="modal-footer d-flex justify-content-center">
-                        <button type="button" className="btn btn-primary" onClick={handleUpdateUser}>Update</button>
+                        <button type="button" className="btn btn-primary" onClick={handleUpdateUser} data-bs-dismiss="modal">Update</button>
                         <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>

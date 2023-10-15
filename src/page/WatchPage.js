@@ -9,11 +9,11 @@ import VideoUpdateModal from '../components/videoUpdateModal';
 import { createHistory } from '../components/saveHistories';
 import '../config';
 import moment from 'moment';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import '../css/watch.css'
 import '../css/swal2theme.css'
 import Swal from 'sweetalert2';
-import config from '../config';
+import '../config';
 
 function formatTime(seconds) {
     const hours = Math.floor(seconds / 3600);
@@ -66,10 +66,10 @@ const WatchPage = () => {
     const video = param.get('v');
     var flag = true
     const c_user = getUser();
-    const ipw = global.config.ip.ipw;
     const ip = global.config.ip.ip;
+    const ipws = global.config.ip.ipws;
+    const navigate = useNavigate();
 
-    // const url = ipw + '/hls/upload/' + user + '/' + video + '/' + video + '.m3u8';
     const api = ip + '/get/video/info?v=' + video + '&u=' + c_user;
     let dynamicAPI = ''
 
@@ -105,7 +105,6 @@ const WatchPage = () => {
 
         }).then(response => response.json())
             .then(data => {
-                // console.log('url:', data.url);
                 setUrl(data.url)
             })
             .catch(() => { })
@@ -194,32 +193,6 @@ const WatchPage = () => {
             });
     }
 
-    // const handleDownloadBtn = (e) => {
-    //     const downloadAPI = ip + '/download?u=' + vidDetail.U_folder + '&v=' + vidDetail.V_encode
-    //     fetch(downloadAPI)
-    //         .then(response => {
-    //             console.log(response)
-    //             if (response.ok) {
-    //                 return response.blob();
-    //             }
-    //         })
-    //         .then(blob => {
-    //             const downloadUrl = URL.createObjectURL(blob);
-    //             const a = document.createElement('a');
-    //             a.href = downloadUrl;
-    //             a.download = vidDetail.V_title + '.mp4';
-    //             document.body.appendChild(a);
-    //             a.click();
-    //             document.body.removeChild(a);
-    //             return
-    //         }).then(result => {
-    //             deleteDownload();
-    //         })
-    //         .catch(e => {
-    //             console.error('Error:', e);
-    //         })
-    // }
-
     const deleteDownload = () => {
         fetch((ip + '/delete/download?u=' + vidDetail.U_folder + '&v=' + vidDetail.V_encode), {
             method: 'GET'
@@ -228,7 +201,7 @@ const WatchPage = () => {
 
 
     const handleShare = () => {
-        const value = ipw + "/watch?u=" + vidDetail.U_folder + "&v=" + vidDetail.V_encode;
+        const value = ipws + "/watch?u=" + vidDetail.U_folder + "&v=" + vidDetail.V_encode;
         Swal.fire({
             title: 'Share URL',
             text: value,
@@ -238,57 +211,16 @@ const WatchPage = () => {
             if (result.isConfirmed) {
                 navigator.clipboard.writeText(value)
                     .then(() => {
-                        Swal.fire('Copied!', 'URL has been copied to the clipboard.', 'success');
+                        Swal.fire({
+                            title: 'Copied!',
+                            icon: 'success',
+                            showConfirmButton: false,
+                            timer: 2000
+                        });
                     })
                     .catch((error) => {
                         console.error('Unable to copy: ', error);
                     });
-            }
-        });
-    }
-
-    const handleReport = () => {
-        Swal.fire({
-            title: 'Report Video',
-            input: 'select',
-            inputOptions: {
-                Legal: 'Legal issue',
-                Violent_replulsive: 'Violent or replulsive content',
-                Hateful: 'Hateful content',
-                Harmful: 'Harmful or dangerous acts',
-                Wrong_information: 'Wrong information',
-                Spam: 'Spam content',
-                Harassment_bullying: 'Harassment or bullying',
-                Other: 'Ohter..',
-            },
-            inputPlaceholder: 'Select the reason for reporting.',
-            showCancelButton: true,
-            confirmButtonText: 'Next',
-            preConfirm: (selectedOption) => {
-                if (!selectedOption) {
-                    Swal.showValidationMessage('Please select an option');
-                }
-                return selectedOption;
-            },
-        }).then((result) => {
-            if (result.isConfirmed && result.value) {
-                const selectedOption = result.value;
-                Swal.fire({
-                    title: 'Report Video',
-                    input: 'textarea',
-                    inputPlaceholder: 'Enter additional details...',
-                    inputAttributes: {
-                        'aria-label': 'Textarea',
-                    },
-                    showCancelButton: true,
-                    confirmButtonText: 'Submit',
-                }).then((result) => {
-                    const additionalDetails = result.value;
-                    if (result.isConfirmed) {
-                        Swal.fire('Reported!', 'Your report is completed!', 'success');
-                    }
-                    console.log(vidDetail.U_name + " has report " + vidDetail.V_title + " " + selectedOption + " with " + additionalDetails)
-                })
             }
         });
     }
@@ -303,7 +235,13 @@ const WatchPage = () => {
             if (result.isConfirmed) {
                 navigator.clipboard.writeText(url)
                     .then(() => {
-                        Swal.fire('Copied!', 'API has been copied to the clipboard.', 'success');
+                        Swal.fire({
+                            title: 'Copied!',
+                            text: 'API has been copied to the clipboard.',
+                            icon: 'success',
+                            showConfirmButton: false,
+                            timer: 2000
+                        });
                     })
                     .catch((error) => {
                         console.error('Unable to copy: ', error);
@@ -312,14 +250,54 @@ const WatchPage = () => {
         });
     }
 
-    const update = () => {
-        window.location.reload();
+    const handleDeleteVideoDialog = () => {
+        Swal.fire({
+            title: 'Are you sure to delete?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Delete'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                handleDelete();
+            }
+        })
+    }
+
+    const handleDelete = () => {
+        const tmp = {
+            'U_id': vidDetail.U_ID,
+            'U_folder': vidDetail.U_folder,
+            'V_encode': vidDetail.V_encode
+        }
+
+        fetch(ip + '/delete/video/user', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + getToken()
+            },
+            body: JSON.stringify(tmp)
+        })
+            .then(response => {
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: "Deleted!",
+                        showConfirmButton: false,
+                        timer: 2000,
+                        didClose: (
+                            navigate('/')
+                        )
+                    })
+                }
+            })
+            .catch((e) => { })
     }
 
     const handleDesc = () => {
         setshowDesc(!showDesc);
     };
-    // console.log(vidDetail)
+
     if (videos && vidDetail) {
         const f1 = checkVidPermit(vidDetail.U_ID)
         const f2 = isAdmin()
@@ -356,12 +334,9 @@ const WatchPage = () => {
                                             }
                                             {(f1 || f2) &&
                                                 <li>
-                                                    <button className="dropdown-item" type="button"><i className="bi bi-trash"></i> Delete</button>
+                                                    <button className="dropdown-item" type="button" onClick={handleDeleteVideoDialog}><i className="bi bi-trash"></i> Delete</button>
                                                 </li>
                                             }
-                                            <li>
-                                                <button className="dropdown-item" type="button" onClick={handleReport}><i className="bi bi-flag"></i> Report</button>
-                                            </li>
                                         </ul>
                                         <VideoUpdateModal id={vidDetail.U_ID} V_id={vidDetail.V_ID} desc={vidDetail.V_desc} title={vidDetail.V_title} permit={vidDetail.V_permit} path={vidDetail.U_folder} encode={vidDetail.V_encode} tags={vidDetail.tags} />
                                     </div>
@@ -406,7 +381,7 @@ const WatchPage = () => {
                                                 </div>
                                                 <div className='suggest-info'>
                                                     <h4>{video.V_title}</h4>
-                                                    <p>{video.U_name} <br /> {vidDetail.V_view} Views &bull; {formatTimeDifference(new Date(vidDetail.V_upload))}</p>
+                                                    <p>{video.U_name} <br /> {video.V_view} Views &bull; {formatTimeDifference(new Date(video.V_upload))}</p>
                                                 </div>
                                             </div>
                                         </a>

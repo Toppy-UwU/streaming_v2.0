@@ -67,8 +67,8 @@ const AdminTag = () => {
                 Swal.fire({
                     title: 'Delete completed!',
                     icon: 'success',
-                    showCancelButton: true,
-                    confirmButtonText: 'OK'
+                    showConfirmButton: false,
+                    timer: 2000
                 }).then((result) => {
                     fetchData();
                 })
@@ -85,6 +85,16 @@ const AdminTag = () => {
     };
 
     const handleEditTag = async (T_ID, T_Name) => {
+        if (T_Name === '') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Please fill tag fields',
+                showConfirmButton: false,
+                timer: 1500
+            });
+            return;
+        }
+
         try {
             const update_api = `${ip}/update/tag`;
             const token = getToken();
@@ -105,8 +115,8 @@ const AdminTag = () => {
                 Swal.fire({
                     title: 'Update completed!',
                     icon: 'success',
-                    showCancelButton: true,
-                    confirmButtonText: 'OK'
+                    showConfirmButton: false,
+                    timer: 2000
                 }).then((result) => {
                     fetchData();
                 })
@@ -161,7 +171,7 @@ const AdminTag = () => {
         if (!newTag) {
             Swal.fire({
                 icon: 'error',
-                title: 'Please fill Tag fields',
+                title: 'Please fill tag fields',
                 showConfirmButton: false,
                 timer: 1500
             });
@@ -186,8 +196,8 @@ const AdminTag = () => {
                 Swal.fire({
                     title: 'Add completed!',
                     icon: 'success',
-                    showCancelButton: true,
-                    confirmButtonText: 'OK'
+                    showConfirmButton: false,
+                    timer: 2000
                 }).then((result) => {
                     fetchData();
                 })

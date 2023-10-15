@@ -5,45 +5,42 @@ import AdminSidebar from "../components/AdminSidebar";
 import { getAPI } from '../components/callAPI';
 import DataTable, { createTheme, Media } from "react-data-table-component";
 import '../config'
-import VideoUpdateModal from "../components/videoUpdateModal";
 import { getToken } from "../components/session";
 import Swal from "sweetalert2";
 
 
 const VideosListPage = () => {
-    const [logs, setLogs] = useState([]);
+    const [video, setVideo] = useState([]);
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState([]);
-    const [selectedRow, setSelectedRow] = useState([]);
     document.title = "Users Videos | Administator";
     const ip = global.config.ip.ip;
 
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await getAPI('uploadLog');
-                console.log(response);
-                setLogs(response);
-                setFilter(response);
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            }
-        };
+    const fetchData = async () => {
+        try {
+            const response = await getAPI('uploadLog');
+            console.log(response);
+            setVideo(response);
+            setFilter(response);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    };
 
+    useEffect(() => {
         fetchData();
     }, []);
 
     useEffect(() => {
-        const result = logs.filter((item) => {
-            return item.V_title.toLowerCase().match(search.toLocaleLowerCase());
+        const result = video.filter((item) => {
+            const lowerCaseSearch = search.toLowerCase();
+            return item.V_permit.toString().includes(lowerCaseSearch) ||
+                item.V_title.toLowerCase().includes(lowerCaseSearch) ||
+                item.U_name.toLowerCase().includes(lowerCaseSearch);
         });
         setFilter(result);
     }, [search]);
-
-    const handleSettingClick = (row) => {
-        setSelectedRow(row);
-    }
 
     const handleDeleteVideoDialog = (row) => {
         Swal.fire({
@@ -59,7 +56,7 @@ const VideosListPage = () => {
     }
 
     const handleDelete = (row) => {
-        
+
         const tmp = {
             'U_id': row.U_ID,
             'U_folder': row.U_folder,
@@ -67,7 +64,7 @@ const VideosListPage = () => {
         }
         const token = getToken();
 
-        fetch( ip + '/delete/video/user', {
+        fetch(ip + '/delete/video/user', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -77,22 +74,29 @@ const VideosListPage = () => {
         })
             .then(response => {
                 if (response.ok) {
-                    window.location.href = '/admin/videos'
+                    Swal.fire({
+                        icon: 'success',
+                        title: "Deleted!",
+                        showConfirmButton: false,
+                        timer: 2000,
+                        didClose: (
+                            fetchData()
+                        )
+                    })
                 }
             })
-            .catch((e) => {})
+            .catch((e) => { })
     }
 
     const columns = [
         {
             name: 'Videos',
-            selector: row =>  <Link className="dropdown-item" to={'/watch?u=' + row.U_folder + '&v=' + row.V_encode}> <img height={120} width={160} src={`data:image/jpeg;base64, ${row.V_pic}`} alt={row.V_title+" Picture"}/> </Link>,
+            selector: row => <Link className="dropdown-item" to={'/watch?u=' + row.U_folder + '&v=' + row.V_encode}> <img height={120} width={160} src={`data:image/jpeg;base64, ${row.V_pic}`} alt={row.V_title + " Picture"} /> </Link>,
             hide: Media.SM
         },
         {
             name: 'Title',
             selector: row => row.V_title,
-            sortable: true
         },
         {
             name: 'Owner',
@@ -102,6 +106,7 @@ const VideosListPage = () => {
         {
             name: 'Permit',
             selector: row => row.V_permit,
+            cell: (row) => (row.V_permit.toUpperCase()),
             sortable: true
         },
         {
@@ -129,11 +134,6 @@ const VideosListPage = () => {
                                 <span><i className="bi bi-play-btn"></i> View</span>
                             </Link>
                         </li>
-                        {/* <li>
-                            <Link className="dropdown-item" to="#" data-bs-toggle="modal" data-bs-target="#updateVideoModal" onClick={() => handleSettingClick(row)}>
-                                <span><i className="bi bi-gear"></i> Setting</span>
-                            </Link>
-                        </li> */}
                         <li>
                             <Link className="dropdown-item" to="#" onClick={() => handleDeleteVideoDialog(row)}>
                                 <span><i className="bi bi-trash3"></i> Delete</span>
@@ -181,7 +181,7 @@ const VideosListPage = () => {
         },
     }, 'dark');
 
-    if (logs !== null) {
+    if (video !== null) {
         return (
             <AdminSidebar>
                 <div className="container-fluid">

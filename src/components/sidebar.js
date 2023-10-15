@@ -138,7 +138,7 @@ const Sidebar = ({ children }) => {
               <div>
                 <button type="button" className="bar-button hideBtn" onClick={toggleSearchBox}><span><i className="bi bi-search"></i></span></button>
                 <Link to="/"><button type="button" className="bar-button add"><span><i className="bi bi-house"></i></span></button></Link>
-                <Link to="/login"><button type="button" className="bar-button"><span><i className="bi bi-box-arrow-in-right"></i></span></button></Link>
+                <Link to="/login"><button type="button" className="bar-button"><i className="bi bi-box-arrow-in-right"></i><span className='spanSMHide'> Login</span></button></Link>
               </div>
             )}
           </div>
@@ -200,13 +200,9 @@ const Sidebar = ({ children }) => {
                       <Link className="nav-link active" to="/stats"><i className="bi bi-graph-up"></i><span> Statistics</span></Link>
                     </li>
 
-                    {/* <li className="nav-item">
-                      <Link className="nav-link active" to="/report"><i className="bi bi-flag"></i><span> Report</span></Link>
-                    </li>
-
                     <li className="nav-item">
-                      <Link className="nav-link active" to="/api"><i className="bi bi-link"></i><span> Videos API</span></Link>
-                    </li> */}
+                      <Link className="nav-link active" to="/api"><i className="bi bi-folder-symlink"></i><span> Videos URL</span></Link>
+                    </li>
 
                     <li className="nav-item">
                       <Link className="nav-link active" to="/setting"><i className="bi bi-person-fill-gear"></i><span> Setting</span></Link>

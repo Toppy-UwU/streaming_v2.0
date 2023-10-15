@@ -23,15 +23,13 @@ import VideoStatusPage from './page/PageStatus';
 import UserListPage from './page/userslist';
 import VideosListPage from './page/videoslist';
 
-import { getlocalData, isSessionSet, setlocalData } from './components/session';
-import { useEffect, useRef } from 'react';
-import AdminReport from './page/AdminReport';
+import {isSessionSet} from './components/session';
+import AdminAPI from './page/AdminAPI';
 import AdminTag from './page/AdminTag';
 import AdminLog from './page/AdminLog';
 import Monitor from './page/Monitor';
 import UsersStorage from './page/UsersStorage';
 import SettingPage from './page/settingPage';
-import AccountSettingPage from './page/AccountSetting';
 import UserLog from './page/UserLogPage';
 import UserReport from './page/UserReportPage';
 import UserAPI from './page/UserAPI';
@@ -59,7 +57,6 @@ function App() {
 					<Route path='/token-expired' element={<TokenExpirePage />} />
 					<Route path='/history' element={<HistoryPage />} />
 					<Route path='/setting' element={<SettingPage/>} />
-					<Route path='/setting-account' element={<AccountSettingPage />} />
 					<Route path='/tag' element={<TagPage />} />
 					<Route path='/search' element={<SearchPage />} />
 					<Route path='/videos' element={<UserVideos/>} />
@@ -70,7 +67,7 @@ function App() {
 					<Route path='/api' element={<UserAPI/>} />
 					<Route path='/admin/users' element={<UserListPage/>} />
 					<Route path='/admin/videos' element={<VideosListPage/>} />
-					<Route path='/admin/report' element={<AdminReport/>} />
+					<Route path='/admin/api' element={<AdminAPI/>} />
 					<Route path='/admin/tag' element={<AdminTag/>} />
 					<Route path='/admin/uploadLog' element={<AdminVideoLog/>} />
 					<Route path='/admin/userLog' element={<AdminLog/>} />

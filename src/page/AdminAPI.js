@@ -1,17 +1,18 @@
-import React, { useState, useEffect } from "react";
-import Sidebar from "../components/sidebar";
-import DataTable, { createTheme, Media } from "react-data-table-component";
-import config from '../config';
-import { getToken, getlocalData } from "../components/session";
+import { useEffect, useState } from "react"
+import AdminSidebar from "../components/AdminSidebar";
 import Swal from "sweetalert2";
+import DataTable, { createTheme, Media } from "react-data-table-component";
+import { getToken } from "../components/session";
+import '../config'
 import moment from "moment";
 
-const UserAPI = () => {
-    document.title = "Videos URL";
+const AdminAPI = () => {
+    document.title = "Videos URL | Administration";
     const [api, setAPI] = useState([]);
-    const ip = config.ip.ip;
-    var session = getlocalData('session')
-    const apiUrl = ip + '/get/url_token/user?u=' + session.U_id
+    const [search, setSearch] = useState('');
+    const [filter, setFilter] = useState([]);
+    const ip = global.config.ip.ip;
+    const apiUrl = ip + '/get/url_token';
 
     const fetchData = async () => {
         try {
@@ -25,12 +26,22 @@ const UserAPI = () => {
             if (!response.ok) throw new Error("HTTP error!");
             const data = await response.json()
             setAPI(data)
+            setFilter(data)
         } catch { }
     }
 
     useEffect(() => {
         fetchData()
     }, []);
+
+    useEffect(() => {
+        const result = api.filter((item) => {
+            const lowerCaseSearch = search.toLowerCase();
+            return item.V_ID.toString().includes(lowerCaseSearch) ||
+                item.V_encode.toLowerCase().includes(lowerCaseSearch);
+        });
+        setFilter(result);
+    }, [search]);
 
     const copyToClipboard = (text) => {
         Swal.fire({
@@ -98,6 +109,9 @@ const UserAPI = () => {
                 fontSize: "16px",
             }
         },
+        background: {
+            default: "#222E3C"
+        }
     }
 
     createTheme('solarized', {
@@ -122,11 +136,10 @@ const UserAPI = () => {
     }, 'dark');
 
     return (
-        <Sidebar>
-            <div className="container-fluid">
-                <br />
+        <AdminSidebar>
+            <div className="container-fluid content">
                 <div className='PageTitle'>
-                    <h2><i className="bi bi-folder-symlink"></i> Videos URL</h2>
+                    <h2><i className="bi bi-folder-symlink-fill"></i> Videos URL</h2>
                 </div>
 
                 <div className='user-table'>
@@ -135,18 +148,28 @@ const UserAPI = () => {
                             <DataTable
                                 customStyles={tableHeaderStyle}
                                 columns={columns}
-                                data={api}
+                                data={filter}
                                 pagination
                                 fixedHeader
                                 highlightOnHover
                                 theme="solarized"
+                                subHeader
+                                subHeaderComponent={
+                                    <input type="text"
+                                        className="w-25 form-control"
+                                        placeholder="Search..."
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                    />
+                                }
                             ></DataTable>
                         </div>
                     </div>
                     <br />
                 </div>
             </div>
-        </Sidebar>
+        </AdminSidebar>
     )
 }
-export default UserAPI;
+
+export default AdminAPI;

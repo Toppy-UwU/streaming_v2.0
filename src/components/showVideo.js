@@ -59,29 +59,10 @@ function ShowVideos(props) {
                                 </Link>
                                 <div className='vidInfo'>
                                     <div className='row'>
-                                        <div className='col-10'>
+                                        <div className='col-12'>
                                             <Link to={'/watch?u=' + video.U_folder + '&v=' + video.V_encode} className='LinkStyle'>
                                                 <h6>{video.V_title}</h6>
                                             </Link>
-                                        </div>
-                                        <div className='col-1 justify-content-end'>
-                                            <i className="bi bi-three-dots-vertical" data-bs-toggle="dropdown"></i>
-                                            <ul className="dropdown-menu dropdown-menu-dark">
-                                                <li><button className="dropdown-item" type="button"><i className="bi bi-share"></i> Share</button></li>
-                                                <li><button className="dropdown-item" type="button"><i className="bi bi-download"></i> Download</button></li>
-                                                <li>
-                                                    <button className="dropdown-item" type="button"><i className="bi bi-link"></i> Get API</button>
-                                                </li>
-                                                <li>
-                                                    <button className="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#UpdateVideoModal"><i className="bi bi-gear"></i> Setting</button>
-                                                </li>
-                                                <li>
-                                                    <button className="dropdown-item" type="button"><i className="bi bi-trash"></i> Delete</button>
-                                                </li>
-                                                <li>
-                                                    <button className="dropdown-item" type="button"><i className="bi bi-flag"></i> Report</button>
-                                                </li>
-                                            </ul>
                                         </div>
                                     </div>
                                     <div className='UserVid'>

@@ -74,7 +74,6 @@ const AdminSidebar = ({ children }) => {
       window.location.href = '/token-expired';
     } else {
       var session = getlocalData('session');
-      var isLoggedIn = getlocalData('isLoggedIn');
     }
   }
 
@@ -145,7 +144,7 @@ const AdminSidebar = ({ children }) => {
                 </li>
 
                 <li className="nav-item">
-                  <Link className="nav-link active" to="/admin/report"><i className="bi bi-flag-fill"></i><span> Dynamic URL</span></Link>
+                  <Link className="nav-link active" to="/admin/api"><i className="bi bi-folder-symlink-fill"></i><span> Videos URL</span></Link>
                 </li>
 
                 <li className="nav-item">
@@ -164,10 +163,6 @@ const AdminSidebar = ({ children }) => {
 
                 <li className="nav-item">
                   <Link className="nav-link active" to="/admin/monitor"><i className="bi bi-hdd-stack-fill"></i><span> Server Monitor</span></Link>
-                </li>
-
-                <li className="nav-item">
-                  <Link className="nav-link active" to="/admin/storage"><i className="bi bi-sd-card-fill"></i><span> Storage</span></Link>
                 </li>
               </ul>
             </div>

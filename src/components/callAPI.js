@@ -7,7 +7,6 @@ const getServerAPI = ip+'/server_resource';
 const getVideosPublic = ip+'/getVideos/public';
 const getUploadLog = ip+'/get/uploadLog';
 const getTag = ip+'/get/tags';
-const getOwnVids = ip+'/get/tags';
 
 // post API
 

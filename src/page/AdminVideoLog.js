@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react"
-import DataTable, { createTheme, Media } from "react-data-table-component";
+import DataTable, { createTheme} from "react-data-table-component";
 import AdminSidebar from "../components/AdminSidebar";
-import { getToken, getUser } from "../components/session"
 import { getAPI } from '../components/callAPI';
-import Swal from "sweetalert2";
 import '../config'
 import "../css/admin.css"
 
@@ -11,7 +9,7 @@ const AdminVideoLog = () => {
     const [logs, setLogs] = useState([]);
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState([]);
-    document.title = "Logs | Administator";
+    document.title = "Upload Logs | Administator";
 
     useEffect(() => {
         const fetchData = async () => {
@@ -29,20 +27,23 @@ const AdminVideoLog = () => {
 
     useEffect(() => {
         const result = logs.filter((item) => {
-            return item.V_title.toLowerCase().match(search.toLocaleLowerCase());
+            console.log(item)
+            const lowerCaseSearch = search.toLowerCase();
+            return item.U_name.toLowerCase().includes(lowerCaseSearch) ||
+                item.V_title.toLowerCase().includes(lowerCaseSearch);
         });
         setFilter(result);
+        // eslint-disable-next-line
     }, [search]);
 
     const columns = [
         {
             name: 'Videos',
-            selector: row => <img height={120} width={160} src={`data:image/jpeg;base64, ${row.V_pic}`} />,
+            selector: row => <img height={120} width={160} src={`data:image/jpeg;base64, ${row.V_pic}`} alt={row.V_title+" Cover"}/>,
         },
         {
             name: 'Title',
             selector: row => row.V_title,
-            sortable: true
         },
         {
             name: 'Owner',

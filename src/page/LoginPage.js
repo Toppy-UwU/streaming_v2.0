@@ -12,6 +12,7 @@ const LoginPage = () => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPass, setShowPass] = useState(false);
   document.title = "Login";
   // login API
   const api = ip + '/login';
@@ -23,6 +24,10 @@ const LoginPage = () => {
   const handlePasswordChange = (e) => {
     setPassword(e.target.value);
   };
+
+  const handleShowPass = () => {
+    setShowPass(!showPass);
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -101,7 +106,7 @@ const LoginPage = () => {
   }
 
   return (
-    <div className="container-fluid background-container py-3 h-100">
+    <div className="container-fluid background-container py-3">
       <div className="row d-flex justify-content-center align-items-center">
         <div className="col col-xl-8">
           <div className="card text-bg-dark">
@@ -126,25 +131,26 @@ const LoginPage = () => {
                     <h5 className="text-white fw-normal mb-3 pb-3">Login to your account</h5>
 
                     <div className="form-floating mb-4">
-                      <input type="email" id="emailInput" className="form-control form-control-lg" placeholder="E-Mail" onChange={handleEmailChange} />
+                      <input type="email" id="emailInput" className="form-control form-control-lg" placeholder="E-Mail" onChange={handleEmailChange} required />
                       <label for="emailInput">E-Mail</label>
                     </div>
 
                     <div className="form-floating mb-4">
-                      <input type="password" id="passwordInput" className="form-control form-control-lg" placeholder="Password" onChange={handlePasswordChange} required/>
+                      <input type={showPass? 'text':'password'} id="passwordInput" className="form-control form-control-lg" placeholder="Password" onChange={handlePasswordChange} required />
                       <label for="passwordInput">Password</label>
                     </div>
 
-                    {/* <div className="form-outline mb-1">
-                      <input type="checkbox" className="form-check-input" id="checkBox" />
-                      <label className="form-check-label" id="RemMe" htmlFor="chackBox"><span className='text-white'>&nbsp;Remember Me</span></label>
-                    </div>
-
-                    <hr className='text-secondary d-md-block' /> */}
-
                     <div className="form-outline mb-4">
-                      <input type="checkbox" className="form-check-input" id="checkBox" />
-                      <label className="form-check-label" id="RemMe" htmlFor="chackBox"><span className='text-white'>&nbsp;Remember Me</span></label>
+                      <div className='d-flex justify-content-between'>
+                        <div className='Remember'>
+                          <input type="checkbox" className="form-check-input" id="checkBox" />
+                          <label className="form-check-label" id="RemMe" htmlFor="chackBox"><span className='text-white'>&nbsp;Remember Me</span></label>
+                        </div>
+                        <div className="ShowPassbox">
+                          <i className={showPass? "bi bi-eye-slash-fill text-white":"bi bi-eye-fill text-white"} onClick={handleShowPass}></i>
+                          <label className="form-check-label" id="showPassLogin" htmlFor="chackBox" onClick={handleShowPass}><span className='text-white'>&nbsp;Show Password</span></label>
+                        </div>
+                      </div>
                     </div>
 
                     <div className="pt-1 mb-4 px-0">

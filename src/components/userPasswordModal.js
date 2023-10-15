@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { getToken, getlocalData } from "./session";
 import Swal from "sweetalert2";
 import { ip } from "../config";
+import validator from "validator";
 
 const UpdatePasswordModal = () => {
     const [oldPass, setOldPass] = useState('');
@@ -21,6 +22,24 @@ const UpdatePasswordModal = () => {
     };
 
     const handleReset = () => {
+        if (oldPass === "" || newPass === "" || confirmNewPass === "") {
+            Swal.fire({
+                icon: 'error',
+                title: 'Please fill all fields',
+                showConfirmButton: false,
+                timer: 1500
+            });
+            return;
+        } else if (validator.isStrongPassword(newPass) === false) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Please use strong password format!',
+                showConfirmButton: false,
+                timer: 1500
+            });
+            return;
+        }
+
         if (newPass === confirmNewPass) {
             const session = getlocalData('session');
             const data = {
@@ -36,8 +55,8 @@ const UpdatePasswordModal = () => {
                 showConfirmButton: true,
                 showCancelButton: true,
             }).then((result) => {
-                if(result.isConfirmed) {
-                    fetch( ip.ip + '/password/reset', {
+                if (result.isConfirmed) {
+                    fetch(ip.ip + '/password/reset', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -45,7 +64,7 @@ const UpdatePasswordModal = () => {
                         },
                         body: JSON.stringify(data)
                     }).then(response => {
-                        if(response.ok){
+                        if (response.ok) {
                             Swal.fire({
                                 title: 'Password changed',
                                 icon: 'success',
@@ -53,10 +72,10 @@ const UpdatePasswordModal = () => {
                             })
                             window.location.reload();
                         }
-                    }).catch(() => {})
+                    }).catch(() => { })
                 }
             })
-            
+
         } else {
             Swal.fire({
                 title: 'New password doesn\'t match',

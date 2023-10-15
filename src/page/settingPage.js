@@ -18,12 +18,11 @@ const SettingPage = () => {
             window.location.href = '/token-expired';
         } else {
             var session = getlocalData('session');
-            var isLoggedIn = getlocalData('isLoggedIn');
         }
     }
 
     const handleDelete = (U_id, U_folder) => {
-        const deleteApi = ip + '/delete/user';
+        const deleteApi = ip.ip + '/delete/user';
 
         const tmp = ({
             'U_ID': U_id,
@@ -31,7 +30,7 @@ const SettingPage = () => {
         })
 
         Swal.fire({
-            title: 'Confirm to delete this account',
+            title: 'Confirm to delete account?',
             icon: 'question',
             confirmButtonText: 'Delete',
             showCancelButton: true,
@@ -61,18 +60,16 @@ const SettingPage = () => {
                 Swal.fire({
                     title: 'Deleted!',
                     icon: 'success',
-                    timer: 500,
+                    timer: 2000,
                     showConfirmButton: false,
                     didClose: () => {
                         localStorage.clear();
-                        window.location.href = '/login';
+                        window.location.href = '/';
                     }
                 })
             }
         })
     }
-
-    // console.log(session)
 
     return (
         <Sidebar>
@@ -109,13 +106,6 @@ const SettingPage = () => {
                     <div className="card">
                         <div className="card-body">
                             <div className="row">
-                                {/* <Link to="#" className="text-decoration-none" data-bs-toggle="modal" data-bs-target="#UpdateUserModal">
-                                    <div className="col-12">
-                                        <h4><i className="bi bi-person-fill-gear"></i> Account</h4>
-                                        <p>Manage your account information</p>
-                                    </div>
-                                </Link>
-                                <hr className='text-white' /> */}
                                 <Link to="#" className="text-decoration-none" data-bs-toggle="modal" data-bs-target="#UpdatePasswordModal">
                                     <div className="col-12">
                                         <h4><i className="bi bi-lock-fill"></i> Password</h4>

@@ -1,4 +1,3 @@
-import { isSessionSet } from "./session"
 import '../config';
 
 const ip = global.config.ip.ip;

@@ -15,7 +15,6 @@ const VideoUpdateModal = (props) => {
     const ip = global.config.ip.ip;
 
     const updateApi = ip + '/update/video/user';
-    const deleteApi = ip + '/delete/video/user';
 
     useEffect(() => {
         getAPI('tags')
@@ -27,6 +26,16 @@ const VideoUpdateModal = (props) => {
     }, [])
 
     const handleSubmit = () => {
+        if (title === '') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Please fill title fields',
+                showConfirmButton: false,
+                timer: 1500,
+            });
+            return;
+        }
+
         const tmp = ({
             'V_id': props.V_id,
             'U_id': props.id,
@@ -117,32 +126,6 @@ const VideoUpdateModal = (props) => {
         }
     };
 
-    const handleDelete = () => {
-        const tmp = {
-            'U_id': props.id,
-            'U_folder': props.path,
-            'V_encode': props.encode
-        }
-        const token = getToken();
-
-        fetch(deleteApi, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-            },
-            body: JSON.stringify(tmp)
-        })
-            .then(response => {
-                if (response.ok) {
-                    window.location.href = '/'
-                }
-            })
-            .catch((e) => {
-
-            })
-    }
-
     return (
         <div className="modal fade" id="UpdateVideoModal" tabindex="-1" aria-labelledby="UpdateVideoModal" aria-hidden="true">
             <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
@@ -176,9 +159,9 @@ const VideoUpdateModal = (props) => {
                                 <label>Tag</label>
                                 <h6>
                                     <div className="row">
-                                        {vidTags.map((tag, index) => (
+                                        {vidTags && vidTags.map((tag, index) => (
                                             <div className="col-auto" key={index}>
-                                                <div className="" style={{ width: 'fit-content', backgroundColor: 'lightgray', borderRadius: '10px', marginTop: "1rem" }}>
+                                                <div className="" style={{ width: 'fit-content', backgroundColor: 'white', borderRadius: '10px', marginTop: "1rem" }}>
                                                     <div style={{ color: 'black' }}>
                                                         &nbsp;{tag.T_name}
                                                         <button onClick={() => removeTag(tag)} className="btn">x</button>
@@ -207,7 +190,7 @@ const VideoUpdateModal = (props) => {
                         </div>
                     </div>
                     <div className="modal-footer d-flex justify-content-center">
-                        <button type="button" className="btn btn-primary" onClick={handleSubmit} disabled={flag}>Save</button>
+                        <button type="button" className="btn btn-primary" onClick={handleSubmit} disabled={flag} >Save</button>
                         <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
