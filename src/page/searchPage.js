@@ -81,7 +81,6 @@ const SearchPage = () => {
                                             <Link to={"/profile?profile=" + user.U_id} className="searchBtn"><button type="button" class="btn btn-secondary searchBtn"><i className="bi bi-person-fill"></i> <span> View Profile</span></button></Link>
                                         </div>
                                     ))}
-                                    {console.log(users)}
                                     <hr className='text-secondary d-md-block' />
                                 </>
                             )}
@@ -103,15 +102,21 @@ const SearchPage = () => {
                         </>
                     )}
 
-                    {users.length <= 0 && videos.length <= 0 && (
+                    {loading1 === false && loading2 === false && (
                         <>
-                            <div className='notfound-Search'>
-                                <i class="bi bi-exclamation-triangle"></i>
-                                <p>Your search <b>" {search} "</b> was not found.</p>
-                                <Link to="/"><button type="button" class="btn btn-outline-primary">Back to Home</button></Link>
-                            </div>
+                            {users.length <= 0 && videos.length <= 0 && (
+                                <>
+                                    <div className={setLoading1 === true || setLoading2 === true ? 'notfound-Search d-none' : 'notfound-Search'}>
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        <p>Your search <b>" {search} "</b> was not found.</p>
+                                        <Link to="/"><button type="button" class="btn btn-outline-primary">Back to Home</button></Link>
+                                    </div>
+                                </>
+                            )}
                         </>
-                    )}
+                    )
+                    }
+
                 </div>
             </Sidebar>
         </div>

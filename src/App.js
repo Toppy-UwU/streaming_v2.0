@@ -6,7 +6,6 @@ import 'react-bootstrap'
 
 
 import Home from "./page/Home"
-import Contact from "./page/Contact"
 import LoginPage from "./page/LoginPage"
 import RegisterPage from "./page/RegisterPage" 
 import ProfilePage from './page/profilePage';
@@ -42,7 +41,6 @@ function App() {
 		return (
 			<Router>
 				<Routes>
-					<Route path="/contact" element={<Contact />} />
 					
 					{/* login/register page */}
 					<Route path='/login' element={<LoginPage />} />

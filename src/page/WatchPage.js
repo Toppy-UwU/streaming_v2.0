@@ -381,7 +381,7 @@ const WatchPage = () => {
                                                 </div>
                                                 <div className='suggest-info'>
                                                     <h4>{video.V_title}</h4>
-                                                    <p>{video.U_name} <br /> {video.V_view} Views &bull; {formatTimeDifference(new Date(video.V_upload))}</p>
+                                                    <p>{video.U_name} <br /> {video.V_view} Views &bull; {moment.utc(video.V_upload).format("DD MMM YYYY : HH:mm")}</p>
                                                 </div>
                                             </div>
                                         </a>

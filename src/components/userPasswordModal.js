@@ -104,9 +104,12 @@ const UpdatePasswordModal = () => {
                                 <input type="password" className="form-control" placeholder="New Password" value={newPass} onChange={handleNewPassChange} required />
                                 <label htmlFor="floatingInput">New Password</label>
                             </div>
-                            <div className="form-floating mb-4">
-                                <input type="password" className="form-control" placeholder="Confirm New Password" value={confirmNewPass} onChange={handleConfirmNewPassChange} required />
+                            <div className="form-floating mb-2">
+                                <input type="password" className="form-control" placeholder="Confirm New Password" value={confirmNewPass} onChange={handleConfirmNewPassChange} required aria-describedby="passwordHelpBlock"/>
                                 <label htmlFor="floatingInput">Confirm New Password</label>
+                                <div id="passwordHelpBlock" class="form-text">
+                                <i className="bi bi-info-circle-fill"></i> Password must be 8-20 characters long, contain at least  1 upper and lower letters, numbers and special characters.
+                                </div>
                             </div>
                         </div>
                     </div>

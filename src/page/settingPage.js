@@ -92,7 +92,7 @@ const SettingPage = () => {
                                     <h4 className="card-title">{session.username}</h4>
                                     <p>{session.email}</p>
                                     <p>Type : {session.U_type}</p>
-                                    <p>{session.vid} Videos | Storage {session.U_storage} MB</p>
+                                    <p>{session.vid} Videos | Storage {session.U_storage >= 1024 ? `${(session.U_storage / 1024).toFixed(2)} GB`: `${session.U_storage} MB`}</p>
                                 </div>
                                 <div className="col-3 d-flex justify-content-center align-items-center">
                                     <Link to={`/profile?profile=${session.U_id}`}><button type="button" class="btn btn-success"><i className="bi bi-person-fill"></i> <span class="sr-only">Profile</span></button></Link>

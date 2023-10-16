@@ -15,14 +15,11 @@ const ProfilePage = () => {
   const ip = global.config.ip.ip;
 
   const getAPI = ip + '/getUser/id?u=' + U_id;
-
   const [user, setUser] = useState(null);
-
   let [currentComp, setCurrentComp] = useState('public');
-
   const [chk, setChk] = useState(false);
-
   const session = isSessionSet('token') ? getlocalData('session') : { U_id: null };
+  const [chkUser, setChkUser] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -31,6 +28,7 @@ const ProfilePage = () => {
 
         if (!response.ok) {
           setChk(true);
+          console.log("test err 500")
           throw new Error(`Request failed with status: ${response.status}`);
         }
 
@@ -38,6 +36,7 @@ const ProfilePage = () => {
         setUser(data);
       } catch (error) {
         console.error('Error:', error);
+        setChkUser(true);
       }
     };
 
@@ -52,8 +51,8 @@ const ProfilePage = () => {
 
 
   if (user === null) {
-    console.log(chk);
-    if (chk) {
+    if (chkUser === true) {
+      document.title = 'Not Found!';
       return (
         <Sidebar>
           <div className='notfound-vid'>
@@ -74,7 +73,6 @@ const ProfilePage = () => {
     }
   }
 
-  console.log(user);
   if (user || chk) {
 
     const buttonHandler = (btnId) => {
@@ -88,7 +86,7 @@ const ProfilePage = () => {
             <img src={`data:image/jpeg;base64, ${user.U_banner}`} alt="cover" className="cover-photo" />
             <img src={`data:image/jpeg;base64, ${user.U_pro_pic}`} alt="profile" className="profile-photo" />
             <h2 className="user-details">{user.U_name}</h2>
-            <p className="user-details">{user.U_mail} | {user.U_vid} Videos</p>
+            <p className="user-details"><i className="bi bi-envelope-at-fill"></i> : {user.U_mail} <br /> <i className="bi bi-play-btn-fill"></i> : {user.U_vid} Videos | <i className="bi bi-hdd-stack-fill"></i> : {user.U_storage >= 1024 ? `${(user.U_storage / 1024).toFixed(2)} GB`: `${user.U_storage} MB`} Used</p>
 
             {session.U_id === user.U_ID && (
               <button type="button" className="setting-button" data-bs-toggle="modal" data-bs-target="#UpdateUserModal">

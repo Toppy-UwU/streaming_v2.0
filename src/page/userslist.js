@@ -137,7 +137,8 @@ const UserListPage = () => {
         },
         {
             name: 'Storage',
-            selector: row => row.U_storage + ' MB',
+            selector: row => row.U_storage,
+            cell: (row) => (row.U_storage >= 1025 ? `${(row.U_storage / 1024).toFixed(2)} GB` : `${row.U_storage} MB`),
             sortable: true,
             hide: Media.SM
         },

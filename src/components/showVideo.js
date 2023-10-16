@@ -1,5 +1,6 @@
 import '../css/video.css'
 import { Link } from 'react-router-dom';
+import moment from 'moment';
 
 function formatTimeDifference(pastTime) {
     const currentTime = new Date();
@@ -76,7 +77,7 @@ function ShowVideos(props) {
                                         <div className='row'>
                                             <div className='col-12'>
                                                 <Link to={'/watch?u=' + video.U_folder + '&v=' + video.V_encode} className='LinkStyle'>
-                                                    <h6>{video.V_view} views • {formatTimeDifference(new Date(video.V_upload))}</h6>
+                                                    <h6>{video.V_view} views • {moment.utc(video.V_upload).format("DD MMM YYYY : HH:mm:ss")}</h6>
                                                 </Link>
                                             </div>
                                         </div>

@@ -71,11 +71,14 @@ const Sidebar = ({ children }) => {
         }).catch(error => { });
         Swal.fire({
           title: 'Logout Completed!',
-          icon: 'success'
-        }).then(() => {
-          localStorage.clear();
-          window.location.href = '/'
-        });
+          icon: 'success',
+          showConfirmButton: false,
+          timer: 2000,
+          didClose: () => {
+            localStorage.clear();
+            window.location.href = '/'
+          }
+        })
       }
     })
   }
@@ -100,7 +103,7 @@ const Sidebar = ({ children }) => {
               <i id="navbtn" className="bi bi-list" aria-hidden="true"></i>
             </Link>
           </div>
-          <Link to="/" className='link'><div className='title ml-auto' style={{ display: searchBox ? "none" : "" }}>CS <span>FLIX</span></div></Link>
+          <Link to="/" className='link'><div className='title ml-auto' style={{ display: searchBox ? "none" : "" }}>CS <span>MSU</span></div></Link>
           <form className='searchBox' style={{ display: searchBox ? "flex" : "", width: searchBox ? "calc(90% - 10%)" : "" }} onSubmit={Search}>
             <input type='text' placeholder='Search..' defaultValue={''} onChange={handleSearch} />
             <button onClick={Search} className='searchbtn'><i className="bi bi-search"></i></button>
@@ -115,23 +118,23 @@ const Sidebar = ({ children }) => {
               <div>
                 <button type="button" className="bar-button hideBtn" onClick={toggleSearchBox}><span><i className="bi bi-search"></i></span></button>
                 {session.U_permit === 1 &&
-                <Link to="/upload" className="no-text-decoration"><button type="button" className="bar-button"><i className="bi bi-cloud-upload"></i> <span className="spanSMHide fs-6">Upload</span></button></Link>
+                  <Link to="/upload" className="no-text-decoration"><button type="button" className="bar-button"><i className="bi bi-cloud-upload"></i> <span className="spanSMHide fs-6">Upload</span></button></Link>
                 }
                 <Link to='#dropdown-menu' type="button" id="triggerId" data-bs-toggle="dropdown" aria-haspopup="true"
                   aria-expanded="false"><img src={`data:image/jpeg;base64, ${session.U_pro_pic}`} alt="profile" className='user-icon' /></Link>
-                <div class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="triggerId">
+                <div className="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="triggerId">
                   <div className='UserInfo'>
                     <Link to={`/profile?profile=${session.U_id}`} className='text-decoration-none text-white'><span><img src={`data:image/jpeg;base64, ${session.U_pro_pic}`} alt="profile" className='user-icon' />{session.username}</span></Link>
                   </div>
-                  <hr class="dropdown-divider"></hr>
-                  <Link class="dropdown-item" to={`/profile?profile=${session.U_id}`}><span><i className="bi bi-person-circle"></i> Profile</span></Link>
-                  <Link class="dropdown-item" to="/"><span><i className="bi bi-house"></i> Home</span></Link>
-                  <Link class="dropdown-item" to="/setting"><span><i className="bi bi-person-fill-gear"></i> Setting</span></Link>
+                  <hr className="dropdown-divider"></hr>
+                  <Link className="dropdown-item" to={`/profile?profile=${session.U_id}`}><span><i className="bi bi-person-circle"></i> Profile</span></Link>
+                  <Link className="dropdown-item" to="/"><span><i className="bi bi-house"></i> Home</span></Link>
+                  <Link className="dropdown-item" to="/setting"><span><i className="bi bi-person-fill-gear"></i> Setting</span></Link>
                   {session.U_type === 'admin' && (
-                    <Link class="dropdown-item" to="/admin"><span><i className="bi bi-nut"></i> Administation</span></Link>
+                    <Link className="dropdown-item" to="/admin"><span><i className="bi bi-nut"></i> Administation</span></Link>
                   )}
-                  <hr class="dropdown-divider"></hr>
-                  <Link class="dropdown-item" to="#" onClick={logoutHandler}><span><i className="bi bi-box-arrow-right"></i> Logout</span></Link>
+                  <hr className="dropdown-divider"></hr>
+                  <Link className="dropdown-item" to="#" onClick={logoutHandler}><span><i className="bi bi-box-arrow-right"></i> Logout</span></Link>
                 </div>
               </div>
             ) : (
@@ -142,12 +145,12 @@ const Sidebar = ({ children }) => {
               </div>
             )}
           </div>
-          <div class="offcanvas offcanvas-start text-bg-dark" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasDarkNavbarLabel">
-            <div class="offcanvas-header">
+          <div className="offcanvas offcanvas-start text-bg-dark" tabIndex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasDarkNavbarLabel">
+            <div className="offcanvas-header">
               <h5 className="offcanvas-title" id="offcanvasExampleLabel">CS <span>FLIX</span></h5>
-              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
             </div>
-            <div class="offcanvas-body">
+            <div className="offcanvas-body">
               {isLoggedIn ? (
                 <>
                   <ul className="navbar-nav">
@@ -208,6 +211,9 @@ const Sidebar = ({ children }) => {
                       <Link className="nav-link active" to="/setting"><i className="bi bi-person-fill-gear"></i><span> Setting</span></Link>
                     </li>
 
+                    <li className="nav-item">
+                      <Link className="nav-link active" to="#" onClick={logoutHandler}><i className="bi bi-box-arrow-right"></i><span> Logout</span></Link>
+                    </li>
                   </ul>
                 </>
               ) : (
