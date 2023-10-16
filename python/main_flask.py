@@ -564,22 +564,20 @@ def create_app(test_config=None):
             return ({"message": "query fail"}), 500
 
     @app.route("/cancle_convert", methods=["POST"])
+    @token_required
     def cancle_convert():
         try:
             data = request.get_json()
+            print(data)
             V_encode = data["V_encode"]
             U_folder = data["U_folder"]
-            
-            dir_path = "../upload/" + U_folder
-
-            files = glob.glob(os.path.join(dir_path, V_encode + ".*"))
 
             path = "../upload/" + U_folder + "/" + V_encode
             try:
                 shutil.rmtree(path)
                 print('delete folder:', path)
             except:
-                print('delete folder fail')
+                return ({'message': 'delete fail'}), 500
             
             return ({'message': 'deleted'}), 200
         except:
@@ -749,45 +747,49 @@ def create_app(test_config=None):
         try:
             u_id = request.args.get("u")
 
-            conn = create_conn()
+            if(isinstance(u_id, int)):
 
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM users WHERE U_ID = %s", (u_id,))
-            data = cursor.fetchone()
+                conn = create_conn()
 
-            folder_name = data[9]
-            folder_path = "../upload/" + folder_name
-            size = 0
+                cursor = conn.cursor()
+                cursor.execute("SELECT * FROM users WHERE U_ID = %s", (u_id,))
+                data = cursor.fetchone()
 
-            for path, dirs, files in os.walk(folder_path):
-                for f in files:
-                    fp = os.path.join(path, f)
-                    size += os.path.getsize(fp)
+                folder_name = data[9]
+                folder_path = "../upload/" + folder_name
+                size = 0
 
-            size = round(size / (1048576))  # bytes to mb
+                for path, dirs, files in os.walk(folder_path):
+                    for f in files:
+                        fp = os.path.join(path, f)
+                        size += os.path.getsize(fp)
 
-            cursor.execute(
-                "UPDATE users SET U_storage = %s WHERE U_ID = %s", (size, data[0])
-            )
-            conn.commit()
-            cursor.close()
-            conn.close()
-            tmp = str(data[6])
-            tmp2 = str(data[10])
-            user = {
-                "U_ID": data[0],
-                "U_name": data[1],
-                "U_mail": data[2],
-                "U_type": data[4],
-                "U_vid": data[5],
-                "U_storage": size,
-                "U_pro_pic": tmp[2:-1],
-                "U_banner": tmp2[2:-1],
-            }
+                size = round(size / (1048576))  # bytes to mb
 
-            return jsonify(user), 200
+                cursor.execute(
+                    "UPDATE users SET U_storage = %s WHERE U_ID = %s", (size, data[0])
+                )
+                conn.commit()
+                cursor.close()
+                conn.close()
+                tmp = str(data[6])
+                tmp2 = str(data[10])
+                user = {
+                    "U_ID": data[0],
+                    "U_name": data[1],
+                    "U_mail": data[2],
+                    "U_type": data[4],
+                    "U_vid": data[5],
+                    "U_storage": size,
+                    "U_pro_pic": tmp[2:-1],
+                    "U_banner": tmp2[2:-1],
+                }
+
+                return jsonify(user), 200
+            else:
+               return({"message": "no user"}), 500
         except Exception as e:
-            print(e), 500
+            return({"message": "query fail"}), 500
 
     @app.route("/get/users/search", methods=["GET"])
     def searchUsers():
