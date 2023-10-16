@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Sidebar from "../components/sidebar";
-import { getUser } from "../components/session";
+import { getToken, getUser, getlocalData } from "../components/session";
 import DataTable, { createTheme, Media } from "react-data-table-component";
 import config from '../config'; // Make sure to import config properly
 import Swal from "sweetalert2";
@@ -15,18 +15,20 @@ const VideoStatusPage = () => {
     const gatUploadApi = ip + '/get/videos/upload?u=' + user;
 
     const [uploading, setUploading] = useState([]); // Initialize with an empty array
+    const session = getlocalData('session');
+
+    const fetchData = async () => { // Use async/await for axios request
+        try {
+            const response = await axios.get(gatUploadApi);
+            const data = response.data;
+            setUploading(data);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
+    };
 
     useEffect(() => {
-        const fetchData = async () => { // Use async/await for axios request
-            try {
-                const response = await axios.get(gatUploadApi);
-                const data = response.data;
-                setUploading(data);
-            } catch (error) {
-                console.error("Error fetching data:", error);
-            }
-        };
-
+        
         fetchData();
 
         const interval = setInterval(fetchData, 10000); // Fetch data every 10 seconds
@@ -48,17 +50,35 @@ const VideoStatusPage = () => {
     }
 
     const handleDelete = (row) => {
-        Swal.fire({
-            title: "It work!",
-            icon: "success",
-            text: "Data = "+row,
-            showConfirmButton: false,
-            timer:2000,
-            didClose: () => {
+        const cancle_api = ip + '/cancle_convert';
+        const encode = row;
+        const data = {
+            "U_folder": session.U_folder,
+            "V_encode": encode
+        }
 
+        fetch(cancle_api, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + getToken()
+            },
+            body: JSON.stringify(data)
+        }).then((response) => {
+            if(response.ok){
+                Swal.fire({
+                    title: "Cancled",
+                    icon: "success",
+                    showConfirmButton: false,
+                    timer:2000,
+                    didClose: () => {
+                        fetchData();
+                    }
+                })
             }
         })
-        // fetch({})
+
+        
     }
 
     const columns = [
@@ -84,7 +104,7 @@ const VideoStatusPage = () => {
         },
         {
             name: 'Action',
-            cell: row => <button type="button" class="btn btn-danger" onClick={() => handleDeleteVideoDialog(row.V_title)}><i className="bi bi-trash3-fill"></i> <span className="spanSMHide">Delete</span></button>
+            cell: row => <button type="button" class="btn btn-danger" onClick={() => handleDeleteVideoDialog(row.V_encode)}><i className="bi bi-trash3-fill"></i> <span className="spanSMHide">Delete</span></button>
         }
     ]
 
