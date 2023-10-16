@@ -717,7 +717,7 @@ def create_app(test_config=None):
 
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT U_id, U_name, U_mail, U_vid, U_type, U_permit, U_storage, U_folder FROM users"
+                "SELECT U_id, U_name, U_mail, U_vid, U_type, U_permit, U_storage, U_folder FROM users WHERE U_ID > 0"
             )
             data = cursor.fetchall()
             conn.commit()
@@ -746,8 +746,7 @@ def create_app(test_config=None):
     def getUser():
         try:
             u_id = request.args.get("u")
-
-            if(isinstance(u_id, int)):
+            if(isinstance(int(u_id), int)):
 
                 conn = create_conn()
 
@@ -1957,7 +1956,7 @@ def create_app(test_config=None):
         try:
             conn = create_conn()
             cursor = conn.cursor()
-            cursor.execute("SELECT token.*, u.U_folder, v.V_encode FROM url_token AS token, users AS u, videos AS v WHERE u.U_ID = token.U_ID AND v.V_ID = token.V_ID ")
+            cursor.execute("SELECT token.*, u.U_folder, v.V_encode FROM url_token AS token, users AS u, videos AS v WHERE u.U_ID = token.U_ID AND v.V_ID = token.V_ID ORDER BY token.created_at DESC")
             data = cursor.fetchall()
             conn.commit()
             cursor.close()
